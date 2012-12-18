@@ -6,6 +6,7 @@
  */
 package com.original.service.channel.core;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.bson.types.ObjectId;
@@ -157,4 +158,185 @@ public class MessageManager {
 		}
 
 	}
+	
+	
+	/////////////////Search///////////////
+	
+	private Iterator<ChannelMessage> get(String field, String value, String order)
+	{
+		Query<ChannelMessage> q = ds.createQuery(ChannelMessage.class)
+				.field(field).endsWith(value).order(order);
+		return q.iterator();
+	}
+	
+	/**
+	 *  根据 渠道的类型(clazz)来查询。目前有Email\SNS(Weibo)\IM(iQQ)
+	 * @param channel type
+	 * @return
+	 */
+	public Iterator<ChannelMessage> getByChannelType(String channelType)
+	{	
+		String field = "clazz";
+		String value = channelType;
+		String order = "recievedDate";
+		return get(field, value, order);
+	}
+	
+	
+	
+	/**
+	 *  根据数据的id获得消息。
+	 * @param ObjectId id
+	 * @return
+	 */
+	public ChannelMessage getByID(ObjectId id)
+	{
+	     return ds.get(ChannelMessage.class, id);
+	}
+	
+	
+	/**
+	 *  根据消息的id获得消息。(应该只有一个Message ID).
+	 * @param ObjectId id
+	 * @return
+	 */
+	public Iterator<ChannelMessage> getByMessageID(String msgID)
+	{
+		String field = "messageID";
+		String value = msgID;
+		String order = "recievedDate";
+		return get(field, value, order);
+	}
+	
+	/**
+	 *  根据状态获取消息.
+	 * @param ObjectId status
+	 * @return
+	 */
+	public Iterator<ChannelMessage> getByStatus(String status)
+	{
+		String field = "status";
+		String value = status;
+		String order = "recievedDate";
+		return get(field, value, order);
+	}
+	
+	
+	/////////////////Filter///////////////
+
+	/**
+	 * 根据Filter获取消息.
+	 * 
+	 * @param ObjectId
+	 *            status
+	 * @return
+	 */
+	public Iterator<ChannelMessage> getMessage(Filter filter) {
+		// all messages
+		if (filter == null || filter instanceof MessageFilter) {
+			return ds.createQuery(ChannelMessage.class).iterator();
+
+		}
+		String field = filter.getField();
+		String value = filter.getValue();
+		String order = filter.getOrderField();
+		return get(field, value, order);
+	}
+	
+	/////////////////全文搜素(Pending)///////////////
+	
+	/**
+	 * Temporary Full Text Search . (Here should use Full Text Search Engines)
+	 * 
+	 * @param ObjectId
+	 *            status
+	 * @return
+	 */
+	public Iterator<ChannelMessage> search(String text) {
+		
+		// all messages
+		String field = "subject";
+		String value = text;
+		Query<ChannelMessage> q = ds.createQuery(ChannelMessage.class)
+				.field(field).contains(value);
+		Iterator<ChannelMessage> ite1 = q.iterator();
+
+		// all messages
+		field = "body";
+		value = text;
+		q = ds.createQuery(ChannelMessage.class).field(field).contains(value);
+		Iterator<ChannelMessage> ite2 = q.iterator();
+		
+		
+		// all messages
+		field = "fromAddr";
+		value = text;
+		q = ds.createQuery(ChannelMessage.class).field(field).contains(value);
+		Iterator<ChannelMessage> ite3 = q.iterator();
+		
+		
+		// all messages
+		field = "toAddr";
+		value = text;
+		q = ds.createQuery(ChannelMessage.class).field(field).contains(value);
+		Iterator<ChannelMessage> ite4 = q.iterator();
+				
+		return new IteratorIterator<ChannelMessage>(ite1, ite2, ite3, ite4);
+				
+	}
+	
+	
+	// combine interators into 1 iterator
+
+	private class IteratorIterator<T> implements Iterator<T> {
+		private final Iterator<T> is[];
+		private int current;
+
+		public IteratorIterator(Iterator<T>... iterators) {
+			is = iterators;
+			current = 0;
+		}
+
+		public boolean hasNext() {
+			while (current < is.length && !is[current].hasNext())
+				current++;
+
+			return current < is.length;
+		}
+
+		public T next() {
+			while (current < is.length && !is[current].hasNext())
+				current++;
+
+			return is[current].next();
+		}
+
+		public void remove() { /* not implemented */
+		}
+
+		// /* Sample use */
+		// public static void main(String... args)
+		// {
+		// Iterator<Integer> a = Arrays.asList(1,2,3,4).iterator();
+		// Iterator<Integer> b = Arrays.asList(10,11,12).iterator();
+		// Iterator<Integer> c = Arrays.asList(99, 98, 97).iterator();
+		//
+		// Iterator<Integer> ii = new IteratorIterator<Integer>(a,b,c);
+		//
+		// while ( ii.hasNext() )
+		// System.out.println(ii.next());
+		// }
+	}
+
+	// ///////////////全文搜素(Pending)///////////////
+	
+	
+	
+	
+
+	
+	
+	
+	
+	
 }

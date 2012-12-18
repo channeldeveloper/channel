@@ -6,14 +6,18 @@
  */
 package com.original.service.channel.core;
 
+import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.event.EventListenerList;
+
+import org.bson.types.ObjectId;
 
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
@@ -38,47 +42,44 @@ import com.original.service.profile.Profile;
 
 /**
  * 
-		//1. Data 和 View 要分开
-		//2. 服务 和 应用(控制) 要分开
-		//3. 服务控制自服务，不由第3方应用外部控制，
-		//4. 服务不能启动，不影响存库数据(离线的ChannelMessage)访问
-		//5. 服务负责网络的检查和自适应
+ //1. Data 和 View 要分开 //2. 服务 和 应用(控制) 要分开 //3. 服务控制自服务，不由第3方应用外部控制， //4.
+ * 服务不能启动，不影响存库数据(离线的ChannelMessage)访问 //5. 服务负责网络的检查和自适应
+ * 
  * @author sxy
- *
+ * 
  */
-public class ChannelService implements Service{
+public class ChannelService implements Service {
 
 	private ChannelServer channelServer;
-	
+
 	private HashMap<ChannelAccount, Service> serviceMap;
 	private MessageManager msgManager;
-	private PeopleManager  peopleManager;
-	
+	private PeopleManager peopleManager;
+
 	private String dbServer = "localhost";
 	private String dbServerPort = "27017";
 	private String channlDBName = "song";
-	
+
 	private Morphia morphia;
 	private Mongo mongo;
 	private Datastore ds;
-	
+
 	java.util.logging.Logger logger;
-	
+
 	//
-	Object channelAppOwner = null;//当前主服务被使用者(即Channel应用程序)
-	private  boolean isStartupAll = false;//所有的子服务，如Mail、QQ、Weibo等是否全部启动成功
-	//当ChannelAccount对应的服务未启动成功时，用户可以跳过
-	private Vector<ChannelAccount> skipAccounts = new Vector<ChannelAccount>(); 
+	Object channelAppOwner = null;// 当前主服务被使用者(即Channel应用程序)
+	private boolean isStartupAll = false;// 所有的子服务，如Mail、QQ、Weibo等是否全部启动成功
+	// 当ChannelAccount对应的服务未启动成功时，用户可以跳过
+	private Vector<ChannelAccount> skipAccounts = new Vector<ChannelAccount>();
 
 	/**
 	 * 
 	 */
-	public ChannelService() 
-	{
-		initMongoDB();		
+	public ChannelService() {
+		initMongoDB();
 		init();
 	}
-	
+
 	/**
 	 * @return the channelServer
 	 */
@@ -87,7 +88,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param channelServer the channelServer to set
+	 * @param channelServer
+	 *            the channelServer to set
 	 */
 	public void setChannelServer(ChannelServer channelServer) {
 		this.channelServer = channelServer;
@@ -101,7 +103,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param serviceMap the serviceMap to set
+	 * @param serviceMap
+	 *            the serviceMap to set
 	 */
 	public void setServiceMap(HashMap<ChannelAccount, Service> serviceMap) {
 		this.serviceMap = serviceMap;
@@ -115,7 +118,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param msgManager the msgManager to set
+	 * @param msgManager
+	 *            the msgManager to set
 	 */
 	public void setMsgManager(MessageManager msgManager) {
 		this.msgManager = msgManager;
@@ -129,7 +133,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param dbServer the dbServer to set
+	 * @param dbServer
+	 *            the dbServer to set
 	 */
 	public void setDbServer(String dbServer) {
 		this.dbServer = dbServer;
@@ -143,7 +148,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param dbServerPort the dbServerPort to set
+	 * @param dbServerPort
+	 *            the dbServerPort to set
 	 */
 	public void setDbServerPort(String dbServerPort) {
 		this.dbServerPort = dbServerPort;
@@ -157,7 +163,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param channlDBName the channlDBName to set
+	 * @param channlDBName
+	 *            the channlDBName to set
 	 */
 	public void setChannlDBName(String channlDBName) {
 		this.channlDBName = channlDBName;
@@ -171,7 +178,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param morphia the morphia to set
+	 * @param morphia
+	 *            the morphia to set
 	 */
 	public void setMorphia(Morphia morphia) {
 		this.morphia = morphia;
@@ -185,7 +193,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param mongo the mongo to set
+	 * @param mongo
+	 *            the mongo to set
 	 */
 	public void setMongo(Mongo mongo) {
 		this.mongo = mongo;
@@ -199,7 +208,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param ds the ds to set
+	 * @param ds
+	 *            the ds to set
 	 */
 	public void setDs(Datastore ds) {
 		this.ds = ds;
@@ -213,7 +223,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param logger the logger to set
+	 * @param logger
+	 *            the logger to set
 	 */
 	public void setLogger(java.util.logging.Logger logger) {
 		this.logger = logger;
@@ -227,7 +238,8 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param notifyingListeners the notifyingListeners to set
+	 * @param notifyingListeners
+	 *            the notifyingListeners to set
 	 */
 	public void setNotifyingListeners(boolean notifyingListeners) {
 		this.notifyingListeners = notifyingListeners;
@@ -241,34 +253,31 @@ public class ChannelService implements Service{
 	}
 
 	/**
-	 * @param listenerList the listenerList to set
+	 * @param listenerList
+	 *            the listenerList to set
 	 */
 	public void setListenerList(EventListenerList listenerList) {
 		this.listenerList = listenerList;
 	}
-	
-	public boolean isStartupAll()
-	{
+
+	public boolean isStartupAll() {
 		return isStartupAll;
 	}
-	
-//	public void setStartupAll(boolean isStartupAll)
-//	{
-//		this.isStartupAll = isStartupAll;
-//	}
-	
-	public Object getChannelAppOwner()
-	{
+
+	// public void setStartupAll(boolean isStartupAll)
+	// {
+	// this.isStartupAll = isStartupAll;
+	// }
+
+	public Object getChannelAppOwner() {
 		return channelAppOwner;
 	}
-	
-	public void setChannelAppOwner(Object channelAppOwner)
-	{
+
+	public void setChannelAppOwner(Object channelAppOwner) {
 		this.channelAppOwner = channelAppOwner;
 	}
 
-	private void initMongoDB()
-	{
+	private void initMongoDB() {
 		logger = Logger.getLogger("channer");
 		morphia = new Morphia();
 		morphia.map(ChannelAccount.class);
@@ -277,7 +286,7 @@ public class ChannelService implements Service{
 		morphia.map(Attachment.class);
 		morphia.map(People.class);
 		logger.log(Level.INFO, "Mapping POJO to Mongo DB!");
-		
+
 		// DB
 		try {
 			mongo = new Mongo(dbServer, Integer.valueOf(dbServerPort));
@@ -289,27 +298,27 @@ public class ChannelService implements Service{
 			logger.log(Level.SEVERE,
 					"To connect MongoDB Service fail!" + exp.toString());
 			logger.log(Level.SEVERE,
-					"Channel Service Fails to start When MongoDB connected issues!" + exp.toString());			
+					"Channel Service Fails to start When MongoDB connected issues!"
+							+ exp.toString());
 		}
-	
+
 	}
-	
-	//////////////////////////control and event
+
+	// ////////////////////////control and event
 	/**
 	 * 
 	 */
-	
-	private void init()
-	{
+
+	private void init() {
 		msgManager = new MessageManager(morphia, mongo, ds);
 		channelServer = new ChannelServer(morphia, mongo, ds);
-		peopleManager = new PeopleManager(morphia, mongo, ds);		
+		peopleManager = new PeopleManager(morphia, mongo, ds);
 		serviceMap = new HashMap<ChannelAccount, Service>();
 	}
-	
+
 	/**
-	 * 初始服务，可以由isStartupAll == false来判断(通常放在循环体中)
-	 * Franz Pending 渠道服务是自管理的，即主框架启动就启动，ChannelApp不启动也不影响
+	 * 初始服务，可以由isStartupAll == false来判断(通常放在循环体中) Franz Pending
+	 * 渠道服务是自管理的，即主框架启动就启动，ChannelApp不启动也不影响
 	 * 
 	 * @throws Exception
 	 */
@@ -337,63 +346,59 @@ public class ChannelService implements Service{
 		startupAll();
 
 	}
-	
+
 	/**
 	 * 当ChannelAccount对应的服务未启动成功时，用户可以跳过
+	 * 
 	 * @param ca
 	 */
-	
-	public synchronized void skipService(ChannelAccount ca) 
-	{
-		if(ca != null && !skipAccounts.contains(ca)) {
+
+	public synchronized void skipService(ChannelAccount ca) {
+		if (ca != null && !skipAccounts.contains(ca)) {
 			skipAccounts.add(ca);
 		}
 	}
-	
-	//服务和GUI要区分。
-	
+
+	// 服务和GUI要区分。
+
 	/**
-	 * 强制启动主线程程序，即使所有的子服务都没有启动成功！
-	 * 一般用于特殊情况，如捕获到未知异常等。
+	 * 强制启动主线程程序，即使所有的子服务都没有启动成功！ 一般用于特殊情况，如捕获到未知异常等。
 	 */
-	
-	public  void startupAll() {
-		if(isStartupAll) return;
-		
+
+	public void startupAll() {
+		if (isStartupAll)
+			return;
+
 		isStartupAll = true;
-		if(channelAppOwner != null) {
-			synchronized (channelAppOwner)
-			{
+		if (channelAppOwner != null) {
+			synchronized (channelAppOwner) {
 				channelAppOwner.notifyAll();
 			}
 		}
 
 	}
-	
+
 	/**
 	 * Pending Use Plug-in register to do this.
+	 * 
 	 * @param ca
 	 * @return
 	 */
-	public synchronized static Service createService(ChannelAccount ca) throws Exception
-	{
-		if (ca.getChannel().getName().startsWith("email_"))
-		{
-			//目前先测试邮箱@gmail.com
-//			if (ca.getAccount().getUser().indexOf("@gmail.com") != -1 )//test one account
+	public synchronized static Service createService(ChannelAccount ca)
+			throws Exception {
+		if (ca.getChannel().getName().startsWith("email_")) {
+			// 目前先测试邮箱@gmail.com
+			// if (ca.getAccount().getUser().indexOf("@gmail.com") != -1 )//test
+			// one account
 			{
 				return new EmailService("Cydow", ca);
 			}
-		}
-		else if (ca.getChannel().getName().startsWith("im_qq"))
-		{
+		} else if (ca.getChannel().getName().startsWith("im_qq")) {
 			return new QQService("Cydow", ca);
-			
+
+		} else if (ca.getChannel().getName().startsWith("sns_weibo")) {
+			return new WeiboService("Cydow", ca);
 		}
-		else 	if (ca.getChannel().getName().startsWith("sns_weibo"))
-		{
-			return new WeiboService("Cydow", ca);			
-		}		
 		return null;
 	}
 
@@ -406,196 +411,178 @@ public class ChannelService implements Service{
 	@Override
 	public void put(String action, List<ChannelMessage> msg) {
 		// TODO Auto-generated method stub
-		if (msg == null || msg.size() == 0)
-		{
-			return ;
+		if (msg == null || msg.size() == 0) {
+			return;
 		}
-		for (ChannelMessage m : msg)
-		{
+		for (ChannelMessage m : msg) {
 			ChannelAccount cha = m.getChanneAccount();
-			if (cha != null)
-			{
+			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				sc.put(action, msg);
 			}
 		}
-		
+
 	}
-
-
 
 	@Override
 	public void stop() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void suspend() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void start() {
 
-		if (serviceMap == null)
-		{
-			return ;
+		if (serviceMap == null) {
+			return;
 		}
 		// weired way, but work anyway
 		for (ChannelAccount key : serviceMap.keySet()) {
-//			System.out.println("Key : " + key.toString() + " Value : "
-//				+ serviceMap.get(key));
+			// System.out.println("Key : " + key.toString() + " Value : "
+			// + serviceMap.get(key));
 			Service service = serviceMap.get(key);
 			service.start();
 		}
-		
+
 	}
 
 	@Override
 	public void post(String action, List<ChannelMessage> msg) {
 		// TODO Auto-generated method stub
-		if (msg == null || msg.size() == 0)
-		{
-			return ;
+		if (msg == null || msg.size() == 0) {
+			return;
 		}
-		for (ChannelMessage m : msg)
-		{
+		for (ChannelMessage m : msg) {
 			ChannelAccount cha = m.getChanneAccount();
-			if (cha != null)
-			{
+			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				sc.post(action, msg);
 			}
 		}
-		
+
 	}
+
 	/**
 	 * Inner listener
 	 * 
 	 */
-	protected class ChannelServiceListener implements MessageListner, ChannelListener, ServiceListener
-	{
+	protected class ChannelServiceListener implements MessageListner,
+			ChannelListener, ServiceListener {
 
 		@Override
 		public void change(ServiceEvent evnt) {
 			// TODO Auto-generated method stub
-			System.out.println("ServiceEvent:" + evnt);			
+			System.out.println("ServiceEvent:" + evnt);
 		}
 
 		@Override
 		public void change(ChannelEvent evnt) {
 			// TODO Auto-generated method stub
-						System.out.println("ChannelEvent:" + evnt);			
-						
-						//proxy event to outer
-						
+			System.out.println("ChannelEvent:" + evnt);
+
+			// proxy event to outer
+
 		}
 
 		@Override
 		public void change(MessageEvent evnt) {
 			// TODO Auto-generated method stub
-			
+
 			// Franz Pending save Message
 			ChannelMessage[] chmsgs = evnt.getAdded();
-			//保存联系人
+			// 保存联系人
 			peopleManager.savePeople(chmsgs);
-			//保存信息
+			// 保存信息
 			msgManager.save(chmsgs);
-			
-			//proxy fire event
-			try
-			{
+
+			// proxy fire event
+			try {
 				fireMessageEvent(evnt);
-			}
-			catch(Exception exp)
-			{
+			} catch (Exception exp) {
 				exp.printStackTrace();
 			}
 		}
 
-	
 	}
-	
-	/////////////////////Event///////////////////////
+
+	// ///////////////////Event///////////////////////
 	/**
-	* Notifies all listeners that have registered interest for notification on
-	* this event type. The event instance is lazily created using the
-	* parameters passed into the fire method.
-	* 
-	* @param e
-	*            the event
-	* @see EventListenerList
-	*/
+	 * Notifies all listeners that have registered interest for notification on
+	 * this event type. The event instance is lazily created using the
+	 * parameters passed into the fire method.
+	 * 
+	 * @param e
+	 *            the event
+	 * @see EventListenerList
+	 */
 	protected void fireMessageEvent(MessageEvent e) {
-	notifyingListeners = true;
-	try {
-	// Guaranteed to return a non-null array
-	Object[] listeners = listenerList.getListenerList();
-	// Process the listeners last to first, notifying
-	// those that are interested in this event
-	for (int i = listeners.length - 2; i >= 0; i -= 2) {
-	if (listeners[i] == MessageListner.class) {
-		// Lazily create the event:
-		// if (e == null)
-		// e = new ListSelectionEvent(this, firstIndex, lastIndex);
-		((MessageListner) listeners[i + 1]).change(e);
+		notifyingListeners = true;
+		try {
+			// Guaranteed to return a non-null array
+			Object[] listeners = listenerList.getListenerList();
+			// Process the listeners last to first, notifying
+			// those that are interested in this event
+			for (int i = listeners.length - 2; i >= 0; i -= 2) {
+				if (listeners[i] == MessageListner.class) {
+					// Lazily create the event:
+					// if (e == null)
+					// e = new ListSelectionEvent(this, firstIndex, lastIndex);
+					((MessageListner) listeners[i + 1]).change(e);
+				}
+			}
+		} finally {
+			notifyingListeners = false;
+		}
 	}
-	}
-	} finally {
-	notifyingListeners = false;
-	}
-	}
-	
+
 	/**
-	* Adds a listener for notification of any changes.
-	* 
-	* @param listener
-	*            the <code>MessageListner</code> to add
-	* @see Service#MessageListner
-	*/
+	 * Adds a listener for notification of any changes.
+	 * 
+	 * @param listener
+	 *            the <code>MessageListner</code> to add
+	 * @see Service#MessageListner
+	 */
 	public void addMessageListener(MessageListner listener) {
-	listenerList.add(MessageListner.class, listener);
+		listenerList.add(MessageListner.class, listener);
 	}
-	
+
 	/**
-	* Removes a listener.
-	* 
-	* @param listener
-	*            the <code>MessageListner</code> to add
-	* @see Service#MessageListner
-	*/
+	 * Removes a listener.
+	 * 
+	 * @param listener
+	 *            the <code>MessageListner</code> to add
+	 * @see Service#MessageListner
+	 */
 	@Override
 	public void removeMessageListener(MessageListner listener) {
-	listenerList.remove(MessageListner.class, listener);
+		listenerList.remove(MessageListner.class, listener);
 	}
-	
+
 	/**
-	* 
-	* @param listenerType
-	* @return
-	*/
+	 * 
+	 * @param listenerType
+	 * @return
+	 */
 	public <T extends EventListener> T[] getListeners(Class<T> listenerType) {
-	return listenerList.getListeners(listenerType);
+		return listenerList.getListeners(listenerType);
 	}
-	
+
 	/**
-	* True will notifying listeners.
-	*/
+	 * True will notifying listeners.
+	 */
 	private transient boolean notifyingListeners;
 	/**
-	* The event listener list for the document.
-	*/
+	 * The event listener list for the document.
+	 */
 	protected EventListenerList listenerList = new EventListenerList();
-	
-	/////////////////////////////////////
 
-	@Override
-	public List<ChannelMessage> delete(String action, String query) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	// ///////////////////////////////////
 
 	@Override
 	public int getStatus() {
@@ -606,17 +593,15 @@ public class ChannelService implements Service{
 	@Override
 	public void put(String action, ChannelMessage msg) {
 		// TODO Auto-generated method stub
-		if (action.endsWith(com.original.service.channel.Constants.ACTION_QUICK_REPLY))
-		{
-			//Original message id.
-			if (msg.getId() != null)
-			{
+		if (action
+				.endsWith(com.original.service.channel.Constants.ACTION_QUICK_REPLY)) {
+			// Original message id.
+			if (msg.getId() != null) {
 				ChannelMessage chmsg = msgManager.getMessage(msg.getId());
-				if (chmsg != null)
-				{
+				if (chmsg != null) {
 					ChannelMessage replyMsg = chmsg.clone();
 					replyMsg.setId(null);
-					
+
 					replyMsg.setToAddr(chmsg.getFromAddr());
 					replyMsg.setFromAddr(chmsg.getToAddr());
 					replyMsg.setBody("Re: " + msg.getBody());
@@ -625,32 +610,101 @@ public class ChannelService implements Service{
 				}
 			}
 		}
-		
-		if (msg != null)
-		{
+
+		if (msg != null) {
 			ChannelAccount cha = msg.getChanneAccount();
-			if (cha != null)
-			{
+			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				sc.put(action, msg);
 			}
 		}
-		
+
 	}
 
 	@Override
 	public void post(String action, ChannelMessage msg) {
-		if (msg != null)
-		{
+		if (msg != null) {
 			ChannelAccount cha = msg.getChanneAccount();
-			if (cha != null)
-			{
+			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				sc.post(action, msg);
 			}
 		}
-		
+
 	}
 
+	// //////////search filter order by MessageManager////////
+
+	// ////////////////Update//////////////
+
+	@Override
+	public List<ChannelMessage> delete(String action, String query) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	/**
+	 * 按照消息数据的ID删除。
+	 * 
+	 * @param msg
+	 */
+	public void deleteMessage(ObjectId id) {
+		// get
+		ChannelMessage msg = msgManager.getByID(id);
+		// delete
+		ds.delete(ChannelMessage.class, id);
+		// event to outer
+		ChannelMessage[] cmsg = new ChannelMessage[1];
+		cmsg[0] = msg;
+		MessageEvent evt = new MessageEvent(null, null,
+				MessageEvent.Type_Removed, null, cmsg, null);
+		fireMessageEvent(evt);
+
+	}
+
+	/**
+	 *  按照消息的的ID删除。（消息ID是否唯一，有待讨论).
+	 * @param msg
+	 */
+	public void deleteMessages(String msgId) {
+		// get
+		Iterator<ChannelMessage> ite = msgManager.getByMessageID(msgId);
+
+		ArrayList<ChannelMessage> bk = new ArrayList<ChannelMessage>();
+		while (ite.hasNext()) {
+			bk.add(ite.next());
+		}
+		// delete
+		ds.delete(ChannelMessage.class, ite);
+		// event to outer
+		ChannelMessage[] msgs = new ChannelMessage[bk.size()];
+		bk.toArray(msgs);
+		MessageEvent evt = new MessageEvent(null, null,
+				MessageEvent.Type_Removed, null, msgs, null);
+		fireMessageEvent(evt);
+	}
 	
+	
+	/**
+	 *  按照Filter 删除消息。
+	 * @param msg
+	 */
+	public void deleteMessages(Filter filter) {
+		// get
+		Iterator<ChannelMessage> ite = msgManager.getMessage(filter);
+
+		ArrayList<ChannelMessage> bk = new ArrayList<ChannelMessage>();
+		while (ite.hasNext()) {
+			bk.add(ite.next());
+		}
+		// delete
+		ds.delete(ChannelMessage.class, ite);
+		// event to outer
+		ChannelMessage[] msgs = new ChannelMessage[bk.size()];
+		bk.toArray(msgs);
+		MessageEvent evt = new MessageEvent(null, null,
+				MessageEvent.Type_Removed, null, msgs, null);
+		fireMessageEvent(evt);
+	}
+
 }
