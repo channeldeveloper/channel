@@ -1,0 +1,69 @@
+ {
+  "name" : "email_gmail", 
+  "vendor" : "google", 
+  "type" : "email" , 
+  "status" : "running", 
+  "domain" : "gmail.com",
+  "port" : "-1",	
+  "protocols" :  [
+                  {"name" : "POP3", "type" : "incoming", "server" : "pop.gmail.com", "port" : 995, "auth" : "ssl"},
+                  {"name" : "IMP4", "type" : "incoming", "server" : "imap.gmail.com", "port" : 993, "auth" : "ssl"},
+                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.gmail.com", "port" : 465, "auth" : "ssl"}
+                  ],
+      "contentType" : ["html"],
+      "actions" :	 ["send", "receive", "replay", "quick replay"],
+      "policy" : "no",
+      "extension" :
+      {
+    	  "country" : "us"				
+          }
+  }
+ 
+ {
+  "name" : "im_gtalk", 
+  "vendor" : "google", 
+  "type" : "im" , 
+  "status" : "running", 
+  "domain" : "talk.google.com",
+  "port" : "5222",
+  "protocols" :  [
+                  {"name" : "XMPP", "type" : "duplexing",  "tls" : true, "auth" :  "OAuth 2" }
+                  ],
+  "contentType" : ["html"],
+  "actions" :	["send", "receive", "replay", "quick replay"],
+  "policy" : "no",
+  "extension" :
+  {
+	  "country" : "us"				
+      }
+  }
+
+ {
+	 "name" : "im_qq", 
+  "vendor" : "Tencent", 
+  "type" : "im" , 
+  "status" : "running", 
+  "domain" : "iqq.com",
+  "port" : "80",
+  "protocols" :  [
+                  {"name" : "HTTP", "type" : "duplexing",  "auth" :  "OAuth 2" }
+                  ],
+  "contentType":  ["html"],
+  "actions" :	["send", "receive", "replay", "quick replay"],
+  "policy" : "no"
+  }
+ 
+ {	"name" : "sns_weibo", 
+  "vendor" : "sina", 
+  "type" : "sns" , 
+  "status" : "running", 
+  "domain" : "123.125.104",
+  "port" : "30",
+  "protocols" :  [
+                  {"name" : "HTTP", "type" : "duplexing",  "auth" :  "OAuth 2" }
+                  ],
+"contentType" : ["html"],
+"actions" :	["post", "transfer", "comment", "replay", "quick replay"],
+"policy" : "no"
+	  	
+  }

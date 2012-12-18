@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EMailServers>
+	<EMailServer mailname="126.com" mailtype="pop3" smtpserver="smtp.126.com" 
+		smtpport="25" popserver="pop.126.com" popport="110" issmtpauth="true" securityprotocol="none"/>
+
+	<EMailServer mailname="gmail.com" mailtype="pop3" smtpserver="smtp.gmail.com" 
+		smtpport="465" popserver="pop.gmail.com" popport="995" issmtpauth="true" securityprotocol="ssl"/>
+
+	<EMailServer mailname="hotmail.com" mailtype="pop3" smtpserver="smtp.live.com" 
+		smtpport="587" popserver="pop3.live.com" popport="995" issmtpauth="true" securityprotocol="tls"/>
+		
+	<EMailServer mailname="live.cn" mailtype="pop3" smtpserver="smtp.live.com" 
+		smtpport="587" popserver="pop3.live.com" popport="995" issmtpauth="true" securityprotocol="tls"/>
+
+	<EMailServer mailname="163.com" mailtype="pop3" smtpserver="smtp.163.com" 
+		smtpport="25" popserver="pop3.163.com" popport="110" issmtpauth="true" securityprotocol="none"/>
+
+	<EMailServer mailname="yeah.net" mailtype="pop3" smtpserver="smtp.yeah.net" 
+		smtpport="25" popserver="pop3.yeah.net" popport="110" issmtpauth="true" securityprotocol="none"/>
+
+	<EMailServer mailname="sina.com" mailtype="pop3" smtpserver="smtp.sina.com" 
+		smtpport="25" popserver="pop3.sina.com" popport="110" issmtpauth="true" securityprotocol="none"/>
+
+	<EMailServer mailname="sohu.com" mailtype="pop3" smtpserver="smtp.sohu.com" 
+		smtpport="25" popserver="pop3.sohu.com" popport="110" issmtpauth="true" securityprotocol="none"/>
+
+	<EMailServer mailname="qq.com" mailtype="pop" smtpserver="smtp.qq.com" 
+		smtpport="25" popserver="pop.qq.com" popport="110" issmtpauth="true" securityprotocol="none"/>
+
+	<EMailServer mailname="yahoo.cn" mailtype="pop" smtpserver="smtp.mail.yahoo.cn" 
+		smtpport="25" popserver="pop.mail.yahoo.cn" popport="110" issmtpauth="true" securityprotocol="none"/>
+
+	<EMailServer mailname="21cn.com" mailtype="pop" smtpserver="smtp.21cn.com" 
+		smtpport="25" popserver="pop.21cn.com" popport="110" issmtpauth="true" securityprotocol="none"/>
+
+	<EMailServer mailname="tom.com" mailtype="pop" smtpserver="smtp.tom.com" 
+		smtpport="25" popserver="pop.tom.com" popport="110" issmtpauth="true" securityprotocol="none"/>
+
+	<EMailServer mailname="sogou.com" mailtype="pop3" smtpserver="smtp.sogou.com" 
+		smtpport="25" popserver="pop3.sogou.com" popport="110" issmtpauth="true" securityprotocol="none"/>
+
+</EMailServers>

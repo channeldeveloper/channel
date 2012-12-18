@@ -1,0 +1,1 @@
+read common settings of email vendor  (email_config.xml) file into java objects.
