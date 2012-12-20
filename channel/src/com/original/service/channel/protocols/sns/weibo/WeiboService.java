@@ -110,7 +110,7 @@ public class WeiboService implements Service{
 			wa.setToken(token);
 			wa.getUid();
 			//收集表情，注意放在线程中。
-			collectionEmotions(token);
+			WeiboParser.collectionEmotions(token);
 		}
 		catch(WeiboException ex) {
 			if ("expired_token".equals(ex.getError()) || 21327 == ex.getErrorCode())
@@ -124,25 +124,6 @@ public class WeiboService implements Service{
 		}
 	}
 	
-	public void collectionEmotions(final String token) throws WeiboException
-	{
-		new Thread(new Runnable()
-		{
-			public void run()
-			{
-				try
-				{
-					weibo4j.Timeline timeline = new weibo4j.Timeline();
-					timeline.setToken(token);
-					WeiboParser.registerEmotions(timeline.getEmotions());
-				} catch (WeiboException ex)
-				{
-					log.error(ex.getMessage(), ex);
-				}
-			}
-		},"Collection Emotions").start();
-	}
-
 	public Map<Account, String> getAccessTokens()
 	{
 		return accessTokens;

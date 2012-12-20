@@ -22,6 +22,7 @@ import com.original.serive.channel.ChannelGUI;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.border.SingleLineBorder;
 import com.original.serive.channel.layout.ChannelGridLayout;
+import com.original.serive.channel.ui.ChannelMessagePane.ContactHeader;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
@@ -48,10 +49,13 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 			channel4Mail = ChannelUtil.createAbstractButton(
 					new AbstractButtonItem(null, CHANNEL_FOR_MAIL, 
 							IconFactory.loadIconByConfig("mailChannelIcon"),new Dimension(40, 40)));
+	private ContactHeader contactHeader = null;
 	
-	public ChannelPopupMenu() {
+	public ChannelPopupMenu(ContactHeader header) {
 		setBorder(new EmptyBorder(3, 3, 2, 2));
 		constructPopupMenu();
+		
+		this.contactHeader = header;
 	}
 	
 	/**
@@ -69,6 +73,18 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 		
 		add(mp);
 		
+	}
+	
+	/**
+	 * 获取当前弹窗对应的消息主体面板
+	 * @return
+	 */
+	private ChannelMessageBodyPane getMessageBody() {
+		if(contactHeader != null) {
+			ChannelMessagePane parent = (ChannelMessagePane)contactHeader.getParent();
+			return parent.body;
+		}
+		return null;
 	}
 	
 	protected void paintComponent(Graphics g)
@@ -115,15 +131,15 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 			ChannelPopupMenu popMenu = (ChannelPopupMenu)this.getParent();
 			popMenu.setVisible(false);
 			
-			//测试用
-			ChannelMessage newMsg = new ChannelMessage();
-			newMsg.setMessageID("功能演示");
-			newMsg.setFromAddr("Unknown");
-			
-			ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(false));
-			cmp.newMessage(newMsg); 
-			ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-			desktop.addOtherShowComp("NEW_"+newMsg.getMessageID(),  cmp);
+			ChannelMessageBodyPane body = popMenu.getMessageBody();
+			if(body != null && !body.messageBodyList.isEmpty()) {
+				ChannelMessage newMsg = body.messageBodyList.firstElement();
+				
+				ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(false));
+				cmp.newMessage(newMsg); 
+				ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
+				desktop.addOtherShowComp("NEW_"+newMsg.getContactName(),  cmp);
+			}
 		}
 
 		protected void paintComponent(Graphics g)

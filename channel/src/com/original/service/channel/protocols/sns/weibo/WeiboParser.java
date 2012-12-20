@@ -9,12 +9,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import weibo4j.model.Emotion;
 import weibo4j.model.Source;
 import weibo4j.model.Status;
+import weibo4j.model.WeiboException;
 
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
@@ -34,6 +39,7 @@ public class WeiboParser implements Constants
 			new SimpleDateFormat("MM月dd日 HH:mm");
 	
 	public static final String PREFIX_EMOTION = "emotion_";
+	private static Lock parserLock = new ReentrantLock();
 	
 	/**
 	 * 注册(添加)微博官方表情
@@ -45,41 +51,19 @@ public class WeiboParser implements Constants
 		}
 	}
 	
-	/**
-	 * 统一处理微博消息
-	 * @param status 微博消息对象
-	 * @return
-	 */
-	public static String uniform(Status status) {
-		if(status != null) {
-			return uniform(status.getText() + "<br>"
-//					+ 	getImageHTMLText(status)
-//					+ 	getDateAndSourceText(status)
-			);
+	public static String parse(ChannelMessage msg) {
+		if(msg != null) {
+			return parse(msg.getBody() + "<br>")
+					+ parseImageText(msg) 
+					+ parseDateAndSource(msg);
 		}
 		return "";
 	}
-	public static String uniform(ChannelMessage msg) {
+	public static String parseIgnoreImage(ChannelMessage msg) {
 		if(msg != null) {
-//			return uniform(msg.getCompleteMsg() 
-//					+ getImageHTMLText(msg) 
-//					+ getDateAndSourceText(msg)
-//			);
-			return msg.getCompleteMsg() 
-					+ getImageHTMLText(msg) 
-					+ getDateAndSourceText(msg);
-		}
-		return "";
-	}
-	public static String uniformWithoutImage(ChannelMessage msg) {
-		if(msg != null) {
-//			return uniform(msg.getCompleteMsg() 
-////					+ getImageHTMLText(msg) 
-//					+ getDateAndSourceText(msg)
-//			);
-			return msg.getCompleteMsg() 
-//					+ getImageHTMLText(msg) 
-					+ getDateAndSourceText(msg);
+			return parse(msg.getBody() + "<br>")
+//					+ parseImageText(msg) 
+					+ parseDateAndSource(msg);
 		}
 		return "";
 	}
@@ -89,9 +73,9 @@ public class WeiboParser implements Constants
 	 * @param text 微博消息文本
 	 * @return
 	 */
-	private static String uniform(String text) {
+	private static String parse(String text) {
 		//处理表情
-		text =uniformEmotions(text);
+		text =parseEmotions(text);
 		//处理@
 		text = text.replaceAll(
 				"@([^<^>^,^，^ ^　^.^。^:^：^/^&^@^#^\"^\']{1,})([：, :/<])",
@@ -110,20 +94,50 @@ public class WeiboParser implements Constants
 	}
 	
 	/**
-	 * 统一转换表情
-	 * @param text
+	 * 统一转换表情(这里做了锁控制，只有等{@link #collectionEmotions(String)}收集完表情后，才进行转换表情操作)
+	 * @param text 表情字符
 	 * @return
 	 */
-	public static String uniformEmotions(String text) {
-		if(text != null && text.length() > 0) {
-			Matcher matcher = Pattern.compile("\\[(.+?)\\]").matcher(text);//注意这里必须使用"非贪婪模式"
-			String phrase = null;
-			while(matcher.find()) {
-				phrase = matcher.group();
-				text = text.replace(phrase, findEmotions(phrase));
+	public static String parseEmotions(final String text) {
+		Callable<String> callable = new Callable<String>() {
+			@Override
+			public String call() throws Exception {
+				parserLock.lock();
+				try {
+					String copy = text;
+					if(copy != null && copy.length() > 0) {
+						Matcher matcher = Pattern.compile("\\[(.+?)\\]").matcher(copy);//注意这里必须使用"非贪婪模式"
+						String phrase = null;
+						while(matcher.find()) {
+							phrase = matcher.group();
+							copy = copy.replace(phrase, findEmotions(phrase));
+						}
+					}
+					return copy;
+				}
+				finally {
+					parserLock.unlock();
+				}
+			}
+		};
+		
+		FutureTask<String> futureTask = new FutureTask<String>(callable);
+		new Thread(futureTask, "Parse Emotions").start();
+		
+		while(!futureTask.isDone()) {
+			try {
+				Thread.sleep(100);
+			}catch(Exception ex) {
+				return text;
 			}
 		}
-		return text;
+		
+		try {
+			return futureTask.get();
+		}
+		catch(Exception ex) {
+			return text;
+		}
 	}	
 	/**
 	 * 查找表情
@@ -131,7 +145,7 @@ public class WeiboParser implements Constants
 	 * @return 表情的链接地址
 	 */
 	public static String findEmotions(String phrase) {
-		if(phrase != null && phrase.matches("\\[.+\\]")) {
+		if(phrase != null && phrase.matches("\\[.+?\\]")) {
 			Object obj = cache.get(PREFIX_EMOTION+phrase);
 			if(obj != null) 
 				return (String)obj;
@@ -151,11 +165,40 @@ public class WeiboParser implements Constants
 	}
 	
 	/**
+	 * 由授权Token获取微博官方表情
+	 * @param token
+	 * @throws WeiboException
+	 */
+	public static void collectionEmotions(final String token) throws WeiboException
+	{
+		new Thread(new Runnable()
+		{
+			public void run()
+			{
+				boolean isLock = false;
+				try
+				{
+					if(isLock = parserLock.tryLock()) {
+						weibo4j.Timeline timeline = new weibo4j.Timeline();
+						timeline.setToken(token);
+						WeiboParser.registerEmotions(timeline.getEmotions());
+					}
+				} catch (WeiboException ex)
+				{
+					ex.printStackTrace();
+				} finally {
+					if(isLock) parserLock.unlock();
+				}
+			}
+		},"Collect Emotions").start();
+	}
+	
+	/**
 	 * 从微博中获取图片的链接地址，点击该链接地址可以放大图片
 	 * @param status 微博消息对象
 	 * @return
 	 */
-	public static String getImageHTMLText(Status status){
+	public static String parseImageText(Status status){
 		String imgUrl = "";
 		if (!"".equals(status.getThumbnailPic())) {
 			imgUrl =  "<br/><br/><a href=\"" + status.getBmiddlePic() 
@@ -164,7 +207,7 @@ public class WeiboParser implements Constants
 		}
 		return imgUrl;
 	}
-	public static String getImageHTMLText(ChannelMessage msg) {
+	public static String parseImageText(ChannelMessage msg) {
 		HashMap exts = msg.getExtensions();
 		String imgUrl = "";
 		if(exts == null || exts.isEmpty())
@@ -226,7 +269,7 @@ public class WeiboParser implements Constants
 	 * @param status
 	 * @return
 	 */
-	public static String getDateAndSourceText(Status status){
+	public static String parseDateAndSource(Status status){
 		String dateAndSource = "<br/><br/>"
 			+ weiboFormat.format(status.getCreatedAt()) + "  来自";
 		
@@ -235,7 +278,7 @@ public class WeiboParser implements Constants
 			+ source.getName() + "</a>";
 		return dateAndSource;
 	}
-	public static String getDateAndSourceText(ChannelMessage msg){
+	public static String parseDateAndSource(ChannelMessage msg){
 		HashMap exts = msg.getExtensions();
 		String sourceUrl = null,
 				sourceName = null;
@@ -261,7 +304,7 @@ public class WeiboParser implements Constants
 	 * @param count 统计数
 	 * @return
 	 */
-	public String getCountText(String text, int count) {
+	public String parseCountText(String text, int count) {
 		return (text == null ? "" : text) +
 				(count == 0 ? "" : "(" + count + ")");
 	}

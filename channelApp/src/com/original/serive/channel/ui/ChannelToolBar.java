@@ -352,6 +352,7 @@ public class ChannelToolBar extends JPanel implements ActionListener
 			g2d.draw(rect);
 				
 			g2d.translate(0, -1);
+			
 				ImageIcon rightCornerIcon = (ImageIcon)cornerIcon.getIcon();
 				if (rightCornerIcon != null)
 				{
@@ -360,7 +361,7 @@ public class ChannelToolBar extends JPanel implements ActionListener
 							rightCornerIcon.getIconWidth(), 
 							rightCornerIcon.getIconHeight());
 
-					g.drawImage(rightCornerIcon.getImage(), bounds.x, bounds.y, bounds.width, bounds.height, this);	        
+					g2d.drawImage(rightCornerIcon.getImage(), bounds.x, bounds.y, bounds.width, bounds.height, this);	        
 					cornerIcon.setBounds(bounds);
 				}
 		}

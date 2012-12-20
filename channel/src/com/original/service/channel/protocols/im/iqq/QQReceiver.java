@@ -3,9 +3,11 @@ package com.original.service.channel.protocols.im.iqq;
 import iqq.comm.Auth;
 import iqq.comm.Auth.AuthInfo;
 import iqq.model.Message;
+import iqq.model.MessageDetail;
 import iqq.service.MessageService;
 
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
@@ -49,7 +51,7 @@ public class QQReceiver {
 	 */
 	public void start()
 	{
-//		backgroud.start();
+		backgroud.start();
 	}
 
 	/**
@@ -141,20 +143,28 @@ public class QQReceiver {
 		msg.setType(ChannelMessage.TYPE_RECEIVED);
 		msg.setClazz(ChannelMessage.QQ);
 		msg.setDate(qqMsg.getCreateDate());
-		//设置简短消息和完整消息显示
-		msg.setShortMsg(qqMsg.getShortMsg());
-		msg.setCompleteMsg(qqMsg.getCompleteMsg());
+		//设置消息
+		MessageDetail detail = qqMsg.getMsgDetail();
+		msg.setBody(detail.getShortMsg());
 		
-		//转发数和评论数
 		HashMap<String, Integer> flags = new HashMap<String, Integer>();
 		//
 		msg.setFlags(flags);	
 		msg.setFollowedID(null);
 		msg.setFromAddr(qqMsg.getMember().getNickname()); //这里目前使用QQ昵称(QQ号没有任何意思)
 		
-		//消息来源
+		//这里保存表情、图片、自定义表情等信息
 		HashMap<String, String> exts = new HashMap<String, String>();
 		//
+		for(Entry<String, String> entry : detail.getFaces().entrySet()) { //表情
+			exts.put(entry.getKey(), entry.getValue());
+		}
+		for(Entry<String, String> entry : detail.getOffpics().entrySet()) { //图片
+			exts.put(entry.getKey(), entry.getValue());
+		}
+		for(Entry<String, String> entry : detail.getCfaces().entrySet()) { //自定义表情
+			exts.put(entry.getKey(), entry.getValue());
+		}
 		msg.setExtensions(exts);
 		msg.setRecievedDate(qqMsg.getCreateDate());
 		msg.setToAddr(ca.getAccount().getUser());

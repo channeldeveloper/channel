@@ -11,7 +11,6 @@ import java.awt.event.MouseMotionAdapter;
 import com.original.serive.channel.ChannelGUI;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.GraphicsHandler;
-import com.original.serive.channel.util.IconFactory;
 import com.original.serive.channel.util.LocationIcon;
 import com.original.service.channel.ChannelMessage;
 
@@ -23,13 +22,20 @@ import com.original.service.channel.ChannelMessage;
 public class ChannelMessageTopBar extends ChannelMessageStatusBar
 {
 	private LocationIcon closeIcon = null;
+	private boolean drawSeparateLine = true; //是否显示分割线
 	
 	public ChannelMessageTopBar() {
-		this(new LocationIcon(IconFactory.loadIconByConfig("closeIcon")));
+		this(true);
 	}
 	
-	public ChannelMessageTopBar(final LocationIcon closeIcon) {
+	public ChannelMessageTopBar(boolean drawSeparateLine) {
+		this(ChannelConstants.CLOSE_ICON, drawSeparateLine);
+	}
+	
+	public ChannelMessageTopBar(final LocationIcon closeIcon, final boolean drawSeparateLine)
+	{
 		this.closeIcon = closeIcon;
+		this.drawSeparateLine = drawSeparateLine;
 	}
 	
 	/**
@@ -78,17 +84,20 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 		if(body != null)
 		{
 			ChannelMessageBodyPane.Body child, origin = null;
-			if(body.messageBodyList.isEmpty() && body.getComponentCount() == 0) {
+			if(body.messageBodyList.isEmpty() || body.getComponentCount() == 0) {
 				desktop.showDefaultComp();
 			}
 			else {
-				child = (ChannelMessageBodyPane.Body)body.getComponent(0);
-				if( (origin = child.origin) != null ) //关闭的时候也要通知origin
-				{
-					child.copyTo(origin);
+				if(body.getComponent(0) instanceof ChannelMessageBodyPane.Body) {
+					child = (ChannelMessageBodyPane.Body)body.getComponent(0);
+					if( (origin = child.origin) != null ) //关闭的时候也要通知origin
+					{
+						child.copyTo(origin);
+					}
+					
+					ChannelMessage newMsg = child.iMsg;
+					desktop.removeShowComp("SHOW_"+newMsg.getContactName(), true);
 				}
-				ChannelMessage newMsg = child.iMsg;
-				desktop.removeShowComp("SHOW_"+newMsg.getContactName(), true);
 			}
 		}
 	}
@@ -111,7 +120,9 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 					closeIcon.getWidth(), closeIcon.getHeight());
 		}
 		
-		g2d.setColor(Color.gray);
-		g2d.drawLine(0, height-1, width, height-1);
+		if(drawSeparateLine) {
+			g2d.setColor(Color.gray);
+			g2d.drawLine(0, height-1, width, height-1);
+		}
 	}
 }

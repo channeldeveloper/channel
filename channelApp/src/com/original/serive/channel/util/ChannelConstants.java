@@ -1,5 +1,6 @@
 package com.original.serive.channel.util;
 
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
 
@@ -18,5 +19,12 @@ public interface ChannelConstants
 	//字体类
 	Font DEFAULT_FONT  =  new Font(
 			ChannelConfig.getPropValue("channelFont"),  Font.PLAIN, 14);
+	
+	//图标类
+	LocationIcon CLOSE_ICON = 	new LocationIcon(
+			IconFactory.loadIconByConfig("closeIcon"));
+	
+	//颜色类
+	Color LIGHT_TEXT_COLOR = new Color(85,127,196);
 
 }

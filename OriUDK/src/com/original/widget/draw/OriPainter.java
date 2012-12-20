@@ -7,12 +7,6 @@ package com.original.widget.draw;
 //This class will be used to draw special effects, and
 //generate special components.
 
-import com.jhlabs.image.ConvolveFilter;
-import com.jhlabs.image.GaussianFilter;
-import com.jhlabs.image.OpacityFilter;
-import com.jhlabs.image.SmartBlurFilter;
-import com.thebuzzmedia.imgscalr.Scalr;
-import com.thebuzzmedia.imgscalr.Scalr.Method;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -36,7 +30,15 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.Kernel;
+
 import javax.swing.JTextField;
+
+import com.jhlabs.image.ConvolveFilter;
+import com.jhlabs.image.GaussianFilter;
+import com.jhlabs.image.OpacityFilter;
+import com.jhlabs.image.SmartBlurFilter;
+import com.thebuzzmedia.imgscalr.Scalr;
+import com.thebuzzmedia.imgscalr.Scalr.Method;
 
 /**
  *
@@ -801,14 +803,15 @@ public class OriPainter  {
         int xoffset = dist+(int)(radius*Math.cos(angle));
         int yoffset = dist+(int)(radius*Math.sin(angle));
 
-        GaussianFilter filter2 = new GaussianFilter(radius*2);
-        BufferedImage shadow = filter2.filter(tmpImg, null);
+//        GaussianFilter filter2 = new GaussianFilter(radius*2);
+//        BufferedImage shadow = filter2.filter(tmpImg, null);
         rg.dispose();
-        tmpImg = null;
+//        tmpImg = null;
 
         Graphics2D g2d = (Graphics2D)g.create();
         g2d.setComposite( AlphaComposite.getInstance( AlphaComposite.SRC_OVER, opacity ) );
-        g2d.drawImage(shadow, dist-xoffset-radius/4, dist-yoffset-radius, null);
+        g2d.drawImage(tmpImg, dist-xoffset-radius/4, dist-yoffset-radius, null);
+        tmpImg = null;
         g2d.dispose();
     }
 
@@ -840,7 +843,6 @@ public class OriPainter  {
 
         Graphics2D g2d = (Graphics2D)g.create();
         g2d.setComposite( AlphaComposite.getInstance( AlphaComposite.SRC_OVER, opacity ) );
-        
         g2d.drawImage(shadow, xoffset, yoffset, null);
         g2d.dispose();
     }

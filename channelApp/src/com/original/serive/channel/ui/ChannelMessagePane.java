@@ -63,7 +63,6 @@ public class ChannelMessagePane extends JPanel
 	}
 	
 	public ChannelMessagePane(ChannelMessageStatusBar statusBar) {
-		this.statusBar = statusBar;
 		this.container = new MessageContainer(statusBar);
 		
 		layoutMgr.setInsets(new Insets(0, 0, 0, 4));
@@ -157,7 +156,6 @@ public class ChannelMessagePane extends JPanel
 	{
 		String uName = msg.getContactName();
 		if(uid == null) { //第一次添加，需要设置布局
-//			uid = msg.getMessageID();
 			uid = uName;
 
 			body.addMessage(msg, addFirst,showAll);
@@ -178,14 +176,28 @@ public class ChannelMessagePane extends JPanel
 	
 	/**
 	 * 新建已知或未知联系人消息。注意和{@link #addMessage(ChannelMessage, boolean)}不一样。
+	 * 对应{@link NewMessageBodyPane}面板
 	 * @param msg 消息对象
 	 */
 	public void newMessage(ChannelMessage msg)
 	{
 		if(msg != null && msg.getMessageID() != null)
 		{
-			header.setContactName(msg.getMessageID());
+			header.setContactName(msg.getContactName());
 			setPostMsgLayout();
+		}
+	}
+	
+	/**
+	 * 显示消息的完整内容，对应{@link ShowMessageBodyPane}面板
+	 * @param msg
+	 */
+	public void showMessage(ChannelMessage msg)
+	{
+		if(msg != null && msg.getMessageID() != null)
+		{
+			header.setContactName(msg.getContactName());
+			setReceiveMsgLayout();
 		}
 	}
 	
@@ -198,29 +210,41 @@ public class ChannelMessagePane extends JPanel
 	{
 		Color bgColor = Color.white;//背景颜色，默认白色
 		
-		public MessageContainer(ChannelMessageStatusBar statusBar)
+		public MessageContainer(ChannelMessageStatusBar msgStatusBar)
 		{
 			setLayout(new VerticalGridLayout(VerticalGridLayout.TOP_TO_BOTTOM,0,0,new Insets(0, 0, 5, 2)));
 			setBackground(Color.white);
 			
 			//由状态栏的类型来设置不同的控件 及添加方式
 			//注意子类在前，父类在后
-			if(statusBar instanceof NewMessageTopBar) {
-				add(statusBar);
+			if(msgStatusBar instanceof NewMessageTopBar) {
+				add(statusBar = msgStatusBar);
 				add(body = new NewMessageBodyPane());
 			}
-			else if(statusBar instanceof ChannelMessageTopBar){
-				add(statusBar);
+			else if(msgStatusBar instanceof ShowMessageTopBar) {
+				add(statusBar = msgStatusBar);
+				add(body = new ShowMessageBodyPane());
+			}
+			else if(msgStatusBar instanceof ChannelMessageTopBar){
+				add(statusBar = msgStatusBar);
 				add(body = new ChannelMessageBodyPane());
 			}
 			else {
 				add(body = new ChannelMessageBodyPane());
-				add(statusBar);
+				add(statusBar = msgStatusBar);
 			}
 			
 			//分别设置其关联组件
 			body.setMessageContainer(this);
 			statusBar.setMessageBody(body);
+		}
+		
+		public ChannelMessageBodyPane getMessageBody() {
+			return body;
+		}
+		
+		public ChannelMessageStatusBar getMessageStatusBar() {
+			return statusBar;
 		}
 		
 		//设置背景效果
@@ -242,7 +266,7 @@ public class ChannelMessagePane extends JPanel
 			int width = getWidth()-2, height = getHeight()-2;
 
 			//绘制阴影2px
-			GraphicsHandler.fillShadow(g2d, 2, width, height, 10, 0.2f);
+			GraphicsHandler.fillShadow(g2d, 4, width, height, 10, 0.2f);
 
 			//填充背景
 			g2d.setColor(bgColor);
@@ -260,7 +284,7 @@ public class ChannelMessagePane extends JPanel
 	{
 		private LocationIcon headImageIcon = null;//联系人头像
 		private String contactName = "联系人";//联系人用户名
-		private ChannelPopupMenu popupMenu = new ChannelPopupMenu();
+		private ChannelPopupMenu popupMenu = new ChannelPopupMenu(this);
 		
 		public static  Dimension SIZE =  new Dimension(78, 100),
 				HEADSIZE = new Dimension(72, 72);

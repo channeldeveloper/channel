@@ -22,7 +22,6 @@ import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.SwingPropertyChangeSupport;
 import javax.swing.text.EditorKit;
@@ -32,7 +31,6 @@ import javax.swing.text.html.StyleSheet;
 import com.original.serive.channel.ChannelGUI;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.border.DottedLineBorder;
-import com.original.serive.channel.email.MailContentPane;
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.ui.ChannelMessagePane.MessageContainer;
 import com.original.serive.channel.util.ChannelConfig;
@@ -41,8 +39,8 @@ import com.original.serive.channel.util.ChannelHyperlinkListener;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
-import com.original.service.channel.protocols.email.services.MailAuthentication;
 import com.original.service.channel.protocols.sns.weibo.WeiboParser;
+import com.original.widget.OTextField;
 
 /**
  * 消息Channel主体面板，就是显示消息的面板，默认显示第一条最新的消息(即JList中的第一条记录)。
@@ -72,6 +70,10 @@ public class ChannelMessageBodyPane extends JPanel
 	public void setMessageContainer(MessageContainer container)
 	{
 		this.container = container;
+	}
+	public MessageContainer getMessageContainer()
+	{
+		return this.container;
 	}
 	
 	/**
@@ -128,7 +130,7 @@ public class ChannelMessageBodyPane extends JPanel
 			}
 			this.add(body);
 			this.validate();
-		}		
+		}
 	}
 	
 	/**
@@ -325,41 +327,14 @@ public class ChannelMessageBodyPane extends JPanel
 		}
 		
 		//完整信息
-		public void doShowAllComplete() {
-					ChannelMessagePane nw =  new ChannelMessagePane(new ChannelMessageTopBar());
-						ChannelMessage newMsg = iMsg.clone();
-						nw.addMessage(newMsg, false,true);
-					
-					ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-					desktop.addOtherShowComp("SHOW_"+newMsg.getContactName(), nw);
-		}
-		
-		// 完整信息 for email
 		public void doShowComplete() {
 			ChannelMessage newMsg = iMsg.clone();
-			if (newMsg.getChanneAccount().getChannel().getType()
-					.equals("email")) {
-				MailAuthentication mailAuth = new MailAuthentication("cydow",
-						newMsg.getChanneAccount().getAccount().getUser(),
-						newMsg.getChanneAccount().getAccount().getPassword(),
-						false);// (String userId, String user, String password,
-								// boolean _delmail) {
-				
-				UIManager.put("ScrollBar.width",10);
-				
-				MailContentPane nw = new MailContentPane(mailAuth);
-				nw.setDataToGUI(newMsg);
-				// ChannelMessagePane nw = new ChannelMessagePane(new
-				// ChannelMessageTopBar());
-				// ChannelMessage newMsg = iMsg.clone();
-				// nw.addMessage(newMsg, false,true);
+			ChannelMessagePane nw =  new ChannelMessagePane(new ShowMessageTopBar(newMsg));
+			nw.showMessage(newMsg);
+			((ShowMessageBodyPane)nw.body).setMessageToGUI(newMsg);
 
-				ChannelDesktopPane desktop = (ChannelDesktopPane) ChannelGUI.channelNativeStore
-						.get("ChannelDesktopPane");
-				desktop.addOtherShowComp("SHOW_" + newMsg.getContactName(), nw);
-			} else {
-				doShowAllComplete();
-			}
+			ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
+			desktop.addOtherShowComp("SHOW_"+newMsg.getContactName(), nw);
 		}
 		
 		//将当前面板的一些属性复制到newBody中。
@@ -427,13 +402,15 @@ public class ChannelMessageBodyPane extends JPanel
 					messageHeader.setIcon(IconFactory.loadIconByConfig("defaultMailIcon"));
 				}
 				
-				messageHeader.setForeground(new Color(85,127,196));
+				messageHeader.setForeground(ChannelConstants.LIGHT_TEXT_COLOR);
 				messageHeader.setFont(ChannelConstants.DEFAULT_FONT);
-				messageHeader.setText(
-						ChannelUtil.appendBlank(ChannelUtil.isEmpty(msg.getFromAddr())?"":msg.getFromAddr(),
-								getFontMetrics(getFont()), 30).concat(msg.getDate() ==null ?"":
-									messageFormat.format(msg.getDate()))
-						 );
+				//目前messageHeader只显示收发的时间
+				if(ChannelMessage.TYPE_SEND.equals(msg.getType())) {
+					messageHeader.setText(msg.getSentDate() == null ? "" : messageFormat.format(msg.getSentDate()));
+				}
+				else {
+					messageHeader.setText(msg.getDate() == null ? "" : messageFormat.format(msg.getDate()));
+				}
 				messageHeader.setIconTextGap(10);
 				messageHeader.setHorizontalTextPosition(JLabel.RIGHT);
 			}
@@ -552,14 +529,20 @@ public class ChannelMessageBodyPane extends JPanel
 		 */
 		public void setText(String text)
 		{
-			FontMetrics fm = getFontMetrics(getFont());
-			int width = SIZE.width;
-			int textWidth = fm.stringWidth(text);
+			if(text == null) return;
 			
-			int limitLength = width-fm.stringWidth("……"); //不能超出limitLength的长度
-			if(textWidth >= limitLength) {
-				text = ChannelUtil.subString(text, fm, limitLength) + "……";
+			//查找换行符
+			int lineCharIndex = -1;
+			if( (lineCharIndex = text.indexOf('\r')) != -1) {
+				text = text.substring(0,lineCharIndex);
 			}
+			else if((lineCharIndex = text.indexOf('\n')) != -1) {
+				text = text.substring(0,lineCharIndex);
+			}
+			
+			//如果文本的长度超出面板的宽度，则多余的部分会被截断，以“…”代替。
+			FontMetrics fm = getFontMetrics(getFont());
+			text = ChannelUtil.cutString(text, fm, SIZE.width-fm.stringWidth("…"));
 			super.setText(text);
 		}
 		
@@ -576,10 +559,10 @@ public class ChannelMessageBodyPane extends JPanel
 				
 				//对不同消息类型进行单独处理
 				if(ChannelMessage.WEIBO.equals(msg.getClazz())) {
-					super.setText(WeiboParser.uniformWithoutImage(msg)); //先设置文本再获取高度
+					super.setText(WeiboParser.parseIgnoreImage(msg)); //先设置文本再获取高度
 					SIZE.height = super.getPreferredScrollableViewportSize().height  +
 							WeiboParser.getImageHeight(msg) ;
-					super.setText(WeiboParser.uniform(msg));
+					super.setText(msg.getCompleteMsg());
 				}
 				else {
 					super.setText(msg.getCompleteMsg()); //先设置文本再获取高度
@@ -600,7 +583,7 @@ public class ChannelMessageBodyPane extends JPanel
 					setEditorKit(editorKit);
 				}
 				setText(msg.getShortMsg());
-				SIZE.height =15;
+				SIZE.height = 15;
 			}
 		}		
 	}
@@ -610,7 +593,7 @@ public class ChannelMessageBodyPane extends JPanel
 	{
 		private JButton btnReply = new JButton("发送"),
 				btnCancel = new JButton("取消");
-		private JTextField replyTextField = new JTextField();
+		private JTextField replyTextField = new OTextField();
 		
 		Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-60, 30);
 		public Bottom() 
@@ -623,7 +606,7 @@ public class ChannelMessageBodyPane extends JPanel
 			setLayout(null);
 			setPreferredSize(SIZE);
 			
-			replyTextField.setBounds(40, 0, SIZE.width-60*2, 28);
+			replyTextField.setBounds(40, 2, SIZE.width-60*2, 32);
 			add(replyTextField);
 			
 			btnReply.setBounds(40+(SIZE.width-60*2), 0, 60, 28);
@@ -669,8 +652,6 @@ public class ChannelMessageBodyPane extends JPanel
 					ChannelMessage newMsg = body.iMsg.clone();
 					newMsg.setType(ChannelMessage.TYPE_SEND);
 					newMsg.setBody(replyContent);
-					newMsg.setShortMsg(newMsg.getBody());
-					newMsg.setCompleteMsg(newMsg.getBody());
 					
 					//最后回复消息
 					ChannelDesktopPane desktop = (ChannelDesktopPane)

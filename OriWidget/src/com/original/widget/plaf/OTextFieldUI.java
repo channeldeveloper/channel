@@ -66,7 +66,7 @@ public class OTextFieldUI extends BasicTextFieldUI  {
         //圆角长方形
         RoundRectangle2D r2d = new RoundRectangle2D.Double(
                 TextBlockModel.CORNERRADIUS/2,
-                TextBlockModel.CORNERRADIUS/2,
+               0,// TextBlockModel.CORNERRADIUS/2,
                 width-TextBlockModel.CORNERRADIUS,
                 height-TextBlockModel.CORNERRADIUS,
                 TextBlockModel.CORNERRADIUS,

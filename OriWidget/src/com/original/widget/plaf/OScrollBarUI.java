@@ -98,8 +98,8 @@ public class OScrollBarUI extends MetalScrollBarUI
 
         if(scrollbar.getOrientation()==JScrollBar.VERTICAL){
             r2d = new RoundRectangle2D.Double(
-                thumbBounds.x+thumbBounds.width/2-2, 0,
-                model.getBarwidth(), thumbBounds.height - 1,
+                thumbBounds.x+thumbBounds.width/2, model.getBarwidth()+2,
+                model.getBarwidth(), thumbBounds.height - 2*model.getBarwidth() - 2*2,
                 model.getBarwidth(),model.getBarwidth());
         }
         else  { // HORIZONTAL

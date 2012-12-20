@@ -9,6 +9,7 @@ public interface EventConstants
 {
 	/* 通用功能 */
 	String QUICK_REPLY = "quick reply"; //快速回复
+	String REPLY = "reply";//回复
 	String SAVE = "save"; //保存
 	String DELETE = "delete"; //删除
 	String CANCEL = "cancel";//取消

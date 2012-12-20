@@ -60,7 +60,7 @@ public class OButton extends JButton implements ChangeListener  {
     //设置按钮的层级
     public void setLevel(BUTTONLEVEL level){
         cmodel.setLevel(level);
-        this.setFont(cmodel.getButtonTextFont(!OriCharacter.containChinese(this.getText())));
+//        this.setFont(cmodel.getButtonTextFont(!OriCharacter.containChinese(this.getText())));
         this.setForeground(cmodel.getButtonTextColor());
     }
 

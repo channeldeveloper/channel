@@ -60,7 +60,7 @@ public class TextBlockModel {
     //固定
     public static int CORNERRADIUS = 10;
     public static Color BORDERCOLOR = new Color(152, 152, 152);
-    public static Color SHADOWCOLOR = new Color(0.0f, 0.0f, 0.0f, 0.4f);
+    public static Color SHADOWCOLOR = Color.black;//new Color(0.0f, 0.0f, 0.0f, 0.4f);
     /**
      * Only one <code>ChangeEvent</code> is needed per button model
      * instance since the event's only state is the source property.
@@ -76,8 +76,8 @@ public class TextBlockModel {
      */
     public TextBlockModel(TextType type) {
         this.forecolor = Color.BLACK;
-        this.backgroundcolor = new Color(249,249,249);
-        this.font = new Font("微软雅黑", Font.PLAIN, 16);
+        this.backgroundcolor = new Color(237,237,237);
+//        this.font = new Font("微软雅黑", Font.PLAIN, 16);
         if (type == TextType.Password) {
             this.PasswordChar = '*';
         } else if (type == TextType.TextArea) {

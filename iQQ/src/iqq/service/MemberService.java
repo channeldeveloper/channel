@@ -266,32 +266,32 @@ public class MemberService {
             //member = Auth.getMember();
             //member.setAccount(Auth.getAccount());
             //member.setLnick(obj.getString("lnick"));
-            member.setBirthday(DateUtils.parse(obj.getJSONObject("birthday")));
-            member.setOccupation(obj.getString("occupation"));
-            member.setPhone(obj.getString("phone"));
-            member.setAllow(obj.getInt("allow"));
-            member.setCollege(obj.getString("college"));
-            if (!obj.isNull("reg_time")) {
-                member.setRegTime(obj.getInt("reg_time"));
-            }
-            member.setUin(obj.getLong("uin"));
-            member.setConstel(obj.getInt("constel"));
-            member.setBlood(obj.getInt("blood"));
-            member.setHomepage(obj.getString("homepage"));
-            member.setStat(obj.getInt("stat"));
-            member.setVipInfo(obj.getInt("vip_info"));
-            member.setCountry(obj.getString("country"));
-            member.setCity(obj.getString("city"));
-            member.setPersonal(obj.getString("personal"));
+//            member.setBirthday(DateUtils.parse(obj.getJSONObject("birthday")));
+//            member.setOccupation(obj.getString("occupation"));
+//            member.setPhone(obj.getString("phone"));
+//            member.setAllow(obj.getInt("allow"));
+//            member.setCollege(obj.getString("college"));
+//            if (!obj.isNull("reg_time")) {
+//                member.setRegTime(obj.getInt("reg_time"));
+//            }
+//            member.setUin(obj.getLong("uin"));
+//            member.setConstel(obj.getInt("constel"));
+//            member.setBlood(obj.getInt("blood"));
+//            member.setHomepage(obj.getString("homepage"));
+//            member.setStat(obj.getInt("stat"));
+//            member.setVipInfo(obj.getInt("vip_info"));
+//            member.setCountry(obj.getString("country"));
+//            member.setCity(obj.getString("city"));
+//            member.setPersonal(obj.getString("personal"));
             member.setNickname(obj.getString("nick"));
-            member.setChineseZodiac(obj.getInt("shengxiao"));
+//            member.setChineseZodiac(obj.getInt("shengxiao"));
             member.setEmail("email");
-            member.setProvince(obj.getString("province"));
-            member.setGender(obj.getString("gender"));
-            member.setMobile(obj.getString("mobile"));
-            if (!obj.isNull("client_type")) {
-                member.setClient_type(obj.getInt("client_type"));
-            }
+//            member.setProvince(obj.getString("province"));
+//            member.setGender(obj.getString("gender"));
+//            member.setMobile(obj.getString("mobile"));
+//            if (!obj.isNull("client_type")) {
+//                member.setClient_type(obj.getInt("client_type"));
+//            }
         }
         return member;
     }

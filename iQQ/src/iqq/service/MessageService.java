@@ -10,8 +10,8 @@ import iqq.comm.MyDefaultTreeCellRenderer;
 import iqq.model.Group;
 import iqq.model.Member;
 import iqq.model.Message;
+import iqq.model.MessageDetail;
 import iqq.ui.MainPanel;
-import iqq.util.ErrorMessage;
 import iqq.util.GroupUtil;
 import iqq.util.Log;
 import iqq.util.Method;
@@ -120,8 +120,8 @@ public class MessageService extends Thread {
         }
     }
     
-    public String[] convertToHTML(AuthInfo ai, JSONObject value ) {
-    	String shortMsg = "", completeMsg = "";
+    public MessageDetail convertToHTML(AuthInfo ai, JSONObject value ) {
+    	MessageDetail md = new MessageDetail();
     	try {
     	 int msg_id = value.getInt("msg_id");
          long from_uin = value.getLong("from_uin");
@@ -131,24 +131,35 @@ public class MessageService extends Thread {
          JSONArray array = value.getJSONArray("content");
          int size = array.length();
          
+         String item = null;//表情、图片、自定义表情等元素
+         String shortMsg = "", completeMsg = ""; //简短消息、完整消息
          for (int i = 1; i < size; i++) {
              String valStr = array.get(i).toString();
              if (valStr.startsWith("[\"face\",")) {
             	 shortMsg += "[表情]";
-            	 completeMsg += QQImageUtil.convertFlagToHTML(array.getJSONArray(i).getString(1));
+            	 item = QQImageUtil.convertFlagToHTML(array.getJSONArray(i).getString(1));
+            	 completeMsg += item;
+            	 md.addFace(i, item);
              } else if (valStr.startsWith("[\"offpic\"")) {
             	 shortMsg += "[图片]";
                  JSONObject obj = new JSONObject(array.getJSONArray(i).getString(1));
                  if (obj.getInt("success") == 1) {
-                	 completeMsg += QQImageUtil.getOffImage(ai, obj.getString("file_path"), from_uin);
+                	 item = QQImageUtil.getOffImage(ai, obj.getString("file_path"), from_uin);
+                	 completeMsg += item;
+                	 md.addOffpic(i, item);
                  }
              } else if (valStr.startsWith("[\"cface\"")) {
             	 shortMsg += "[自定义表情]";
-            	 completeMsg += QQImageUtil.getCFaceImage(ai, array.getJSONArray(i).getString(1), msg_id, from_uin);
+            	 item = QQImageUtil.getCFaceImage(ai, array.getJSONArray(i).getString(1), msg_id, from_uin);
+            	 completeMsg += item;
+            	 md.addCface(i, item);
              } else {
             	 shortMsg += array.getString(i);
             	 completeMsg += array.getString(i);
              }
+             
+             md.setShortMsg(shortMsg);
+             md.setCompleteMsg(completeMsg);
          }
          Log.println("新信息来了：" + shortMsg);
 
@@ -159,7 +170,7 @@ public class MessageService extends Thread {
         } catch (Exception ex) {
             Logger.getLogger(MessageService.class.getName()).log(Level.SEVERE, null, ex);
         }
-    	return new String[]{shortMsg, completeMsg};
+    	return md;
     }
     
     public Message receiveMsgOnly(final AuthInfo ai, JSONObject value) {
@@ -167,17 +178,13 @@ public class MessageService extends Thread {
          	long from_uin = value.getLong("from_uin");
          	long time = value.getLong("time");
          	
-         	String[] msgs = convertToHTML(ai, value);
-         	HTMLDocument htmlDoc = new HTMLDocument();
-         	htmlDoc.insertString(0, msgs[1], null);
+         	MessageDetail md = convertToHTML(ai, value);
          	
              member = memberService.get(ai, from_uin);
              member = memberService.getMemberAccount(ai, member);
              Message msg = new Message();
              msg.setMember(member);
-             msg.setMessage(htmlDoc);
-             msg.setShortMsg(msgs[0]); //简单消息
-             msg.setCompleteMsg(msgs[1]); //完整消息
+             msg.setMsgDetail(md);
              msg.setCreateDate(new Date(time * 1000L));
              msg.setId(System.currentTimeMillis());
              return msg;
@@ -189,14 +196,14 @@ public class MessageService extends Thread {
          return null;
     }
     
-    public Message receiveMsg(final AuthInfo ai, JSONObject value) {
+    public void receiveMsg(final AuthInfo ai, JSONObject value) {
         try {
         	long from_uin = value.getLong("from_uin");
         	long time = value.getLong("time");
         	
-        	String[] msgs = convertToHTML(ai, value);
+        	MessageDetail md = convertToHTML(ai, value);
         	HTMLDocument htmlDoc = new HTMLDocument();
-        	htmlDoc.insertString(0, msgs[1], null);
+        	htmlDoc.insertString(0, md.getCompleteMsg(), null);
         	
             member = memberService.get(ai, from_uin);
             Message msg = new Message();
@@ -231,13 +238,11 @@ public class MessageService extends Thread {
             	if (member != null) {
             		ThreadUtil.submit(r);
             	}
-            return msg;
         } catch (JSONException ex) {
             Logger.getLogger(MessageService.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
             Logger.getLogger(MessageService.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return null;
     }
 
     public synchronized static void changeStatus(AuthInfo ai, JSONObject value) throws Exception {

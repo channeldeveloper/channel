@@ -136,9 +136,6 @@ public class WeiboReceiver {
 		msg.setType(ChannelMessage.TYPE_RECEIVED);
 		msg.setClazz(ChannelMessage.WEIBO);
 		msg.setDate(status.getCreatedAt());
-		//设置简短消息和完整消息显示
-		msg.setShortMsg(status.getText());
-		msg.setCompleteMsg(WeiboParser.uniform(status));
 		
 		//转发数和评论数
 		HashMap<String, Integer> flags = new HashMap<String, Integer>();

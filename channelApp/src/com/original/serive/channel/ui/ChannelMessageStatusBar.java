@@ -59,7 +59,7 @@ public class ChannelMessageStatusBar extends JPanel implements PropertyChangeLis
 	 * 初始化一些控件，如设置图标，颜色等。
 	 */
 	protected void initStatusBar() {
-		Color color = new Color(85,127,196);//统一前景色
+		Color color = ChannelConstants.LIGHT_TEXT_COLOR;//统一前景色
 		mailLabel.setForeground(color);
 		qqLabel.setForeground(color);
 		weiboLabel.setForeground(color);

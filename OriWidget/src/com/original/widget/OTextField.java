@@ -56,7 +56,7 @@ public class OTextField extends JTextField implements MouseListener,
     private void initComp() {
         setModel(new TextBlockModel(TextBlockModel.TextType.TextField));
         setOpaque(false);
-        setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
+        setBorder(BorderFactory.createEmptyBorder(5, 12, 12, 12));
         //mode property listner
         this.setFont(model.getFont());
         this.setForeground(model.getForecolor());

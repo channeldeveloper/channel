@@ -204,11 +204,7 @@ public class EmailReceiver {
 	}
 	
 	private ChannelMessage mailMessage2Message(EMail email)
-	{
-		
-//		getType()
-//		getXh()
-		
+	{		
 		ChannelMessage msg = new ChannelMessage();
 		msg.setMessageID(email.getMsgId());
 //		msg.setAttachmentIds(email.getAttachments()); Pending franz deal attachment later
@@ -220,9 +216,6 @@ public class EmailReceiver {
 		msg.setContentType(Constants.Content_Type_Text_Html);
 		msg.setClazz(ChannelMessage.MAIL);
 		msg.setDate(email.getSendtime());
-		//设置简短消息和完整消息显示
-		msg.setShortMsg(email.getMailtitle());
-		msg.setCompleteMsg(email.getContent());
 		
 		HashMap<String, Integer> flags = new HashMap<String, Integer>();
 		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_REPLYED,	email.getIsReplay());
@@ -242,13 +235,9 @@ public class EmailReceiver {
 		exts.put(Constants.Message_Header_Ext_EMAIL_Foler, email.getType());
 		msg.setExtensions(exts);
 		msg.setSubject(email.getMailtitle());
-		msg.setRecievedDate(email.getReceivedtime());
-		msg.setSentDate(email.getSendtime());
 		msg.setToAddr(ca.getAccount().getUser());
-		
 		
 		return msg;
 	}
-	
 
 }

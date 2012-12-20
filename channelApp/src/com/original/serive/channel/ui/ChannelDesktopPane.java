@@ -18,7 +18,6 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-import javax.swing.UIManager;
 
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.util.ChannelConfig;
@@ -42,6 +41,8 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 			ChannelConfig.getIntValue("desktopHeight"));
 	
 	public static JPanel DEFAULT_PANE = new JPanel(); //桌面默认显示的面板，消息列表面板，带滚动条
+	public static JScrollBar DEFAULT_SCROLLBAR = 
+			new OScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)); //默认显示面板的滚动条
 	
 	public ChannelDesktopPane() {
 		setLayout(layoutMgr);
@@ -64,11 +65,8 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 		if((msgContainer = findMessage(msg)) == null) {
 			msgContainer = new ChannelMessagePane();
 		}
-		else {
-			DEFAULT_PANE.remove(msgContainer);
-		}
 		
-		msgContainer.addMessage(msg, true,false);
+		msgContainer.addMessage(msg, true, false);
 		DEFAULT_PANE.add(msgContainer);
 		DEFAULT_PANE.validate();
 		
@@ -153,8 +151,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		
-		UIManager.put("ScrollBar.width",10);
-		jsp.setVerticalScrollBar(new OScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)));
+		jsp.setVerticalScrollBar(DEFAULT_SCROLLBAR);
 		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 5));
 		
 		//设置滚动面板透明
@@ -182,14 +179,12 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 			return;
 		}
 		
-		JPanel otherPane = new JPanel(DEFAULT_PANE.getLayout()); //和DEFAULT_PANE一样，作为载体
-		
+		JPanel otherPane = new JPanel(DEFAULT_PANE.getLayout()); 
 		//为载体添加滚动条
 		JScrollPane jsp =  new JScrollPane(otherPane,
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		
-		UIManager.put("ScrollBar.width",10);
 		jsp.setVerticalScrollBar(new OScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)));
 		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 5));
 		

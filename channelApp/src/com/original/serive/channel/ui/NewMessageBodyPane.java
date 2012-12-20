@@ -1,23 +1,26 @@
 package com.original.serive.channel.ui;
 
+import java.awt.Color;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.border.EmptyBorder;
 
 import com.original.serive.channel.ChannelGUI;
 import com.original.serive.channel.EventConstants;
+import com.original.serive.channel.border.InnerShadowBorder;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.ChannelGridLayout;
 import com.original.serive.channel.layout.VerticalGridLayout;
@@ -25,6 +28,9 @@ import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
+import com.original.widget.OButton;
+import com.original.widget.OScrollBar;
+import com.original.widget.OTextField;
 
 /**
  * 新建消息主体面板，区别于{@link ChangeMessageBodyPane}显示消息主体面板。
@@ -39,7 +45,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	Center center = new Center(); //中间编辑面板
 	
 	public NewMessageBodyPane() {
-		setLayout(new VerticalGridLayout(VerticalGridLayout.TOP_TO_BOTTOM, 0, 5, new Insets(5, 10, 5, 15)));
+		setLayout(new VerticalGridLayout(VerticalGridLayout.TOP_TO_BOTTOM, 0, 5, new Insets(5, 0, 5, 0)));
 		add(top);
 		add(center);
 	}
@@ -47,8 +53,9 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	//顶部功能按钮面板
 	public class Top extends JPanel implements ActionListener, EventConstants
 	{
+		OButton btnCancel = new OButton("取消");
 		public Top() {
-			setLayout(new ChannelGridLayout(2, 0, new Insets(0, 0, 0, 0)));
+			setLayout(new ChannelGridLayout(2, 0, new Insets(0, 10, 0, 0)));
 			setButtomItems(new AbstractButtonItem[] {
 				new AbstractButtonItem("取消", CANCEL, null),	
 			});
@@ -112,11 +119,11 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 				new ChannelGridBagLayoutManager(this);
 		
 		Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth"),
-				350);
+				380);
 		
 		//一些组件，显示或隐藏由消息类型(QQ、微博、邮件等)来决定
-		private JTextField  txtCC = new JTextField(),//分享/抄送
-				txtSubject = new JTextField(); //主题
+		private JTextField  txtCC = new OTextField(),//分享/抄送
+				txtSubject = new OTextField(); //主题
 		
 		//一些功能按钮
 		private JButton btnFont =(JButton) ChannelUtil.createAbstractButton(
@@ -131,7 +138,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		
 		public Center() {
 			layoutMgr.setAnchor(GridBagConstraints.NORTHEAST); //靠右对齐，主要针对标签
-			layoutMgr.setInsets(new Insets(0, 0, 2, 5));
+			layoutMgr.setInsets(new Insets(0, 0, 2, 2));
 			
 			jbInit();
 		}
@@ -139,6 +146,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		//设置和添加组件
 		private void jbInit() {
 			this.setPreferredSize(SIZE); //固定大小，文本面板如果超出该大小，则添加滚动条
+			this.setBorder(new EmptyBorder(0, 10, 0, 10));
 			
 			layoutMgr.addComToModel(new JLabel("分享/抄送："));
 			layoutMgr.addComToModel(txtCC, 1, 1, GridBagConstraints.HORIZONTAL);
@@ -148,7 +156,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			layoutMgr.addComToModel(txtSubject, 1, 1, GridBagConstraints.HORIZONTAL);
 			layoutMgr.newLine(1);
 			
-			JPanel ctrlpane = new JPanel(new ChannelGridLayout(5, 0, new Insets(0, 0, 0, 0)));
+			JPanel ctrlpane = new JPanel(new ChannelGridLayout(5, 0, new Insets(0, 5, 0, 0)));
 			ctrlpane.add(btnFont);
 			ctrlpane.add(btnImage);
 			ctrlpane.add(btnFile);
@@ -156,7 +164,19 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			layoutMgr.newLine();
 			
 			layoutMgr.addComToModel(new JLabel("内容："));
-			layoutMgr.addComToModel(new JScrollPane(content), 1, 1, GridBagConstraints.BOTH);
+			content.setOpaque(false);
+			content.setBackground(new Color(0, 0, 0, 0)); //设置文本面板透明的唯一方法
+			JScrollPane scrollPane = new JScrollPane(content,
+	                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+	                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+	        scrollPane.setVerticalScrollBar(new OScrollBar(JScrollBar.VERTICAL, Color.gray));
+	        scrollPane.setBorder(BorderFactory.createCompoundBorder(
+	        		new InnerShadowBorder(), new EmptyBorder(0, 5, 10, 5)));
+	        scrollPane.setOpaque(false);
+	        scrollPane.getViewport().setOpaque(false);
+	        scrollPane.setViewportBorder(null);
+	        
+			layoutMgr.addComToModel(scrollPane, 1, 1, GridBagConstraints.BOTH);
 		}
 
 		public void actionPerformed(ActionEvent e)

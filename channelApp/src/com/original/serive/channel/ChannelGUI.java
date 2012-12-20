@@ -1,6 +1,5 @@
 ﻿package com.original.serive.channel;
 
-import java.awt.Color;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
@@ -62,66 +61,67 @@ public class ChannelGUI extends JFrame
 		ChannelGUI main = new ChannelGUI();
 		cs = ChannelAccesser.getChannelService();
 		cs.setChannelAppOwner(main);
-//		
-//		//渠道服务的控制内部控制。
-//		
-//		while(!cs.isStartupAll()) {
-//			try {
-//				cs.initService();
-//			}
-//			catch(Exception ex) {
-//				ex.printStackTrace();
-//				
-//				if(ex instanceof ChannelException) {
-//					final ChannelAccount ca = ((ChannelException) ex).getChannelAccount();
-//					if(ca == null) {
-//						cs.startupAll();
-//						break;
-//					}
-//					
-//					switch(((ChannelException) ex).getExceptionType())
-//					{
-//					case WEIBO: //如果出现需要微博授权的提示错误
-//						 ChannelUtil.showAuthorizeWindow(main, ca.getAccount().getUser(), new WindowAdapter()
-//						{
-//							public void windowClosing(WindowEvent e) //当用户关闭授权浏览器窗口时，表示跳过此错误
-//							{
-//								cs.skipService(ca);
-//							}
-//						});
-//						break;
-//						
-//					case QQ: //如果出现QQ登录需要验证码
-//						int option = JOptionPane.showConfirmDialog(main, ex.getMessage(),
-//								"是否重试", JOptionPane.YES_NO_OPTION);
-//						if(option != JOptionPane.YES_OPTION) {//-1:关闭 1:否 0:是
-//							cs.skipService(ca);
-//						}
-//						break;
-//						
-//					case MAIL:
-//						break;
-//					}
-//				}
-//				else {
-//					cs.startupAll();
-//					break;
-//				}
-//			}
-//		}		
-//		
-//		//如果ChannelService没有全部启动完毕，则主线程需要等待
-//		synchronized (main)
-//		{
-//			if(!cs.isStartupAll()) {
-//				main.wait();
-//			}
-//		}
-//		cs.start();
+		
+		//渠道服务的控制内部控制。
+		
+		while(!cs.isStartupAll()) {
+			try {
+				cs.initService();
+			}
+			catch(Exception ex) {
+				ex.printStackTrace();
+				
+				if(ex instanceof ChannelException) {
+					final ChannelAccount ca = ((ChannelException) ex).getChannelAccount();
+					if(ca == null) {
+						cs.startupAll();
+						break;
+					}
+					
+					switch(((ChannelException) ex).getExceptionType())
+					{
+					case WEIBO: //如果出现需要微博授权的提示错误
+						 ChannelUtil.showAuthorizeWindow(main, ca.getAccount().getUser(), new WindowAdapter()
+						{
+							public void windowClosing(WindowEvent e) //当用户关闭授权浏览器窗口时，表示跳过此错误
+							{
+								cs.skipService(ca);
+							}
+						});
+						break;
+						
+					case QQ: //如果出现QQ登录需要验证码
+						int option = JOptionPane.showConfirmDialog(main, ex.getMessage(),
+								"是否重试", JOptionPane.YES_NO_OPTION);
+						if(option != JOptionPane.YES_OPTION) {//-1:关闭 1:否 0:是
+							cs.skipService(ca);
+						}
+						break;
+						
+					case MAIL:
+						break;
+					}
+				}
+				else {
+					cs.startupAll();
+					break;
+				}
+			}
+		}		
+		
+		//如果ChannelService没有全部启动完毕，则主线程需要等待
+		synchronized (main)
+		{
+			if(!cs.isStartupAll()) {
+				main.wait();
+			}
+		}
+		cs.start();
 		
 		//开始应用程序：
 		UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
 		UIManager.getDefaults().put("defaultFont", ChannelConstants.DEFAULT_FONT);
+		UIManager.put("ScrollBar.width",10); //滚动条默认宽度
 
 		//使用层面板的方式来布局
 		JLayeredPane mp = main.getLayeredPane();
@@ -143,7 +143,7 @@ public class ChannelGUI extends JFrame
 		channelNativeStore.put("ChannelDesktopPane", desktop);
 		desktop.setBounds(0,40,ChannelDesktopPane.SIZE.width,
 				ChannelDesktopPane.SIZE.height);		
-//		cs.addMessageListener(desktop);
+		cs.addMessageListener(desktop);
 		
 		mp.add(desktop, JLayeredPane.DEFAULT_LAYER);
 		main.setVisible(true);
@@ -155,9 +155,7 @@ public class ChannelGUI extends JFrame
 		for (ChannelMessage m : msgs)
 		{
 			desktop.addMessage(m);
-//			break;
 		}
 	}
-	
 	
 }

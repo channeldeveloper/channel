@@ -4,27 +4,28 @@
  */
 package iqq.model;
 
+import iqq.util.Log;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.text.AbstractDocument.Content;
+
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
-import iqq.util.Log;
-import iqq.util.QQImageUtil;
 
 /**
  *
  * @author chenzhihui
  */
 public class Message implements Serializable {
-
-    private long id;
+	private static final long serialVersionUID = -4241869204979955146L;
+	
+	private long id;
     private Member member;
     private Group group;
     private transient HTMLDocument message;
-    private String shortMsg, completeMsg;
+    private MessageDetail msgDetail;
     private Date createDate;
     private boolean isRead;
 
@@ -76,22 +77,11 @@ public class Message implements Serializable {
         this.message = message;
     }
 
-	public String getShortMsg()
-	{
-		return shortMsg;
+	public MessageDetail getMsgDetail() {
+		return msgDetail;
 	}
-	public void setShortMsg(String shortMsg)
-	{
-		this.shortMsg = shortMsg;
-	}
-
-	public String getCompleteMsg()
-	{
-		return completeMsg;
-	}
-	public void setCompleteMsg(String completeMsg)
-	{
-		this.completeMsg = completeMsg;
+	public void setMsgDetail(MessageDetail msgDetail) {
+		this.msgDetail = msgDetail;
 	}
 
 	@Override

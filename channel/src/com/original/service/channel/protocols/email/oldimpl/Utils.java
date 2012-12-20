@@ -123,22 +123,31 @@ public class Utils {
     	email.setMsgId(msg.getMessageID());
     	email.setContent(msg.getBody());
     	email.setSize(msg.getSize());
-    	email.setSendtime(msg.getSentDate());
 
-    	email.setAddresser(msg.getFromAddr());
-    	email.setReceiver(msg.getChanneAccount().getAccount().getUser());
+    	email.setAddresser(parseHTMLFlags(msg.getFromAddr()));
+    	email.setReceiver(parseHTMLFlags(msg.getChanneAccount().getAccount().getUser()));
     	
     	if (msg.getExtensions() != null)
     	{
     		email.setType(msg.getExtensions().get(Constants.Message_Header_Ext_EMAIL_Foler));
-    		email.setBcc(msg.getExtensions().get(Constants.Message_Header_Ext_EMAIL_BCC));
-    		email.setCc(msg.getExtensions().get(Constants.Message_Header_Ext_EMAIL_CC));
+    		email.setBcc(parseHTMLFlags(msg.getExtensions().get(Constants.Message_Header_Ext_EMAIL_BCC)));
+    		email.setCc(parseHTMLFlags(msg.getExtensions().get(Constants.Message_Header_Ext_EMAIL_CC)));
     		email.setReplayTo(msg.getExtensions().get(Constants.Message_Header_Ext_EMAIL_ReplyTo));
     	}
 
     	email.setMailtitle(msg.getSubject());
-    	email.setSendtime(msg.getSentDate());
+    	email.setSendtime(ChannelMessage.TYPE_SEND.equals(msg.getType()) ? 
+    			msg.getSentDate() : msg.getDate());
 		return email;
+	}
+	
+	public static String parseHTMLFlags(String content)
+	{
+		if(content != null && !content.isEmpty()) {
+			content = content.replaceAll("\\<", "&lt;");
+			content = content.replaceAll("\\>", "&gt;");
+		}
+		return content;
 	}
 	
 }

@@ -8,11 +8,14 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
+
+import sun.swing.SwingUtilities2;
 
 import weibo4j.http.AccessToken;
 import weibo4j.model.WeiboException;
@@ -76,24 +79,33 @@ public class ChannelUtil
 	 * 截取指定长度subLength(单位px)的字符串
 	 * @param text 字符串
 	 * @param fm 字体测量工具
-	 * @param subLength 截取长度
+	 * @param cutLength 截取长度
 	 * @return
 	 */
-	public static String subString(String text, FontMetrics fm, int subLength)
+	public static String cutString(String text, FontMetrics fm, int cutLength)
 	{
-		if(text != null && fm.stringWidth(text) > subLength)
+		if(text != null && fm.stringWidth(text) > cutLength)
 		{
 			int len = 0;
 			for(int i=0 ; i<text.length(); i++)
 			{
 				len += fm.charWidth(text.charAt(i));
-				if(len == subLength) {
-					return text.substring(0, i);
+				if(len == cutLength) {
+					return text.substring(0, i) + "...";
 				}
-				else if(len > subLength) {
-					return text.substring(0, i-1);
+				else if(len > cutLength) {
+					return text.substring(0, i-1) + "...";
 				}
 			}
+		}
+		return text;
+	}
+	public static String cutString(String text, JComponent comp)
+	{
+		if(comp != null && !isEmpty(text)) {
+			FontMetrics fm = SwingUtilities2.getFontMetrics(comp, comp.getFont());
+			int cutLength = comp.getPreferredSize().width - fm.stringWidth("...");
+			return cutString(text, fm, cutLength);
 		}
 		return null;
 	}

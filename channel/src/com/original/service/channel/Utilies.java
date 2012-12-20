@@ -6,10 +6,18 @@
  */
 package com.original.service.channel;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 
 import com.original.service.channel.protocols.email.model.EMail;
+import com.original.service.channel.protocols.email.model.EMailAttachment;
+import com.original.service.channel.protocols.email.oldimpl.Utils;
+import com.original.service.channel.protocols.email.services.MailParseUtil;
+import com.original.service.storage.FileManager;
+import com.original.service.storage.StreamData;
 
 /**
  * 渠道的工具类。
@@ -17,6 +25,26 @@ import com.original.service.channel.protocols.email.model.EMail;
  *
  */
 public class Utilies {
+	
+	static final String MAIL_ATTACH_DIR = System.getProperty("user.home") + 
+			"/channel/mailattach/";
+	
+	static {
+		mkdirs(MAIL_ATTACH_DIR); //如果有其他文件夹，可以事先创建下
+	}
+	
+	public static void mkdirs(String folderDir) {
+		if(folderDir != null && !folderDir.isEmpty()) {
+			File dir = new File(folderDir);
+			if(!dir.exists()) {
+				dir.mkdirs();
+			}
+			else if(dir.isFile()) {
+				dir.delete();
+				dir.mkdirs();
+			}
+		}
+	}
 
 	/**
 	 * Copy 2 POJO
@@ -39,10 +67,7 @@ public class Utilies {
 	 * @return
 	 */
 	public static ChannelMessage email2Channel(EMail email)
-	{
-//		getType()
-//		getXh()
-		
+	{		
 		ChannelMessage msg = new ChannelMessage();
 		msg.setMessageID(email.getMsgId());
 //		msg.setAttachmentIds(email.getAttachments()); Pending franz deal attachment later
@@ -54,9 +79,6 @@ public class Utilies {
 		msg.setContentType(Constants.Content_Type_Text_Html);
 		msg.setClazz(ChannelMessage.MAIL);
 		msg.setDate(email.getSendtime());
-		//设置简短消息和完整消息显示
-		msg.setShortMsg(email.getMailtitle());
-		msg.setCompleteMsg(email.getContent());
 		
 		HashMap<String, Integer> flags = new HashMap<String, Integer>();
 		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_REPLYED,	email.getIsReplay());
@@ -76,11 +98,9 @@ public class Utilies {
 		exts.put(Constants.Message_Header_Ext_EMAIL_Foler, email.getType());
 		msg.setExtensions(exts);
 		msg.setSubject(email.getMailtitle());
-		msg.setRecievedDate(email.getReceivedtime());
-		msg.setSentDate(email.getSendtime());
+//		msg.setRecievedDate(email.getReceivedtime());
+//		msg.setSentDate(email.getSendtime());
 //		msg.setToAddr(ca.getAccount().getUser());
-		
-		
 		return msg;
 	}
 	
@@ -97,7 +117,6 @@ public class Utilies {
 //		email.setAttachmentIds(msg.getAttachments()); Pending franz deal attachment later
 		email.setContent(msg.getBody());
 		email.setSize(msg.getSize());
-		email.setSendtime(msg.getDate());
 		HashMap<String, Integer> flags = msg.getFlags();
 		if (flags != null)
 		{
@@ -124,5 +143,75 @@ public class Utilies {
 
 		return email;
 	}
+	
+	/**
+	 * 将邮件内容中的图片等附件下载到系统缓存
+	 */
+	private static String saveAttachmentToTemp(String content, String emailid, EMailAttachment eatt) 
+	{
+		StreamData sd = FileManager.fetchBinaryFile(new String(eatt.getData()));
+		if (eatt.getCId() != null) {
+			StringBuilder buffer = new StringBuilder();
+			buffer.append(MAIL_ATTACH_DIR).append(emailid).append("/")
+					.append(eatt.getFileName());
+			String filename = buffer.toString();
+			File file = new File(filename);
+			content = content.replace("cid:" + eatt.getCId(), file.getName()); //这里只要显示文件名即可，不要显示全部的地址
+			try {
+				if (!file.isFile()) {
+					sd.writeToFile(filename);
+				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		}
+		return content;
+	}
+	
+	public static String parseMail(ChannelMessage msg) {
+		return parseMail(Utils.channel2Email(msg));
+	}
 
+	/**
+	 * 处理邮件内容，即显示邮件的完整内容
+	 * @param email
+	 */
+	public static String parseMail(EMail email) {
+		if (email != null) {
+			StringBuffer header = new StringBuffer("<font color='#557fc4' style='font-size:13'>");
+			header.append("发件人：").append(email.getAddresser()).append("<br>");
+			header.append("收件人：").append(email.getReceiver()).append("<br>");
+			if(email.getCc() != null) {
+				header.append("抄　送：").append(email.getCc()).append("<br>");
+			}
+			
+			String content = email.getContent();
+			//附件名
+			StringBuilder attach = new StringBuilder();
+			String attachNames = null;
+			
+			List attachList = email.getAttachments();
+			String emailid = email.get_id();
+			if (attachList != null) {
+				for (int l = 0; l < attachList.size(); l++) {
+					EMailAttachment eatt = (EMailAttachment) attachList.get(l);
+					attach.append(eatt.getFileName()).append(";");
+					content = saveAttachmentToTemp(content, emailid, eatt);
+				}
+				attachNames = attach.toString();
+			} 
+			if(attachNames != null) {
+				header.append("附　件：").append(attachNames).append("<br>");
+			}
+			
+			if (content.startsWith("<![CDDATA[")) {
+				content = content.substring(10, content.length() - 2);
+			}
+			content = header.append("</font><br>").append(content).toString();
+			content = MailParseUtil.parseContent(content);
+			return content;
+		}
+		
+		return null;
+	}
 }

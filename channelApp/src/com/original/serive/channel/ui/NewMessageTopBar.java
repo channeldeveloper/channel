@@ -60,7 +60,7 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements EventConst
 	 * @param editable 是否可编辑。
 	 */
 	public NewMessageTopBar(boolean editable) {
-		super(null);
+		super(null, true);
 		this.editable = editable;
 		
 		this.layoutMgr.setAnchor(GridBagConstraints.CENTER);
@@ -84,7 +84,7 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements EventConst
 		JPanel center = new JPanel(new BorderLayout(5,0));
 		center.setPreferredSize(new Dimension(450, 35));//450无意义，主要就是设定输入框的高度
 		JLabel lbTo = new JLabel("To：");
-		lbTo.setForeground(new Color(85,127,196));
+		lbTo.setForeground(ChannelConstants.LIGHT_TEXT_COLOR);
 		center.add(lbTo, BorderLayout.WEST);
 		if(!this.editable) {
 			center.add(lbMsgTo, BorderLayout.CENTER);
@@ -101,7 +101,7 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements EventConst
 	 * 初始化一些控件，如设置图标，颜色等。
 	 */
 	protected void initStatusBar() {
-		Color color = new Color(85,127,196);
+		Color color = ChannelConstants.LIGHT_TEXT_COLOR;
 		Cursor cursor = ChannelConstants.HAND_CURSOR;
 		
 		btnCC.setCursor(cursor);

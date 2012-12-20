@@ -17,6 +17,8 @@ import com.google.code.morphia.annotations.Indexed;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.utils.IndexDirection;
 import com.google.gson.Gson;
+import com.original.service.channel.protocols.im.iqq.QQParser;
+import com.original.service.channel.protocols.sns.weibo.WeiboParser;
 
 /**
  * 渠道的信息对象，一个消息分消息的Header，消息的控制部分Control， 消息的内容Content。 Header是消息的标识，标识消息的主体。
@@ -90,9 +92,6 @@ public class ChannelMessage implements Cloneable{
 	private String contentType;// plaintext, html,xml,json
 	private String body;//
 	private String[] attachmentIds;
-	
-	private String shortMsg; //简短消息, parse
-	private String completeMsg;//完整消息
 
 	/**
 	 * default constructor.
@@ -381,6 +380,17 @@ public class ChannelMessage implements Cloneable{
 	
 	public String getClazz()
 	{
+		if(clazz == null && channeAccount != null) {
+			if("email".equalsIgnoreCase(channeAccount.getChannel().getType())) {
+				clazz = MAIL;
+			}
+			else if("sns_weibo".equalsIgnoreCase(channeAccount.getChannel().getName())) {
+				clazz = WEIBO;
+			}
+			else if("im_qq".equalsIgnoreCase(channeAccount.getChannel().getName())) {
+				clazz = QQ;
+			}
+		}
 		return clazz;
 	}
 	public void setClazz(String clazz) {
@@ -436,20 +446,27 @@ public class ChannelMessage implements Cloneable{
 	
 	public String getShortMsg()
 	{
-		return shortMsg;
-	}
-	public void setShortMsg(String shortMsg)
-	{
-		this.shortMsg = shortMsg;
+		clazz = this.getClazz();
+		if(MAIL.equals(clazz)) {
+			return subject;
+		}
+		else {
+			return body;
+		}
 	}
 
 	public String getCompleteMsg()
 	{
-		return completeMsg;
-	}
-	public void setCompleteMsg(String completeMsg)
-	{
-		this.completeMsg = completeMsg;
+		clazz = this.getClazz();
+		if(WEIBO.equals(clazz)) {
+			return WeiboParser.parse(this);
+		}
+		else if(QQ.equals(clazz)) {
+			return QQParser.parseMessage(this);
+		}
+		else {
+			return  body;
+		}
 	}
 
 	public ChannelMessage clone()
