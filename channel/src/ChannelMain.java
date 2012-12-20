@@ -1,3 +1,4 @@
+import java.util.Iterator;
 import java.util.List;
 
 import com.original.service.channel.ChannelMessage;
@@ -75,8 +76,41 @@ public class ChannelMain {
 		csc.put(Constants.ACTION_QUICK_REPLY, replyMsg);
 		//Pending filter finder(full text search) sort delete.s
 		
+//		delete messages
+		
+		//full text search 
+		MessageManager msgMg = csc.getMsgManager();
+		Iterator<ChannelMessage> result = msgMg.search("franz");
+		while(result.hasNext())
+		{
+			System.out.println("search:"+ result.next());			
+		}
+
+
+		//get by channel clazz
+		result = msgMg.getByChannelType("mail");
+		while(result.hasNext())
+		{
+			System.out.println("getByChannelType:"+ result.next());			
+		}
+		//delete by message ids
+		csc.deleteMessages(msgMg.getByChannelType("email").next().getMessageID());
+		//delete by object id
+		csc.deleteMessage(msgMg.getByChannelType("email").next().getId());
 		
 		
+//		
+//		
+//		//delete messags
+//		//by id
+//		csc.deleteMessage(msgs1.get(0).getId());
+//
+//		//by messageID
+//		csc.deleteMessages(msgs1.get(0).getMessageID());
+//		
+//		//by filter
+//		MessageFilter filter = new MessageFilter("fromAddr", "franzsoong<franzsong@gmail.com>", "recievedDate");
+//		csc.deleteMessages(filter);
 	
 
 		while (true) {
