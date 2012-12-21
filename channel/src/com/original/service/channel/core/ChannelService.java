@@ -672,10 +672,12 @@ public class ChannelService implements Service {
 
 		ArrayList<ChannelMessage> bk = new ArrayList<ChannelMessage>();
 		while (ite.hasNext()) {
-			bk.add(ite.next());
+			ChannelMessage chm = ite.next();
+			bk.add(chm);
+			ds.delete(ChannelMessage.class, chm.getId());
 		}
 		// delete
-		ds.delete(ChannelMessage.class, ite);
+//		ds.delete(ChannelMessage.class, ite);
 		// event to outer
 		ChannelMessage[] msgs = new ChannelMessage[bk.size()];
 		bk.toArray(msgs);
@@ -695,10 +697,12 @@ public class ChannelService implements Service {
 
 		ArrayList<ChannelMessage> bk = new ArrayList<ChannelMessage>();
 		while (ite.hasNext()) {
-			bk.add(ite.next());
+			ChannelMessage chm = ite.next();
+			bk.add(chm);
+			ds.delete(ChannelMessage.class, chm.getId());		
 		}
-		// delete
-		ds.delete(ChannelMessage.class, ite);
+		// delete by interator (exeption)
+//		ds.delete(ChannelMessage.class, ite);
 		// event to outer
 		ChannelMessage[] msgs = new ChannelMessage[bk.size()];
 		bk.toArray(msgs);

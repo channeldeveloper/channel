@@ -29,7 +29,7 @@ public class MessageFilter implements Filter {
 	{
 		this.field = field;
 		this.value = value;
-		this.value = orderField;		
+		this.orderField = orderField;		
 	}
 	
 	public String getField() {

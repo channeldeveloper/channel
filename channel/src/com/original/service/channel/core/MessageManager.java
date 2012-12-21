@@ -233,7 +233,7 @@ public class MessageManager {
 	 */
 	public Iterator<ChannelMessage> getMessage(Filter filter) {
 		// all messages
-		if (filter == null || filter instanceof MessageFilter) {
+		if (filter == null || ! (filter instanceof MessageFilter)) {
 			return ds.createQuery(ChannelMessage.class).iterator();
 
 		}
