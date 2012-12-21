@@ -71,10 +71,12 @@ public class EmailSender{// extends AbstractProcessingResource {
     private String userId = "";
     private List<String> tempfiles = new ArrayList<String>();
     public EMailConfig config = EMailConfig.getEMailConfig();
+//    MailServerMonitor monitor;
     EmailSender(String uid, ChannelAccount ca)
     {
     	this.userId = uid;
     	this.mailAccount = new MailAuthentication("", ca.getAccount().getUser(), ca.getAccount().getPassword(), false);        
+//    	monitor = new MailServerMonitor();
     }
 
     public EmailSender(String _userId) {

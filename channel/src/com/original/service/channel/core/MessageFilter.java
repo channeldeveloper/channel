@@ -43,9 +43,4 @@ public class MessageFilter implements Filter {
 	public String getOrderField() {
 		return orderField;
 	}
-
-	
-	
-	
-
 }
