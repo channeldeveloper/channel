@@ -71,7 +71,6 @@ public class EmailSender{// extends AbstractProcessingResource {
     private String userId = "";
     private List<String> tempfiles = new ArrayList<String>();
     public EMailConfig config = EMailConfig.getEMailConfig();
-    
     EmailSender(String uid, ChannelAccount ca)
     {
     	this.userId = uid;
@@ -437,31 +436,51 @@ public class EmailSender{// extends AbstractProcessingResource {
     	String title = msg.getSubject();
     	this.send(to, from, bccTo, title, content, null);    	
     }
+    Transport transport;
     /**
      *
      * @param _auth 
      * @return
      */
     public String send(MailAuthentication _auth) {
-        try {
-            log.debug("账户信息=" + _auth.getUserName());
-            EMailServer server = config.getEMailServerByUser(mailAccount.getUserName());
-            Properties props = getProperties(server);
-            Transport transport = null;
-            try {
-                MailAuthentication auth = null;
-                if (server != null && server.isIssmtpauth()) {
-                    auth = _auth;
-                }
-                Session session = Session.getInstance(props, auth);
-                transport = session.getTransport("smtp");
-                transport.connect();
-            } catch (Exception e2) {
-                log.debug(e2.getMessage());
-                return "连接服务器时错误！";
-            }
-            log.debug("正在发送邮件....");
+    	
+    	try {
+    		if (transport == null)
+    		{
+    			log.debug("账户信息=" + _auth.getUserName());
+    			EMailServer server = config.getEMailServerByUser(mailAccount.getUserName());
+    			Properties props = getProperties(server);
+    			transport = null;
+    			try {
+    				MailAuthentication auth = null;
+    				if (server != null && server.isIssmtpauth()) {
+    					auth = _auth;
+    				}
+    				Session session = Session.getInstance(props, auth);
+    				transport = session.getTransport("smtp");
+
+//    				transport.addConnectionListener(monitor);
+//    				transport.addTransportListener(monitor);
+
+    				transport.connect();
+    			} catch (Exception e2) {
+    				log.debug(e2.getMessage());
+    				return "连接服务器时错误！";
+    			}
+    		}
+    		else
+    		{
+    			if (!transport.isConnected())
+    			{
+    				transport.connect();
+    			}
+    		}
+
+
+    		log.debug("正在发送邮件....");
+    		mimeMsg.setHeader("cydow_id", "xw385w0q9t8");
             transport.sendMessage(mimeMsg, mimeMsg.getAllRecipients());
+            
             transport.close();
             log.debug("发送邮件成功!");
         } catch (Exception e) {
@@ -473,6 +492,8 @@ public class EmailSender{// extends AbstractProcessingResource {
         }
         return null;
     }
+    
+    
 
     /**
      *

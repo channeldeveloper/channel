@@ -1,9 +1,12 @@
 import java.util.Iterator;
 import java.util.List;
 
+import org.bson.types.ObjectId;
+
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.core.ChannelService;
+import com.original.service.channel.core.MessageFilter;
 import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
@@ -32,7 +35,7 @@ public class ChannelMain {
 		
 		//2 获取All信息,已经按照时间排序
 		
-		MessageManager msm = csc.getMsgManager();
+		/*MessageManager msm = csc.getMsgManager();
 		
 		List<ChannelMessage> msgs = msm.getMessages();
 		
@@ -42,7 +45,7 @@ public class ChannelMain {
 		{
 //			System.out.println("message"+ m);
 			String peopleAddr = m.getFromAddr();//
-			System.out.println("peopleAddr:"+ peopleAddr);
+//			System.out.println("peopleAddr:"+ peopleAddr);
 			
 		}
 		//获取某个人脉的信息,已经按照时间排序
@@ -52,9 +55,9 @@ public class ChannelMain {
 		System.out.println("message count:" + msgs1.size());
 		for (ChannelMessage m : msgs1)
 		{
-			System.out.println("message1"+ m);			
+//			System.out.println("message1"+ m);			
 			String peopleAddr = m.getFromAddr();//
-			System.out.println("peopleAddr:"+ peopleAddr);
+//			System.out.println("peopleAddr:"+ peopleAddr);
 		}
 		//test quick reply
 		//方式1，原来的msg + 内容
@@ -75,43 +78,51 @@ public class ChannelMain {
 		
 		csc.put(Constants.ACTION_QUICK_REPLY, replyMsg);
 		//Pending filter finder(full text search) sort delete.s
-		
-//		delete messages
-		
-		//full text search 
+		*/
+		////////////////////////////查找 过滤和删除
+		//1 全文搜索
 		MessageManager msgMg = csc.getMsgManager();
-		Iterator<ChannelMessage> result = msgMg.search("franz");
+		Iterator<ChannelMessage> result = msgMg.search("Twitter");
 		while(result.hasNext())
 		{
 			System.out.println("search:"+ result.next());			
 		}
 
 
-		//get by channel clazz
-		result = msgMg.getByChannelType("mail");
+		//2 按照类型过滤消息channel clazz
+		result = msgMg.getByChannelType(ChannelMessage.MAIL);
 		while(result.hasNext())
 		{
 			System.out.println("getByChannelType:"+ result.next());			
 		}
-		//delete by message ids
-		csc.deleteMessages(msgMg.getByChannelType("email").next().getMessageID());
-		//delete by object id
-		csc.deleteMessage(msgMg.getByChannelType("email").next().getId());
-		
+		//3 按照类型过滤 消息ID 获取消息
 		
 //		
-//		
-//		//delete messags
-//		//by id
-//		csc.deleteMessage(msgs1.get(0).getId());
-//
-//		//by messageID
-//		csc.deleteMessages(msgs1.get(0).getMessageID());
-//		
-//		//by filter
-//		MessageFilter filter = new MessageFilter("fromAddr", "franzsoong<franzsong@gmail.com>", "recievedDate");
-//		csc.deleteMessages(filter);
-	
+//		//4. 按照过滤器来过滤by filter(Pending).
+		MessageFilter filter = new MessageFilter("fromAddr", "franzsoong<franzsoong@gmail.com>", "recievedDate");
+		result = msgMg.getMessage(filter);
+		while(result.hasNext())
+		{
+			System.out.println("getByChannelType:"+ result.next());			
+		}
+		
+		////////删除////////
+		//1. 删除消息按照 消息ID（消息ID这里有个bug，发送的消息ID都是
+
+		System.out.println("Curent Message Count:" +msgMg.getMessages().size());
+		String msgId = msgMg.getByChannelType(ChannelMessage.MAIL).next().getMessageID();
+		csc.deleteMessages(msgId);
+		System.out.println("Curent Message Count afer delete by message id:" + msgId + " : " +msgMg.getMessages().size());
+		
+		//2 按照类型过滤 消息 数据库ID 获取消息
+		ObjectId id = msgMg.getByChannelType(ChannelMessage.MAIL).next().getId();
+		csc.deleteMessage(id);
+		
+		System.out.println("Curent Message Count afer delete by mail:" +msgMg.getMessages().size());
+		
+
+
+//	
 
 		while (true) {
 			Thread.sleep(1000);
