@@ -4,17 +4,18 @@
  */
 package iqq.service;
 
-import iqq.util.Method;
-import iqq.util.ThreadUtil;
+import iqq.comm.Auth;
+import iqq.comm.Auth.AuthInfo;
+import iqq.model.Category;
+import iqq.model.Member;
 import iqq.util.AbstractNetImage;
+import iqq.util.ImageUtil;
 import iqq.util.JpegNetImage;
 import iqq.util.Log;
-import iqq.util.DateUtils;
+import iqq.util.Method;
 import iqq.util.QQEnvironment;
-import iqq.util.ImageUtil;
-import atg.taglib.json.util.JSONArray;
-import atg.taglib.json.util.JSONException;
-import atg.taglib.json.util.JSONObject;
+import iqq.util.ThreadUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,11 +24,12 @@ import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.swing.ImageIcon;
-import iqq.comm.Auth;
-import iqq.comm.Auth.AuthInfo;
-import iqq.model.Category;
-import iqq.model.Member;
+
+import atg.taglib.json.util.JSONArray;
+import atg.taglib.json.util.JSONException;
+import atg.taglib.json.util.JSONObject;
 
 /**
  *
@@ -65,6 +67,22 @@ public class MemberService {
         }
 
         return getForDownload(ai, uin);
+    }
+    
+    public long getUinByNickName(String nickname) {
+    	if(nickname != null && !nickname.isEmpty()) {
+
+    		List<Category> categoryList = CategoryService.getCategoryList();
+    		if(categoryList != null)
+    			for (Category c : categoryList) {
+    				for (Member m : c.getMemberList()) {
+    					if (nickname.equals(m.getNickname())) {
+    						return m.getUin();
+    					}
+    				}
+    			}
+    	}
+    	return -1L;
     }
 
     public Member getForDownload(AuthInfo ai, long uin) {

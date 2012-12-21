@@ -135,12 +135,12 @@ public class ChannelMessagePane extends JPanel
 	 * @param msg 消息对象
 	 */
 	public void changeMsgLayoutIfNeed(ChannelMessage msg) {
-		if(ChannelMessage.TYPE_RECEIVED == msg.getType()
+		if(ChannelMessage.TYPE_RECEIVED.equals(msg.getType())
 				&& ChannelGridBagLayoutManager.ALIGN_RIGHT == layoutMgr.getAlignment())
 		{
 			changeMsgLayout();
 		}
-		else if(ChannelMessage.TYPE_SEND == msg.getType() 
+		else if(ChannelMessage.TYPE_SEND.equals(msg.getType())
 				&& ChannelGridBagLayoutManager.ALIGN_LEFT == layoutMgr.getAlignment())
 		{
 			changeMsgLayout();

@@ -51,7 +51,7 @@ public class QQReceiver {
 	 */
 	public void start()
 	{
-		backgroud.start();
+//		backgroud.start();
 	}
 
 	/**
@@ -142,7 +142,6 @@ public class QQReceiver {
 		msg.setContentType(Constants.Content_Type_Text_Html);
 		msg.setType(ChannelMessage.TYPE_RECEIVED);
 		msg.setClazz(ChannelMessage.QQ);
-		msg.setDate(qqMsg.getCreateDate());
 		//设置消息
 		MessageDetail detail = qqMsg.getMsgDetail();
 		msg.setBody(detail.getShortMsg());

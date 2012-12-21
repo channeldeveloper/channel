@@ -27,6 +27,7 @@ import weibo4j.model.WeiboException;
 import com.original.service.channel.Account;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
 import com.original.service.channel.Service;
 import com.original.service.channel.core.ChannelException;
 import com.original.service.channel.core.ChannelException.TYPE;
@@ -149,6 +150,13 @@ public class WeiboService implements Service{
 		}
 	}
 	
+	public synchronized static String readToken(ChannelAccount ca) {
+		Account account = null;
+		if(ca != null && (account = ca.getAccount()) != null) {
+			return readToken(account.getUser());
+		}
+		return null;
+	}
 	public synchronized static String readToken(String account) {
 		if(account != null) {
 			return weiboProp.getProperty(account);
@@ -186,6 +194,22 @@ public class WeiboService implements Service{
 		// TODO Auto-generated method stub
 
 	}
+	
+	/**
+	 * 下发一条微博，注意区别发送(回复)类型：快速回复是纯文本，而回复是HTML。
+	 * @param action 回复类型 {@link Constants#ACTION_QUICK_REPLY}和{@link Constants#ACTION_REPLY}
+	 * @param msg 消息对象
+	 */
+	@Override
+	public void put(String action, ChannelMessage msg) throws Exception{
+		// TODO Auto-generated method stub
+		sender.send(action, msg);
+	}
+	
+	@Override
+	public void post(String action, ChannelMessage msg) {
+		// TODO Auto-generated method stub
+	}
 
 	@Override
 	public void stop() {
@@ -201,7 +225,6 @@ public class WeiboService implements Service{
 
 	@Override
 	public void start() {
-		sender.start();
 		receiver.start();
 	}
 
@@ -281,17 +304,4 @@ public class WeiboService implements Service{
 		return 0;
 	}
 
-	@Override
-	public void put(String action, ChannelMessage msg) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void post(String action, ChannelMessage msg) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	// ///////////////////////////////////
 }

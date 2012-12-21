@@ -1,7 +1,15 @@
 package com.original.service.channel.protocols.sns.weibo;
 
+import iqq.service.HttpService;
+import iqq.util.Method;
+
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -16,6 +24,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import weibo4j.http.ImageItem;
 import weibo4j.model.Emotion;
 import weibo4j.model.Source;
 import weibo4j.model.Status;
@@ -39,6 +48,7 @@ public class WeiboParser implements Constants
 			new SimpleDateFormat("MM月dd日 HH:mm");
 	
 	public static final String PREFIX_EMOTION = "emotion_";
+	public static final String IMAGE_PATTERN = "<img src='@url'></img>";
 	private static Lock parserLock = new ReentrantLock();
 	
 	/**
@@ -308,4 +318,134 @@ public class WeiboParser implements Constants
 		return (text == null ? "" : text) +
 				(count == 0 ? "" : "(" + count + ")");
 	}
+	
+	//-------------------------------- 下面用于处理发送微博 --------------------------------//
+	/**
+	 * 提取微博内容中可能含有的图片地址
+	 * @param content
+	 * @return 
+	 */
+	public static String[] fetchImageURL(String content) {
+		if(content != null && !content.isEmpty()) {
+			String regex = Matcher.quoteReplacement(
+					IMAGE_PATTERN.replace("@url", "((file:/|http://|https://).+)"));
+			Matcher matcher = Pattern.compile(regex).matcher(content);
+			if(matcher.find()) {
+				return new String[]{matcher.group(), matcher.group(1)};
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * 处理微博内容(统一编码)，用于快速回复
+	 * @param content
+	 * @return
+	 * @throws WeiboException
+	 */
+	public static String parseUTF8(String content) throws WeiboException{
+//		try {
+//			content = java.net.URLEncoder.encode(content, "utf-8");
+//		} catch (UnsupportedEncodingException e1) {
+//			e1.printStackTrace();
+//		}
+		return content;
+	}
+	
+	/**
+	 * 处理微博内容(统一编码)，用于回复(回复内容比较丰富，如可以有图片等)
+	 * @param content
+	 * @return
+	 * @throws WeiboException
+	 */
+	public static ImageItem parseUTF8(ChannelMessage msg) throws WeiboException
+	{
+		ImageItem imgItem = null;
+		String content = null;
+		if(msg != null && (content = msg.getBody()) != null)
+		{
+			imgItem = new ImageItem();
+			
+			//获取图片
+			String[] imgURLs = fetchImageURL(content);
+			if(imgURLs != null) {
+				content.replace(imgURLs[0], "");//清除图片内容
+				imgItem.setContent(parseBytes(imgURLs[1]));
+			}
+			
+			imgItem.setText(parseUTF8("@" + msg.getToAddr() + "：" + content));
+		}
+		return imgItem;
+	}
+	
+	/**
+	 * 将输入流转换成字节数组，即将文件或网络流转换成字节数组
+	 * @param in 输入流，可以使文件输入流，也可以是Http输入流
+	 * @return
+	 */
+	public static byte[] parseBytes(InputStream in) {
+		if (in != null) {
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			int length = 0;
+			byte[] bytes = null;
+			try {
+				bytes = new byte[1024 * 10];
+				while ((length = in.read(bytes)) != -1) {
+					out.write(bytes, 0, length);
+				}
+				out.flush();
+				
+				bytes = out.toByteArray();
+				return bytes;
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				if (in != null) { //关闭输入流
+					try {
+						in.close();
+					} catch (IOException e) {
+					}
+				}
+				if(out != null) { //关闭输出流
+					try {
+						out.close();
+					} catch(IOException e) {
+					}
+				}
+			}
+		}
+		return null;
+	}
+	public static byte[] parseBytes(File file) {
+		try {
+			return parseBytes(new FileInputStream(file));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	/**
+	 * 将File://或者Http://这些URL地址对应的文件转换成字节数组
+	 * @param url
+	 * @return
+	 */
+	public static byte[] parseBytes(String url) {
+		if(url != null && !url.isEmpty()) {
+			if(url.startsWith("file")) { //文件
+				return parseBytes(new File(url));
+			}
+			else if(url.startsWith("http")) { //网络文件
+				try {
+					HttpService hs = new HttpService(url, Method.GET);
+					return parseBytes(hs.getInputStream());
+				}
+				catch(Exception ex) {
+					ex.printStackTrace(); //网络不通
+				}
+			}
+		}
+		return null;
+    }
+	
 }

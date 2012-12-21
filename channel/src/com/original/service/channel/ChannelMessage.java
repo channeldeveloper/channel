@@ -56,7 +56,7 @@ public class ChannelMessage implements Cloneable{
 
 	private String followedID;
 	@Reference
-	private ChannelAccount channeAccount;
+	private ChannelAccount channelAccount;
 
 	@Indexed(value = IndexDirection.ASC, name = "settimestamp", unique = false, dropDups = false)
 	private Date sentDate;
@@ -133,30 +133,15 @@ public class ChannelMessage implements Cloneable{
 	 * @return the channelID
 	 */
 	public ChannelAccount getChannelAccount() {
-		return channeAccount;
+		return channelAccount;
 	}
 
 	/**
 	 * @param channelID
 	 *            the channelID to set
 	 */
-	public void setChannelAccount(ChannelAccount channeAccount) {
-		this.channeAccount = channeAccount;
-	}
-
-	/**
-	 * @return the date
-	 */
-	public Date getDate() {
-		return recievedDate;
-	}
-
-	/**
-	 * @param date
-	 *            the date to set
-	 */
-	public void setDate(Date date) {
-		this.recievedDate = date;
+	public void setChannelAccount(ChannelAccount channelAccount) {
+		this.channelAccount = channelAccount;
 	}
 
 	/**
@@ -203,24 +188,9 @@ public class ChannelMessage implements Cloneable{
 	public void setType(String type) {
 		this.type = type;
 	}
-
-	/**
-	 * @return the channeAccount
-	 */
-	public ChannelAccount getChanneAccount() {
-		return channeAccount;
-	}
-
-	/**
-	 * @param channeAccount
-	 *            the channeAccount to set
-	 */
-	public void setChanneAccount(ChannelAccount channeAccount) {
-		this.channeAccount = channeAccount;
-	}
 	
 	public String getContactName() {
-		return getPersonName(fromAddr);
+		return getPersonName(TYPE_SEND.equals(type) ? toAddr : fromAddr);
 	}
 	
 	/**
@@ -380,14 +350,14 @@ public class ChannelMessage implements Cloneable{
 	
 	public String getClazz()
 	{
-		if(clazz == null && channeAccount != null) {
-			if("email".equalsIgnoreCase(channeAccount.getChannel().getType())) {
+		if(clazz == null && channelAccount != null) {
+			if("email".equalsIgnoreCase(channelAccount.getChannel().getType())) {
 				clazz = MAIL;
 			}
-			else if("sns_weibo".equalsIgnoreCase(channeAccount.getChannel().getName())) {
+			else if("sns_weibo".equalsIgnoreCase(channelAccount.getChannel().getName())) {
 				clazz = WEIBO;
 			}
-			else if("im_qq".equalsIgnoreCase(channeAccount.getChannel().getName())) {
+			else if("im_qq".equalsIgnoreCase(channelAccount.getChannel().getName())) {
 				clazz = QQ;
 			}
 		}

@@ -415,7 +415,7 @@ public class ChannelService implements Service {
 			return;
 		}
 		for (ChannelMessage m : msg) {
-			ChannelAccount cha = m.getChanneAccount();
+			ChannelAccount cha = m.getChannelAccount();
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				sc.put(action, msg);
@@ -459,7 +459,7 @@ public class ChannelService implements Service {
 			return;
 		}
 		for (ChannelMessage m : msg) {
-			ChannelAccount cha = m.getChanneAccount();
+			ChannelAccount cha = m.getChannelAccount();
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				sc.post(action, msg);
@@ -604,7 +604,7 @@ public class ChannelService implements Service {
 
 					replyMsg.setToAddr(chmsg.getFromAddr());
 					replyMsg.setFromAddr(chmsg.getToAddr());
-					replyMsg.setBody("Re: " + msg.getBody());
+					replyMsg.setBody(msg.getBody());
 					replyMsg.setType(ChannelMessage.TYPE_SEND);
 					msg = replyMsg;
 				}
@@ -612,19 +612,27 @@ public class ChannelService implements Service {
 		}
 
 		if (msg != null) {
-			ChannelAccount cha = msg.getChanneAccount();
+			ChannelAccount cha = msg.getChannelAccount();
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
-				sc.put(action, msg);
+				try {
+					sc.put(action, msg); //下发消息
+					
+					//如果下发成功，则需要保存此消息
+					msg.setType(ChannelMessage.TYPE_SEND); //强制转换
+					msgManager.save(msg);
+				}
+				catch(Exception ex) {
+					logger.log(Level.SEVERE, ex.getMessage());
+				}
 			}
 		}
-
 	}
 
 	@Override
 	public void post(String action, ChannelMessage msg) {
 		if (msg != null) {
-			ChannelAccount cha = msg.getChanneAccount();
+			ChannelAccount cha = msg.getChannelAccount();
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				sc.post(action, msg);

@@ -31,7 +31,7 @@ public interface Service {
 	
 	public abstract void post(String action, List<ChannelMessage> msg);
 	
-	public abstract void put(String action, ChannelMessage msg);
+	public abstract void put(String action, ChannelMessage msg) throws Exception;
 	
 	public abstract void post(String action, ChannelMessage msg);
 

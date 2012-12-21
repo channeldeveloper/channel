@@ -215,7 +215,6 @@ public class EmailReceiver {
 		msg.setType(ChannelMessage.TYPE_RECEIVED);
 		msg.setContentType(Constants.Content_Type_Text_Html);
 		msg.setClazz(ChannelMessage.MAIL);
-		msg.setDate(email.getSendtime());
 		
 		HashMap<String, Integer> flags = new HashMap<String, Integer>();
 		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_REPLYED,	email.getIsReplay());
@@ -237,6 +236,7 @@ public class EmailReceiver {
 		msg.setSubject(email.getMailtitle());
 		msg.setToAddr(ca.getAccount().getUser());
 		
+		msg.setRecievedDate(email.getSendtime());
 		return msg;
 	}
 

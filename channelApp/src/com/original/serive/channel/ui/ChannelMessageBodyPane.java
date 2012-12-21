@@ -12,6 +12,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -32,6 +33,7 @@ import com.original.serive.channel.ChannelGUI;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.border.DottedLineBorder;
 import com.original.serive.channel.layout.VerticalGridLayout;
+import com.original.serive.channel.server.ChannelAccesser;
 import com.original.serive.channel.ui.ChannelMessagePane.MessageContainer;
 import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelConstants;
@@ -39,6 +41,8 @@ import com.original.serive.channel.util.ChannelHyperlinkListener;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
+import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.protocols.sns.weibo.WeiboParser;
 import com.original.widget.OTextField;
 
@@ -185,7 +189,7 @@ public class ChannelMessageBodyPane extends JPanel
 				}
 				
 				ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-				desktop.addOtherShowComp("SHOW_"+newMsg.getContactName(), nw);
+				desktop.addOtherShowComp("SHOWALL_"+newMsg.getContactName(), nw);
 			}
 		}
 	}
@@ -409,7 +413,7 @@ public class ChannelMessageBodyPane extends JPanel
 					messageHeader.setText(msg.getSentDate() == null ? "" : messageFormat.format(msg.getSentDate()));
 				}
 				else {
-					messageHeader.setText(msg.getDate() == null ? "" : messageFormat.format(msg.getDate()));
+					messageHeader.setText(msg.getRecievedDate() == null ? "" : messageFormat.format(msg.getRecievedDate()));
 				}
 				messageHeader.setIconTextGap(10);
 				messageHeader.setHorizontalTextPosition(JLabel.RIGHT);
@@ -433,7 +437,7 @@ public class ChannelMessageBodyPane extends JPanel
 				messageHeader.setBounds(0, 10, dim.width, dim.height);
 				add(messageHeader);
 				
-				if(ChannelMessage.TYPE_SEND != msg.getType()) { //已经回复了，就不再有回复功能
+				if(!ChannelMessage.TYPE_SEND.equals( msg.getType())) { //已经回复了，就不再有回复功能
 					btnReply.setBounds(SIZE.width-(60*2+85), 10, 85, 28);
 					add(btnReply);
 				}
@@ -650,8 +654,16 @@ public class ChannelMessageBodyPane extends JPanel
 					
 					//再新建消息
 					ChannelMessage newMsg = body.iMsg.clone();
+					newMsg.setId(null); //注意，这里是关键
 					newMsg.setType(ChannelMessage.TYPE_SEND);
+					newMsg.setSentDate(new Date());
+					newMsg.setRecievedDate(newMsg.getSentDate());//设置和发送时间一样
 					newMsg.setBody(replyContent);
+					newMsg.setToAddr(body.iMsg.getFromAddr()); //交换一下发送和接受人的顺序
+					newMsg.setFromAddr(body.iMsg.getToAddr());
+					
+					ChannelService cs = 	ChannelAccesser.getChannelService();
+					cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
 					
 					//最后回复消息
 					ChannelDesktopPane desktop = (ChannelDesktopPane)

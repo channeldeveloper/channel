@@ -135,7 +135,6 @@ public class WeiboReceiver {
 		msg.setContentType(Constants.Content_Type_Text_Html);
 		msg.setType(ChannelMessage.TYPE_RECEIVED);
 		msg.setClazz(ChannelMessage.WEIBO);
-		msg.setDate(status.getCreatedAt());
 		
 		//转发数和评论数
 		HashMap<String, Integer> flags = new HashMap<String, Integer>();

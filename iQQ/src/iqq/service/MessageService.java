@@ -181,7 +181,6 @@ public class MessageService extends Thread {
          	MessageDetail md = convertToHTML(ai, value);
          	
              member = memberService.get(ai, from_uin);
-             member = memberService.getMemberAccount(ai, member);
              Message msg = new Message();
              msg.setMember(member);
              msg.setMsgDetail(md);

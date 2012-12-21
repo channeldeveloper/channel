@@ -60,7 +60,6 @@ public class Utils {
 		msg.setSize(email.getSize());
 		//MIME Type Tables		
 		msg.setContentType(Constants.Content_Type_Text_Html);
-		msg.setDate(email.getSendtime());
 		
 		HashMap<String, Integer> flags = new HashMap<String, Integer>();
 		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_REPLYED,	email.getIsReplay());
@@ -81,9 +80,7 @@ public class Utils {
 		msg.setExtensions(exts);
 		msg.setSubject(email.getMailtitle());
 		msg.setRecievedDate(email.getReceivedtime());
-		msg.setSentDate(email.getSendtime());
 		msg.setToAddr(ca.getAccount().getUser());
-		
 		
 		return msg;
 	}
@@ -125,7 +122,7 @@ public class Utils {
     	email.setSize(msg.getSize());
 
     	email.setAddresser(parseHTMLFlags(msg.getFromAddr()));
-    	email.setReceiver(parseHTMLFlags(msg.getChanneAccount().getAccount().getUser()));
+    	email.setReceiver(parseHTMLFlags(msg.getChannelAccount().getAccount().getUser()));
     	
     	if (msg.getExtensions() != null)
     	{
@@ -137,7 +134,7 @@ public class Utils {
 
     	email.setMailtitle(msg.getSubject());
     	email.setSendtime(ChannelMessage.TYPE_SEND.equals(msg.getType()) ? 
-    			msg.getSentDate() : msg.getDate());
+    			msg.getSentDate() : msg.getRecievedDate());
 		return email;
 	}
 	

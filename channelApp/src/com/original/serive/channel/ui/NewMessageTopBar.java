@@ -33,7 +33,7 @@ import com.original.serive.channel.util.IconFactory;
  * @author WMS
  *
  */
-public class NewMessageTopBar extends ChannelMessageTopBar implements EventConstants
+public class NewMessageTopBar extends ChannelMessageTopBar implements ActionListener, EventConstants
 {	
 	AbstractButtonItem newMail = new AbstractButtonItem(null, POST_MAIL, 
 			IconFactory.loadIconByConfig("sendMailIcon"),  IconFactory.loadIconByConfig("sendMailSelectedIcon"), 
@@ -45,7 +45,10 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements EventConst
 					IconFactory.loadIconByConfig("sendWeiboIcon"), 	IconFactory.loadIconByConfig("sendWeiboSelectedIcon"),
 					new Dimension(40, 40));
 	
-	JButton btnCC = new JButton("分享/抄送");
+	JButton btnCC = ChannelUtil.createAbstractButton(
+			new AbstractButtonItem("分享/抄送", ADD_CC, null));
+	JButton btnLinker = ChannelUtil.createAbstractButton(
+			new AbstractButtonItem(null, SELECT_LINKER, IconFactory.loadIconByConfig("linkerIcon")));
 	
 	private boolean editable = false; //是否可编辑。如果为true，则联系人地址可以编辑(文本框)；否则只显示(标签)
 	//由editable来决定是用lbMsgTo还是txtMsgTo
@@ -94,7 +97,10 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements EventConst
 		}
 		layoutMgr.addComToModel(center,1,1,GridBagConstraints.HORIZONTAL);
 		
-		layoutMgr.addComToModel(btnCC);//这里如果有其他按钮，可以放入面板(FlowLayout.RIGHT布局)中。
+		JPanel right = new JPanel(new ChannelGridLayout(-10, 0, new Insets(0, 0, 0, 0)));
+		right.add(btnLinker);
+		right.add(btnCC);
+		layoutMgr.addComToModel(right);
 	}
 	
 	/**
@@ -107,6 +113,9 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements EventConst
 		btnCC.setCursor(cursor);
 		btnCC.setContentAreaFilled(false);
 		btnCC.setForeground(color);
+		btnCC.addActionListener(this);
+		
+		btnLinker.addActionListener(this);
 		
 		lbMsgTo.setHorizontalAlignment(JLabel.LEFT);
 		lbMsgTo.setForeground(color);
@@ -147,6 +156,13 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements EventConst
 		else {
 			lbMsgTo.setText(to);
 		}
+	}
+	
+	//右边控制按钮的操作
+	@Override
+	public void actionPerformed(ActionEvent evt) {
+		// TODO Auto-generated method stub
+		System.out.println(evt.getActionCommand());
 	}
 	
 	/**

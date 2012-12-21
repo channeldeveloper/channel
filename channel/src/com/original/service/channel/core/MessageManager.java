@@ -8,6 +8,7 @@ package com.original.service.channel.core;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 
 import org.bson.types.ObjectId;
 
@@ -54,7 +55,7 @@ public class MessageManager {
 	 */
 	public boolean save(ChannelMessage chMsg)
 	{
-		if (chMsg != null)
+		if (chMsg != null && chMsg.getMessageID() != null)
 		{
 			try
 			{
@@ -80,15 +81,8 @@ public class MessageManager {
 		{
 			for (ChannelMessage chmsg : chMsgs)
 			{
-				try
-				{
-					ds.save(chmsg);
-				}
-				catch(Exception exp)
-				{
-					
-				}
-			}			
+				save(chmsg);
+			}
 		}
 		
 	}
@@ -161,12 +155,48 @@ public class MessageManager {
 	
 	
 	/////////////////Search///////////////
-	
+	/**
+	 * 单一条件查询
+	 * @param field
+	 * @param value
+	 * @param order
+	 * @return
+	 */
 	private Iterator<ChannelMessage> get(String field, String value, String order)
 	{
 		Query<ChannelMessage> q = ds.createQuery(ChannelMessage.class)
 				.field(field).endsWith(value).order(order);
 		return q.iterator();
+	}
+	
+	/**
+	 * 多条件查询
+	 * @param fields
+	 * @param values
+	 * @param order
+	 * @return
+	 */
+	private Iterator<ChannelMessage> get(String[] fields, String[] values, String[] order)
+	{
+		Query<ChannelMessage> query = ds.createQuery(ChannelMessage.class);
+		if(fields != null && values != null) {
+			int size = Math.min(fields.length, values.length);
+			
+			if(size > 0) {
+				for(int i=0; i<size; i++) {
+					query = query.filter(fields[i], values[i]);
+				}
+			}
+		}
+		
+		int size = 0;
+		if(order != null && (size = order.length) > 0) {
+			for(int i=0 ; i<size; i++) {
+				query = query.order(order[i]);
+			}
+		}
+		
+		return query.iterator();
 	}
 	
 	/**
@@ -233,14 +263,34 @@ public class MessageManager {
 	 */
 	public Iterator<ChannelMessage> getMessage(Filter filter) {
 		// all messages
-		if (filter == null || filter instanceof MessageFilter) {
+		if (filter == null) {
 			return ds.createQuery(ChannelMessage.class).iterator();
-
 		}
 		String field = filter.getField();
 		String value = filter.getValue();
 		String order = filter.getOrderField();
 		return get(field, value, order);
+	}
+	
+	public Iterator<ChannelMessage> getMessage(Filter... filters) {
+		if(filters == null || filters.length < 1)
+			return getMessage((Filter)null);
+		else if(filters.length == 1) 
+			return getMessage(filters[0]);
+		
+		Vector<String> fields = new Vector<String>(),
+				values = new Vector<String>(),
+				orders = new Vector<String>();
+		
+		for(Filter filter : filters) {
+			fields.add(filter.getField());
+			values.add(filter.getValue());
+			orders.add(filter.getOrderField());
+		}
+		
+		return get(fields.toArray(new String[fields.size()]),
+				values.toArray(new String[values.size()]), 
+				orders.toArray(new String[orders.size()]));
 	}
 	
 	/////////////////全文搜素(Pending)///////////////

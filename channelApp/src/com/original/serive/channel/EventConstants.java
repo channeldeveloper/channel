@@ -55,4 +55,10 @@ public interface EventConstants
 	String SET_FONT = "set font",
 			ADD_IMAGE = "add image",
 			ADD_FILE = "add file";
+	
+	/*  选择联系人 */
+	String SELECT_LINKER = "select linker";
+	
+	/* 分享/抄送 */
+	String ADD_CC = "add cc";
 }

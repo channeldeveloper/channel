@@ -151,7 +151,7 @@ public class PeopleManager {
 		}
 
 		// Franz Song<franzsong@gmail.com>
-		Channel ch = chMsg.getChanneAccount().getChannel();
+		Channel ch = chMsg.getChannelAccount().getChannel();
 		if (ch.getType().equals(Constants.Channel_Type_Email)) {
 			String fromAddr = chMsg.getFromAddr();
 			if (fromAddr != null && fromAddr.lastIndexOf("<") != -1) {
@@ -179,7 +179,7 @@ public class PeopleManager {
 				p.setName(name);
 				Account ac = new Account();
 				ac.setUser(addr);
-				ac.setChannelName(chMsg.getChanneAccount().getChannel()
+				ac.setChannelName(chMsg.getChannelAccount().getChannel()
 						.getName());
 				p.setAccounts(new Account[]{ac} );
 				ds.save(p);

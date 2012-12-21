@@ -78,7 +78,6 @@ public class Utilies {
 		msg.setType(ChannelMessage.TYPE_RECEIVED);
 		msg.setContentType(Constants.Content_Type_Text_Html);
 		msg.setClazz(ChannelMessage.MAIL);
-		msg.setDate(email.getSendtime());
 		
 		HashMap<String, Integer> flags = new HashMap<String, Integer>();
 		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_REPLYED,	email.getIsReplay());
@@ -98,8 +97,8 @@ public class Utilies {
 		exts.put(Constants.Message_Header_Ext_EMAIL_Foler, email.getType());
 		msg.setExtensions(exts);
 		msg.setSubject(email.getMailtitle());
-//		msg.setRecievedDate(email.getReceivedtime());
-//		msg.setSentDate(email.getSendtime());
+		
+		msg.setRecievedDate(email.getSendtime());
 //		msg.setToAddr(ca.getAccount().getUser());
 		return msg;
 	}

@@ -2,6 +2,7 @@
 
 import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -126,6 +127,7 @@ public class ChannelUtil
 				button.setPreferredSize(item.getSize());
 			
 			if(item.getText() == null) {//如果是图片按钮
+				button.setMargin(new Insets(0, 0, 0, 0));
 				button.setContentAreaFilled(false);
 				button.setCursor(ChannelConstants.HAND_CURSOR);
 				

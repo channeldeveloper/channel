@@ -9,8 +9,6 @@ package com.original.service.channel.protocols.im.iqq;
 
 import iqq.comm.Auth;
 import iqq.comm.Auth.AuthInfo;
-import iqq.model.Category;
-import iqq.model.Member;
 import iqq.service.CategoryService;
 import iqq.service.LoginService;
 import iqq.service.MemberService;
@@ -18,7 +16,6 @@ import iqq.service.MemberService;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.event.EventListenerList;
 
@@ -45,8 +42,6 @@ private static Logger log = OriLog.getLogger(QQService.class);
 private static LoginService loginService = LoginService.getInstance();//QQ登陆服务
 private static MemberService memberService = MemberService.getInstance();//QQ成员服务
 private static CategoryService categoryService = CategoryService.getInstance();//QQ好友服务
-
-private static Map<String, Long> friendsMap = new HashMap<String, Long>();//好友QQ号对应的Uin号(Uin号用于QQ通讯，而不是QQ号)
 	
 	private QQSender sender;
 	private QQReceiver receiver;
@@ -79,36 +74,10 @@ private static Map<String, Long> friendsMap = new HashMap<String, Long>();//好�
 				loginService.login(loginMap);
 				//获取所有好友的信息，同时绑定账号和Uin
 				ai = Auth.getAccountInfo(loginMap.get("account"));
-//				List<Category> categoryList = categoryService.getFriends(ai);
-//				registerFriends(categoryList);
 			}
 			catch(Exception ex) {
 				status = FAILED;
 				throw new ChannelException(ca, TYPE.QQ, ex.getMessage() + "\n是否重试？");
-			}
-		}
-	}
-	
-	/**
-	 * 添加好友账号对应的Uin号
-	 * @param categoryList 好友列表
-	 */
-	private void registerFriends(List<Category> categoryList) 
-	{
-		if(categoryList != null && !categoryList.isEmpty()) {
-			for(Category c : categoryList) {
-				List<Member> memberList = c.getMemberList();
-				for(Member member : memberList)
-				{
-					try
-					{
-						//这里需要严格控制，因为每获取一个好友信息，都需要一次HttpConnect
-						if(member.getUin() > 0 && !friendsMap.containsKey(member.getAccount())) { 
-							member  = memberService.getMemberAccount(ai, member);
-							friendsMap.put(member.getAccount(), member.getUin());
-						}
-					} catch (Exception ex) { }
-				}
 			}
 		}
 	}

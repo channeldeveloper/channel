@@ -96,7 +96,7 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 					}
 					
 					ChannelMessage newMsg = child.iMsg;
-					desktop.removeShowComp("SHOW_"+newMsg.getContactName(), true);
+					desktop.removeShowComp("SHOWALL_"+newMsg.getContactName(), true);
 				}
 			}
 		}
