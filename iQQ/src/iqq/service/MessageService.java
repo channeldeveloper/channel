@@ -26,6 +26,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
 
 import atg.taglib.json.util.JSONArray;
@@ -255,6 +256,19 @@ public class MessageService extends Thread {
         Log.println("用户：" + m.getNickname() + "\t" + status);
         CategoryService.getInstance().changeStatus(ai, m);
     }
+    
+    public boolean sendMsg(AuthInfo ai, long toUin, String text) {
+    	if(text != null && !text.isEmpty()) {
+    		HTMLDocument doc = new HTMLDocument();
+    		try {
+    			doc.insertString(0, text, null);
+    		}
+    		catch(BadLocationException ex) {
+    		}
+    		return sendMsg(ai, toUin, doc);
+    	}
+    	return false;
+    }
 
     public boolean sendMsg(AuthInfo ai, long toUin, HTMLDocument doc) {
         JSONArray msg = QQImageUtil.convertHTMLToFlag(doc);
@@ -313,10 +327,6 @@ public class MessageService extends Thread {
             Log.println("send message to " + toUin + " failure......\n" + e.getMessage());
         }
         return false;
-    }
-
-    public boolean sendMsgToQQ(AuthInfo ai, Long toQQ, String message) {
-        return sendMsg(ai, toQQ, null);
     }
 
     public void receiveGroupMsg(AuthInfo ai, JSONObject value) throws Exception {

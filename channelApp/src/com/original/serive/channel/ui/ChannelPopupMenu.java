@@ -138,7 +138,7 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 				ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(false));
 				cmp.newMessage(newMsg); 
 				ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-				desktop.addOtherShowComp("NEW_"+newMsg.getContactName(),  cmp);
+				desktop.addOtherShowComp(PREFIX_NEW+newMsg.getContactName(),  cmp);
 			}
 		}
 

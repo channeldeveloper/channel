@@ -54,7 +54,7 @@ public class WeiboReceiver {
 	 */
 	public void start()
 	{
-//		backgroud.start();
+		backgroud.start();
 	}
 
 	/**

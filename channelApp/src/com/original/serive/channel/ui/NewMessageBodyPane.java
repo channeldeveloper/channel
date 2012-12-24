@@ -28,6 +28,7 @@ import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
+import com.original.service.channel.ChannelMessage;
 import com.original.widget.OButton;
 import com.original.widget.OScrollBar;
 import com.original.widget.OTextField;
@@ -44,10 +45,23 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	Top top = new Top(); //顶部功能按钮面板
 	Center center = new Center(); //中间编辑面板
 	
+	private ChannelMessage newMsg = null;
+	
 	public NewMessageBodyPane() {
 		setLayout(new VerticalGridLayout(VerticalGridLayout.TOP_TO_BOTTOM, 0, 5, new Insets(5, 0, 5, 0)));
 		add(top);
 		add(center);
+	}
+	
+	/**
+	 * 给当前新建消息面板体添加消息
+	 * @param msg
+	 */
+	public void setMessage2GUI(ChannelMessage msg)
+	{
+		newMsg = msg;
+		//下面开始处理消息：
+		
 	}
 	
 	//顶部功能按钮面板
@@ -104,10 +118,11 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
-			//测试用
 			if(e.getActionCommand() == CANCEL) {
 				ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-				desktop.removeShowComp("NEW_功能演示", true);
+				if(newMsg != null) {
+					desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName(), true);
+				}
 			}
 		}
 	}

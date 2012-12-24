@@ -24,7 +24,7 @@ import com.original.serive.channel.util.IconFactory;
  * @author WMS
  *
  */
-public class ChannelMessageStatusBar extends JPanel implements PropertyChangeListener
+public class ChannelMessageStatusBar extends JPanel implements PropertyChangeListener, EventConstants
 {
 	private ChannelMessageBodyPane body;
 	static Dimension SIZE = new Dimension(

@@ -70,7 +70,7 @@ public class ShowMessageTopBar extends ChannelMessageTopBar
 				.get("ChannelDesktopPane");
 		
 		if(channelMsg != null) {
-			desktop.removeShowComp("SHOW_" + channelMsg.getContactName(), true);
+			desktop.removeShowComp(PREFIX_SHOW + channelMsg.getContactName(), true);
 		}
 		else {
 			desktop.showDefaultComp();

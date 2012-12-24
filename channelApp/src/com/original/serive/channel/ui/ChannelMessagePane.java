@@ -184,6 +184,9 @@ public class ChannelMessagePane extends JPanel
 		if(msg != null && msg.getMessageID() != null)
 		{
 			header.setContactName(msg.getContactName());
+			if(body instanceof NewMessageBodyPane) {
+				((NewMessageBodyPane) body).setMessage2GUI(msg);
+			}
 			setPostMsgLayout();
 		}
 	}

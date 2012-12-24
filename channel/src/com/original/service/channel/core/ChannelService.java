@@ -623,7 +623,7 @@ public class ChannelService implements Service {
 					msgManager.save(msg);
 				}
 				catch(Exception ex) {
-					logger.log(Level.SEVERE, ex.getMessage());
+					ex.printStackTrace();
 				}
 			}
 		}

@@ -60,63 +60,63 @@ public class ChannelGUI extends JFrame
 		//4. 服务不能启动，不影响存库数据(ChannelMessage)访问
 		ChannelGUI main = new ChannelGUI();
 		cs = ChannelAccesser.getChannelService();
-//		cs.setChannelAppOwner(main);
-//		
-//		//渠道服务的控制内部控制。
-//		
-//		while(!cs.isStartupAll()) {
-//			try {
-//				cs.initService();
-//			}
-//			catch(Exception ex) {
-//				ex.printStackTrace();
-//				
-//				if(ex instanceof ChannelException) {
-//					final ChannelAccount ca = ((ChannelException) ex).getChannelAccount();
-//					if(ca == null) {
-//						cs.startupAll();
-//						break;
-//					}
-//					
-//					switch(((ChannelException) ex).getExceptionType())
-//					{
-//					case WEIBO: //如果出现需要微博授权的提示错误
-//						 ChannelUtil.showAuthorizeWindow(main, ca.getAccount().getUser(), new WindowAdapter()
-//						{
-//							public void windowClosing(WindowEvent e) //当用户关闭授权浏览器窗口时，表示跳过此错误
-//							{
-//								cs.skipService(ca);
-//							}
-//						});
-//						break;
-//						
-//					case QQ: //如果出现QQ登录需要验证码
-//						int option = JOptionPane.showConfirmDialog(main, ex.getMessage(),
-//								"是否重试", JOptionPane.YES_NO_OPTION);
-//						if(option != JOptionPane.YES_OPTION) {//-1:关闭 1:否 0:是
-//							cs.skipService(ca);
-//						}
-//						break;
-//						
-//					case MAIL:
-//						break;
-//					}
-//				}
-//				else {
-//					cs.startupAll();
-//					break;
-//				}
-//			}
-//		}		
-//		
-//		//如果ChannelService没有全部启动完毕，则主线程需要等待
-//		synchronized (main)
-//		{
-//			if(!cs.isStartupAll()) {
-//				main.wait();
-//			}
-//		}
-//		cs.start();
+		cs.setChannelAppOwner(main);
+		
+		//渠道服务的控制内部控制。
+		
+		while(!cs.isStartupAll()) {
+			try {
+				cs.initService();
+			}
+			catch(Exception ex) {
+				ex.printStackTrace();
+				
+				if(ex instanceof ChannelException) {
+					final ChannelAccount ca = ((ChannelException) ex).getChannelAccount();
+					if(ca == null) {
+						cs.startupAll();
+						break;
+					}
+					
+					switch(((ChannelException) ex).getExceptionType())
+					{
+					case WEIBO: //如果出现需要微博授权的提示错误
+						 ChannelUtil.showAuthorizeWindow(main, ca.getAccount().getUser(), new WindowAdapter()
+						{
+							public void windowClosing(WindowEvent e) //当用户关闭授权浏览器窗口时，表示跳过此错误
+							{
+								cs.skipService(ca);
+							}
+						});
+						break;
+						
+					case QQ: //如果出现QQ登录需要验证码
+						int option = JOptionPane.showConfirmDialog(main, ex.getMessage(),
+								"是否重试", JOptionPane.YES_NO_OPTION);
+						if(option != JOptionPane.YES_OPTION) {//-1:关闭 1:否 0:是
+							cs.skipService(ca);
+						}
+						break;
+						
+					case MAIL:
+						break;
+					}
+				}
+				else {
+					cs.startupAll();
+					break;
+				}
+			}
+		}		
+		
+		//如果ChannelService没有全部启动完毕，则主线程需要等待
+		synchronized (main)
+		{
+			if(!cs.isStartupAll()) {
+				main.wait();
+			}
+		}
+		cs.start();
 		
 		//开始应用程序：
 		UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");

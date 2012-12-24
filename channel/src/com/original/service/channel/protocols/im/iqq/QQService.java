@@ -72,8 +72,9 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 			
 			try {
 				loginService.login(loginMap);
-				//获取所有好友的信息，同时绑定账号和Uin
 				ai = Auth.getAccountInfo(loginMap.get("account"));
+				//获取好友信息，这一步不能少！！！
+				categoryService.getFriends(ai);
 			}
 			catch(Exception ex) {
 				status = FAILED;
@@ -121,7 +122,6 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 	@Override
 	public void start() {
 		// TODO Auto-generated method stub
-		sender.start();
 		receiver.start();
 
 	}
@@ -204,9 +204,9 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 	}
 
 	@Override
-	public void put(String action, ChannelMessage msg) {
+	public void put(String action, ChannelMessage msg) throws Exception{
 		// TODO Auto-generated method stub
-		
+		sender.put(action, msg);
 	}
 
 	@Override

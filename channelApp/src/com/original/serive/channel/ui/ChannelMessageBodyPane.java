@@ -52,7 +52,7 @@ import com.original.widget.OTextField;
  * @author WMS
  *
  */
-public class ChannelMessageBodyPane extends JPanel
+public class ChannelMessageBodyPane extends JPanel implements EventConstants
 {
 	Vector<ChannelMessage> messageBodyList = new Vector<ChannelMessage>();
 	
@@ -174,22 +174,23 @@ public class ChannelMessageBodyPane extends JPanel
 
 			if(container != null)
 			{
-				ChannelMessagePane old =  (ChannelMessagePane)container.getParent();
+//				ChannelMessagePane old =  (ChannelMessagePane)container.getParent();
 				ChannelMessagePane nw =  new ChannelMessagePane(new ChannelMessageTopBar());
 				for(ChannelMessage msg : messageBodyList)
 				{
 					nw.addMessage(msg, false,false);
 				}
+				nw.body.messageBodyList = messageBodyList;
+//				for(int i = 0; i< Math.min(old.body.getComponentCount(), nw.body.getComponentCount()); i++)
+//				{
+//					Body oldBody = (Body)old.body.getComponent(i);
+//					Body nwBody = (Body)nw.body.getComponent(i);
+//					oldBody.copyTo(nwBody);
+//				}
 				
-				for(int i = 0; i< Math.min(old.body.getComponentCount(), nw.body.getComponentCount()); i++)
-				{
-					Body oldBody = (Body)old.body.getComponent(i);
-					Body nwBody = (Body)nw.body.getComponent(i);
-					oldBody.copyTo(nwBody);
-				}
 				
 				ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-				desktop.addOtherShowComp("SHOWALL_"+newMsg.getContactName(), nw);
+				desktop.addOtherShowComp(PREFIX_SHOWALL+newMsg.getContactName(), nw);
 			}
 		}
 	}
@@ -338,7 +339,7 @@ public class ChannelMessageBodyPane extends JPanel
 			((ShowMessageBodyPane)nw.body).setMessageToGUI(newMsg);
 
 			ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-			desktop.addOtherShowComp("SHOW_"+newMsg.getContactName(), nw);
+			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
 		}
 		
 		//将当前面板的一些属性复制到newBody中。

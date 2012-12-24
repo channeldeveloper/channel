@@ -7,6 +7,11 @@
  */
 public interface EventConstants
 {
+	/*  一些常用功能的前缀 */
+	String PREFIX_SHOW = "SHOW_",
+			PREFIX_SHOWALL = "SHOWALL_",
+			PREFIX_NEW = "NEW_";
+	
 	/* 通用功能 */
 	String QUICK_REPLY = "quick reply"; //快速回复
 	String REPLY = "reply";//回复
