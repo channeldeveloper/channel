@@ -16,6 +16,8 @@ package com.original.service.channel;
  */
 public interface Constants {
 	
+	public enum CHANNEL{MAIL, QQ, WEIBO}
+	
 	public static final String QQ = "QQ",
 			WEIBO = "Weibo",
 			MAIL  = "Mail";
@@ -24,7 +26,6 @@ public interface Constants {
 			TYPE_RECEIVED = "received",
 					TYPE_POST  = "post",
 							TYPE_COMMENT = "comment";
-
 	
 	public static final String CHANEL_NAME_GMAIL = "email_gmail";//type _name
 	public static final String CHANEL_NAME_MAILQQ = "email_qq";

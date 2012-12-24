@@ -1,13 +1,17 @@
 package com.original.serive.channel.ui;
 
+import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -29,7 +33,7 @@ import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
-import com.original.widget.OButton;
+import com.original.service.channel.Constants.CHANNEL;
 import com.original.widget.OScrollBar;
 import com.original.widget.OTextField;
 
@@ -46,31 +50,146 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	Center center = new Center(); //中间编辑面板
 	
 	private ChannelMessage newMsg = null;
+	private LayoutManager childLayout = 
+			new VerticalGridLayout(VerticalGridLayout.TOP_TO_BOTTOM, 0, 5, new Insets(5, 0, 5, 0)),
+			parentLayout = new CardLayout();
+	
+	private boolean isParent = true;
 	
 	public NewMessageBodyPane() {
-		setLayout(new VerticalGridLayout(VerticalGridLayout.TOP_TO_BOTTOM, 0, 5, new Insets(5, 0, 5, 0)));
-		add(top);
-		add(center);
+		this(true);
+	}
+	
+	public NewMessageBodyPane(boolean isParent) {
+		if(isParent) { //用作父面板，即添加如Mail\QQ\Weibo等子面板
+			setLayout(parentLayout);
+		}
+		else {
+			setLayout(childLayout);
+			add(top);
+			add(center);
+		}
+		this.isParent = isParent;
 	}
 	
 	/**
-	 * 给当前新建消息面板体添加消息
-	 * @param msg
+	 * 选择消息Channel新建面板
+	 * @param channel
 	 */
-	public void setMessage2GUI(ChannelMessage msg)
+	public void showChild(CHANNEL channel)
 	{
-		newMsg = msg;
-		//下面开始处理消息：
-		
+		NewMessageBodyPane child = null;
+		if(isParent) {
+			child = newChild(channel);
+			
+			if(child != null) {
+				((CardLayout)parentLayout).show(this, channel.name());
+			}
+		}
 	}
 	
+	private NewMessageBodyPane newChild(CHANNEL channel) {
+		NewMessageBodyPane child = null;
+		if((child = hasChild(channel)) != null)
+		{
+			return child;
+		}
+		
+		child = new NewMessageBodyPane(false);
+		Center ccenter = child.center;
+		switch(channel)
+		{
+		case WEIBO:
+			ccenter.setVisible(0, false); //不显示抄送
+			ccenter.setVisible(1, false);//不显示主题
+			
+			ccenter.setVisible(SET_FONT, false);//没有字体样式
+			ccenter.setVisible(ADD_FILE, false);//没有附件
+			break;
+		case QQ:
+			ccenter.setVisible(0, false); //不显示抄送
+			ccenter.setVisible(1, false);//不显示主题
+			
+			ccenter.setVisible(ADD_FILE, false);//没有附件
+			break;
+			
+		case MAIL: //默认邮件
+		default:
+				break;
+		}
+		child.setName(channel.name()); //注意这里
+		add(channel.name(), child);
+		return child;
+	}
+	
+	/**
+	 * 父面板中是否有Channel对应的子面板
+	 * @param channel
+	 * @return
+	 */
+	private NewMessageBodyPane hasChild(CHANNEL channel)
+	{
+		if(isParent)
+		{
+			for(int i=0; i<getComponentCount(); i++)
+			{
+				Component comp = getComponent(i);
+				if(comp instanceof NewMessageBodyPane
+						&& comp.getName() == channel.name())
+					return ((NewMessageBodyPane)comp);
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * 是否是父面板
+	 * @return
+	 */
+	public boolean isParent() {
+		return isParent;
+	}
+	
+	/**
+	 * 当前显示的子面板
+	 * @return
+	 */
+	public NewMessageBodyPane currentChild() {
+		if(!isParent) 
+			return this;
+		
+		for(int i=0; i<getComponentCount(); i++)
+		{
+			Component comp = getComponent(i);
+			if(comp instanceof NewMessageBodyPane
+					&& comp.isVisible())
+				return (NewMessageBodyPane)comp;
+		}
+		return null;
+	}
+	
+	public void setMessage(ChannelMessage msg)
+	{
+		if(isParent) {
+			NewMessageBodyPane child = currentChild();
+			if(child != null) {
+				child.newMsg = msg;
+			}
+		}
+		else {
+			this.newMsg = msg;
+		}
+	}
+
 	//顶部功能按钮面板
 	public class Top extends JPanel implements ActionListener, EventConstants
 	{
-		OButton btnCancel = new OButton("取消");
 		public Top() {
 			setLayout(new ChannelGridLayout(2, 0, new Insets(0, 10, 0, 0)));
 			setButtomItems(new AbstractButtonItem[] {
+				new AbstractButtonItem("发送", POST, null),
+				new AbstractButtonItem("保存", SAVE, null),
+				new AbstractButtonItem("删除", DELETE, null),
 				new AbstractButtonItem("取消", CANCEL, null),	
 			});
 		}
@@ -120,6 +239,10 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		{
 			if(e.getActionCommand() == CANCEL) {
 				ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
+//				NewMessageBodyPane child = currentChild();
+//				if(child != null && child.newMsg != null) {
+//					desktop.removeShowComp(PREFIX_NEW + child.newMsg.getContactName(), true);
+//				}
 				if(newMsg != null) {
 					desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName(), true);
 				}
@@ -141,6 +264,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 				txtSubject = new OTextField(); //主题
 		
 		//一些功能按钮
+		private JPanel control = new JPanel(new ChannelGridLayout(5, 0, new Insets(0, 5, 0, 0)));
 		private JButton btnFont =(JButton) ChannelUtil.createAbstractButton(
 				new AbstractButtonItem(null, SET_FONT, IconFactory.loadIconByConfig("fontIcon"))), //字体
 				btnImage = (JButton) ChannelUtil.createAbstractButton(
@@ -171,11 +295,10 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			layoutMgr.addComToModel(txtSubject, 1, 1, GridBagConstraints.HORIZONTAL);
 			layoutMgr.newLine(1);
 			
-			JPanel ctrlpane = new JPanel(new ChannelGridLayout(5, 0, new Insets(0, 5, 0, 0)));
-			ctrlpane.add(btnFont);
-			ctrlpane.add(btnImage);
-			ctrlpane.add(btnFile);
-			layoutMgr.addComToModel(ctrlpane,1,1,GridBagConstraints.HORIZONTAL);
+			control.add(btnFont);
+			control.add(btnImage);
+			control.add(btnFile);
+			layoutMgr.addComToModel(control,1,1,GridBagConstraints.HORIZONTAL);
 			layoutMgr.newLine();
 			
 			layoutMgr.addComToModel(new JLabel("内容："));
@@ -192,6 +315,36 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	        scrollPane.setViewportBorder(null);
 	        
 			layoutMgr.addComToModel(scrollPane, 1, 1, GridBagConstraints.BOTH);
+		}
+		
+		/**
+		 * 设置Center面板中某一行显示或隐藏
+		 * @param lineIndex 行索引，从0开始编号
+		 * @param isVisible
+		 */
+		public void setVisible(int lineIndex, boolean isVisible)
+		{
+			layoutMgr.setLineVisible(lineIndex, isVisible);
+		}
+		
+		/**
+		 * 设置Center面板中某一按钮控件显示或隐藏
+		 * @param actionCommand 按钮名称
+		 * @param isVisible
+		 */
+		public void setVisible(String actionCommand, boolean isVisible)
+		{
+			for(int i=0; i<control.getComponentCount(); i++)
+			{
+				Component child = control.getComponent(i);
+				if(child instanceof AbstractButton
+						&& (((AbstractButton) child).getActionCommand() == actionCommand))
+				{
+					if(child.isVisible() != isVisible)
+						child.setVisible(isVisible);
+					break;
+				}
+			}
 		}
 
 		public void actionPerformed(ActionEvent e)

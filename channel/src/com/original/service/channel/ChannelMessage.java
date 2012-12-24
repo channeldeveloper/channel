@@ -37,11 +37,7 @@ import com.original.service.channel.protocols.sns.weibo.WeiboParser;
  * @create 2012-11-11 20:17:13
  */
 @Entity(value = "messages", noClassnameStored = true)
-public class ChannelMessage implements Cloneable{
-	
-	public static final String QQ = "QQ",
-			WEIBO = "Weibo",
-			MAIL  = "Mail";
+public class ChannelMessage implements Cloneable, Constants{
 	//分类(type)
 	private String clazz; //?!
 	
@@ -69,13 +65,8 @@ public class ChannelMessage implements Cloneable{
 	// size
 	private int size;
 
-	// 控制信息MassageControl
-	public static final String TYPE_SEND = "send",
-			TYPE_RECEIVED = "received",
-					TYPE_POST  = "post",
-							TYPE_COMMENT = "comment";
-	
-	private String type = TYPE_RECEIVED;// send received post comment
+	// 控制信息MassageControl	
+	private String type = Constants.TYPE_RECEIVED;// send received post comment
 	@Indexed(value = IndexDirection.ASC, name = "fromwho", unique = false, dropDups = false)
 	private String fromAddr;
 	@Indexed(value = IndexDirection.ASC, name = "towho", unique = false, dropDups = false)
@@ -190,7 +181,10 @@ public class ChannelMessage implements Cloneable{
 	}
 	
 	public String getContactName() {
-		return getPersonName(TYPE_SEND.equals(type) ? toAddr : fromAddr);
+		return getPersonName(getContactAddr());
+	}
+	public String getContactAddr() {
+		return TYPE_SEND.equals(type) ? toAddr : fromAddr;
 	}
 	
 	/**
@@ -200,17 +194,15 @@ public class ChannelMessage implements Cloneable{
 	 */
 	public static  String getPersonName(String emailAddr)
 	{
-		if (emailAddr == null)
-		{
+		if (emailAddr == null) {
 			return "Unknown";
 		}
-		if (emailAddr.indexOf("<") == -1)
-		{
+		int index = -1;
+		if ((index = emailAddr.indexOf("<")) == -1) {
 			return emailAddr;
+		} else {
+			return emailAddr.substring(0, index);
 		}
-		
-		return emailAddr.substring(0, emailAddr.indexOf("<"));
-		
 	}
 
 	/**

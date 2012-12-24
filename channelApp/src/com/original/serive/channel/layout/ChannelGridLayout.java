@@ -9,16 +9,15 @@ import java.awt.LayoutManager;
 /**
  * Channel专用的网格布局，与传统的网格布局不同的是，ChannelGridLayout带有边距设置且单行显示。
  * @author WMS
- * @version 1.0
+ * @version 1.1
+ * @since 1.0 修正了子控件不可见时，仍有边界(bounds)的Bug，同时增加了面板添加方向(isLeftToRight)的控制
  *
  */
 public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
-    /*
-     * serialVersionUID
-     */
-    private static final long serialVersionUID = -7411804673224730901L;
-
-    /**
+	
+	private static final long serialVersionUID = -4382635535050340598L;
+	
+	/**
      * This is the horizontal gap (in pixels) which specifies the space
      * between columns.  They can be changed at any time.
      * This should be a non-negative integer.
@@ -261,19 +260,29 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
 
 			for (int c = 0,  x = insets.left, y = insets.top ; c < ncomponents ; c++, x += hgap) {
 				Component comp = parent.getComponent(c);
-				Dimension dim = comp.getPreferredSize();
-				comp.setBounds(x, y, dim.width, h);
+				if(comp.isVisible()) {
+					Dimension dim = comp.getPreferredSize();
+					comp.setBounds(x, y, dim.width, h);
 
-				x += dim.width;
+					x += dim.width;
+				}
+				else {
+					x -= hgap;
+				}
 			}
 		}
 		else {
 			for (int c = ncomponents,  x = insets.left, y = insets.top ; c > 0 ; c++, x += hgap) {
 				Component comp = parent.getComponent(c-1);
-				Dimension dim = comp.getPreferredSize();
-				comp.setBounds(x, y, dim.width, h);
+				if(comp.isVisible()) {
+					Dimension dim = comp.getPreferredSize();
+					comp.setBounds(x, y, dim.width, h);
 
-				x += dim.width;
+					x += dim.width;
+				}
+				else {
+					x -= hgap;
+				}
 			}
 		}
 	}

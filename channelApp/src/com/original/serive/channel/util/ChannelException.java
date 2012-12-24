@@ -1,7 +1,7 @@
-package com.original.service.channel.core;
+package com.original.serive.channel.util;
 
+import com.original.serive.channel.util.ChannelConstants.TYPE;
 import com.original.service.channel.ChannelAccount;
-import com.original.service.channel.Constants.CHANNEL;
 
 /**
  * ChanelService启动或者运行过程中产生的错误。
@@ -16,18 +16,18 @@ public class ChannelException extends Exception
 	private ChannelAccount channelAccount = null;
 	
 	/** 异常类型 */
-	public CHANNEL channel = null;
+	public TYPE exceptionType = null;
 	
-	public ChannelException(ChannelAccount ca, CHANNEL channel, String msg) {
+	public ChannelException(ChannelAccount ca, TYPE exceptionType, String msg) {
         super(msg);
         this.channelAccount = ca;
-        this.channel = channel;
+        this.exceptionType = exceptionType;
     }
 
-    public ChannelException(ChannelAccount ca, CHANNEL channel, Exception cause) {
+    public ChannelException(ChannelAccount ca, TYPE exceptionType, Exception cause) {
         super(cause);
         this.channelAccount = ca;       
-        this.channel = channel;
+        this.exceptionType = exceptionType;
     }
 
 	public ChannelAccount getChannelAccount()
@@ -38,11 +38,13 @@ public class ChannelException extends Exception
 	{
 		this.channelAccount = channelAccount;
 	}
-
-	public CHANNEL getChannel() {
-		return channel;
+	
+	public TYPE getExceptionType()
+	{
+		return exceptionType;
 	}
-	public void setChannel(CHANNEL exceptionChannel) {
-		this.channel = exceptionChannel;
+	public void setExceptionType(TYPE exceptionType)
+	{
+		this.exceptionType = exceptionType;
 	}
 }

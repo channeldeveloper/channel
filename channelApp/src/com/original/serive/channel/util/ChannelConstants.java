@@ -26,5 +26,8 @@ public interface ChannelConstants
 	
 	//颜色类
 	Color LIGHT_TEXT_COLOR = new Color(85,127,196);
+	
+	//枚举类
+	enum TYPE {MAIL, WEIBO, QQ}
 
 }

@@ -23,6 +23,7 @@ import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.core.ChannelException;
 import com.original.service.channel.core.ChannelService;
+import com.original.service.channel.core.MessageFilter;
 import com.original.service.channel.core.MessageManager;
 
 /**
@@ -60,25 +61,19 @@ public class ChannelGUI extends JFrame
 		//4. 服务不能启动，不影响存库数据(ChannelMessage)访问
 		ChannelGUI main = new ChannelGUI();
 		cs = ChannelAccesser.getChannelService();
-		cs.setChannelAppOwner(main);
 		
 		//渠道服务的控制内部控制。
-		
 		while(!cs.isStartupAll()) {
 			try {
-				cs.initService();
+				cs.restartService();
 			}
 			catch(Exception ex) {
 				ex.printStackTrace();
 				
 				if(ex instanceof ChannelException) {
 					final ChannelAccount ca = ((ChannelException) ex).getChannelAccount();
-					if(ca == null) {
-						cs.startupAll();
-						break;
-					}
 					
-					switch(((ChannelException) ex).getExceptionType())
+					switch(((ChannelException) ex).getChannel())
 					{
 					case WEIBO: //如果出现需要微博授权的提示错误
 						 ChannelUtil.showAuthorizeWindow(main, ca.getAccount().getUser(), new WindowAdapter()
@@ -103,17 +98,9 @@ public class ChannelGUI extends JFrame
 					}
 				}
 				else {
-					cs.startupAll();
+					cs.skipAllService();
 					break;
 				}
-			}
-		}		
-		
-		//如果ChannelService没有全部启动完毕，则主线程需要等待
-		synchronized (main)
-		{
-			if(!cs.isStartupAll()) {
-				main.wait();
 			}
 		}
 		cs.start();
@@ -151,10 +138,10 @@ public class ChannelGUI extends JFrame
 //开始添加信息：
       
 		MessageManager msm =ChannelAccesser.getMsgManager();
-		List<ChannelMessage> msgs = msm.getMessages();
+		List<ChannelMessage> msgs = msm.getMessages(new MessageFilter(null, null, "-recievedDate"));
 		for (ChannelMessage m : msgs)
-		{
-			desktop.addMessage(m);
+		{			
+			desktop.initMessage(m); //注意不要使用addMessage()，用途不一样
 		}
 	}
 	

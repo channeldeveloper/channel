@@ -11,6 +11,7 @@ import iqq.model.Group;
 import iqq.model.Member;
 import iqq.model.Message;
 import iqq.model.MessageDetail;
+import iqq.model.MessageStyle;
 import iqq.ui.MainPanel;
 import iqq.util.GroupUtil;
 import iqq.util.Log;
@@ -269,8 +270,12 @@ public class MessageService extends Thread {
     	}
     	return false;
     }
-
+    
     public boolean sendMsg(AuthInfo ai, long toUin, HTMLDocument doc) {
+    	return sendMsg(ai, toUin, doc, new MessageStyle());
+    }
+
+    public boolean sendMsg(AuthInfo ai, long toUin, HTMLDocument doc, MessageStyle mstyle) {
         JSONArray msg = QQImageUtil.convertHTMLToFlag(doc);
         try {
             JSONObject json = new JSONObject();
@@ -283,18 +288,19 @@ public class MessageService extends Thread {
 //            face.add(0);
 //            msg.add(face);
 //            msg.add(text);
+            if(mstyle == null) mstyle = new MessageStyle();
             JSONArray font = new JSONArray();
             font.add("font");
 
-            JSONObject font1 = new JSONObject().put("name", "宋体").put("size",
-                    "10");
+            JSONObject font1 = new JSONObject().put("name", mstyle.getFontName()).
+            		put("size", ""+mstyle.getFontSize());
 
             JSONArray style = new JSONArray();
-            style.add(0);
-            style.add(0);
-            style.add(0);
+            style.add(mstyle.isBold() ? 1:0); //加粗
+            style.add(mstyle.isItalic() ?1:0);//倾斜
+            style.add(mstyle.isUnderline()?1:0);//下划线
             font1.put("style", style);
-            font1.put("color", "000000");
+            font1.put("color", mstyle.getColor());
 
             font.add(font1);
             msg.add(font);

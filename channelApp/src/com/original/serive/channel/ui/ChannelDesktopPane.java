@@ -7,6 +7,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.awt.Point;
 import java.awt.RadialGradientPaint;
 import java.awt.Rectangle;
@@ -44,12 +45,42 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 	public static JScrollBar DEFAULT_SCROLLBAR = 
 			new OScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)); //默认显示面板的滚动条
 	
+	public static LayoutManager DEFAULT_DOWN_LAYOUT = //默认布局方式
+			new VerticalGridLayout(VerticalGridLayout.BOTTOM_TO_TOP, 0, 8, new Insets(0, 0, 0, 0)), 
+			DEFAULT_UP_LAYOUT = 
+			new VerticalGridLayout(VerticalGridLayout.TOP_TO_BOTTOM, 0, 8, new Insets(0, 0, 0, 0));
+	
+	
 	public ChannelDesktopPane() {
 		setLayout(layoutMgr);
-		DEFAULT_PANE.setLayout(new VerticalGridLayout(
-				VerticalGridLayout.BOTTOM_TO_TOP, 0, 8, new Insets(0, 0, 0, 0)));
+//		DEFAULT_PANE.setLayout(DEFAULT_DOWN_LAYOUT);
 		
 		addDefaultShowComp(DEFAULT_PANE);
+	}
+	
+	/**
+	 * 初始化桌面消息显示列表，注意和addMessage使用的布局方式不同，用法也不同
+	 * @param msg
+	 */
+	public synchronized void initMessage(ChannelMessage msg)
+	{
+		if(!checkMsgValidity(msg))
+			return;
+		
+		ChannelMessagePane msgContainer = null;
+		if (DEFAULT_UP_LAYOUT != DEFAULT_PANE.getLayout()) {
+			DEFAULT_PANE.setLayout(DEFAULT_UP_LAYOUT);
+		}
+		
+		if((msgContainer = findMessage(msg)) == null) {
+			msgContainer = new ChannelMessagePane();
+			msgContainer.addMessage(msg, true);
+			DEFAULT_PANE.add(msgContainer);
+			DEFAULT_PANE.validate();
+		}
+		else {
+			msgContainer.addMessage(msg, true); //注意这里此时只保存msg，不添加面板
+		}
 	}
 	
 	/**
@@ -66,7 +97,10 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 			msgContainer = new ChannelMessagePane();
 		}
 		
-		msgContainer.addMessage(msg, true, false);
+		msgContainer.addMessage(msg, true);
+		if(DEFAULT_DOWN_LAYOUT != DEFAULT_PANE.getLayout()) {
+			DEFAULT_PANE.setLayout(DEFAULT_DOWN_LAYOUT);
+		}
 		DEFAULT_PANE.add(msgContainer);
 		DEFAULT_PANE.validate();
 		
@@ -77,7 +111,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 				(showComp = (JPanel)showComp.getComponent(0)) instanceof ChannelMessagePane)
 		{
 			msgContainer = (ChannelMessagePane)showComp;
-			msgContainer.addMessage(msg, false,false);
+			msgContainer.addMessage(msg, false);
 		}
 	}
 	
@@ -179,7 +213,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 			return;
 		}
 		
-		JPanel otherPane = new JPanel(DEFAULT_PANE.getLayout()); 
+		JPanel otherPane = new JPanel(DEFAULT_DOWN_LAYOUT); 
 		//为载体添加滚动条
 		JScrollPane jsp =  new JScrollPane(otherPane,
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,

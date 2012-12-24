@@ -51,7 +51,7 @@ public class QQReceiver {
 	 */
 	public void start()
 	{
-		backgroud.start();
+//		backgroud.start();
 	}
 
 	/**

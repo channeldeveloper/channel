@@ -27,6 +27,8 @@ import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
+import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants.CHANNEL;
 
 /**
  * 新建消息顶部栏，可以新建已知或未知联系人消息
@@ -45,6 +47,10 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 					IconFactory.loadIconByConfig("sendWeiboIcon"), 	IconFactory.loadIconByConfig("sendWeiboSelectedIcon"),
 					new Dimension(40, 40));
 	
+	JButton btnNewMail = ChannelUtil.createAbstractButton(newMail),
+			btnNewQQ = ChannelUtil.createAbstractButton(newQQ),
+			btnNewWeibo = ChannelUtil.createAbstractButton(newWeibo);
+			
 	JButton btnCC = ChannelUtil.createAbstractButton(
 			new AbstractButtonItem("分享/抄送", ADD_CC, null));
 	JButton btnLinker = ChannelUtil.createAbstractButton(
@@ -57,6 +63,8 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 	
 	private ChannelGridBagLayoutManager layoutMgr = 
 			new ChannelGridBagLayoutManager(this);
+	
+	private ChannelMessage newMsg = null;
 	
 	/**
 	 * 新建消息顶部栏
@@ -79,9 +87,9 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		
 		JPanel left = new JPanel(new ChannelGridLayout(0, 0, new Insets(0,0, 0, 0)));
 		MessageButtonGroup mbg = new MessageButtonGroup();//按钮控制组
-		left.add(mbg.add(newMail));
-		left.add(mbg.add(newQQ));
-		left.add(mbg.add(newWeibo));
+		left.add(mbg.addChild(btnNewMail));
+		left.add(mbg.addChild(btnNewQQ));
+		left.add(mbg.addChild(btnNewWeibo));
 		layoutMgr.addComToModel(left);
 		
 		JPanel center = new JPanel(new BorderLayout(5,0));
@@ -101,6 +109,8 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		right.add(btnLinker);
 		right.add(btnCC);
 		layoutMgr.addComToModel(right);
+		
+		setMessage2GUI();
 	}
 	
 	/**
@@ -144,11 +154,56 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		}
 	}
 	
+	public void setMessage(ChannelMessage msg)
+	{
+//		if(msg != null) {
+//			setMessageTo(msg.getContactAddr());
+//			
+//			String msgClazz = msg.getClazz();
+//			if(ChannelMessage.MAIL.equals(msgClazz)) {
+//				btnNewMail.doClick();
+//			}
+//			else if(ChannelMessage.QQ.equals(msgClazz)) {
+//				btnNewQQ.doClick();
+//			}
+//			else if(ChannelMessage.WEIBO.equals(msgClazz)) {
+//				btnNewWeibo.doClick();
+//			}
+//			
+//			//注意放在最下面
+//			NewMessageBodyPane body = (NewMessageBodyPane)getMessageBody();
+//			body.setMessage(msg);
+//		}
+		
+		this.newMsg = msg;
+	}
+	
+	private void setMessage2GUI() {
+		if(newMsg != null) {
+			setMessageTo(newMsg.getContactAddr());
+			
+			String msgClazz = newMsg.getClazz();
+			if(ChannelMessage.MAIL.equals(msgClazz)) {
+				btnNewMail.doClick();
+			}
+			else if(ChannelMessage.QQ.equals(msgClazz)) {
+				btnNewQQ.doClick();
+			}
+			else if(ChannelMessage.WEIBO.equals(msgClazz)) {
+				btnNewWeibo.doClick();
+			}
+			
+			//注意放在最下面
+			NewMessageBodyPane body = (NewMessageBodyPane)getMessageBody();
+			body.setMessage(newMsg);
+		}
+	}
+	
 	/**
 	 * 设置消息发送地址，即联系人的邮箱地址、QQ账号或微博账号等
 	 * @param to
 	 */
-	public void setMessageTo(String to)
+	private void setMessageTo(String to)
 	{
 		if(editable) {
 			txtMsgTo.setText(to);
@@ -162,7 +217,7 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 	@Override
 	public void actionPerformed(ActionEvent evt) {
 		// TODO Auto-generated method stub
-		System.out.println(evt.getActionCommand());
+		
 	}
 	
 	/**
@@ -174,10 +229,10 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		Hashtable<AbstractButton,Icon> icons = new Hashtable<AbstractButton, Icon>(),
 				selectedIcons = new Hashtable<AbstractButton, Icon>();
 		
-		public AbstractButton add(AbstractButtonItem item)
+		public AbstractButton addChild(final AbstractButton button)
 		{
-			if(item != null) {
-				final	JButton button = (JButton)ChannelUtil.createAbstractButton(item);
+			if(button != null) {
+//				final	JButton button = (JButton)ChannelUtil.createAbstractButton(item);
 				final ButtonModel model  = new JToggleButton.ToggleButtonModel() {
 					public void setSelected(boolean b)
 					{
@@ -218,9 +273,18 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 	       }
 	    }
 
-		public void actionPerformed(ActionEvent e)
+		public void actionPerformed(ActionEvent evt)
 		{
-			System.out.println(e.getActionCommand());
+			NewMessageBodyPane body = (NewMessageBodyPane)getMessageBody();
+			if(evt.getActionCommand() == POST_MAIL) {
+				body.showChild(CHANNEL.MAIL);
+			}
+			else if(evt.getActionCommand() == POST_QQ) {
+				body.showChild(CHANNEL.QQ);
+			}
+			else if(evt.getActionCommand() == POST_WEIBO) {
+				body.showChild(CHANNEL.WEIBO);
+			}
 		}
 	}	
 }

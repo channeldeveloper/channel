@@ -3,6 +3,7 @@ package com.original.serive.channel.ui.data;
 import java.awt.Dimension;
 import java.io.Serializable;
 
+import javax.swing.AbstractButton;
 import javax.swing.Icon;
 
 public class AbstractButtonItem implements Serializable

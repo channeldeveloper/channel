@@ -26,7 +26,6 @@ public class ChannelMain {
 		
 		//1 启动服务
 		ChannelService csc = new ChannelService();
-		csc.initService();
 		
 		//加入自己的监听
 		csc.addMessageListener(listner);

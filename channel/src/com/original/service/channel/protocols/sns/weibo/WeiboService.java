@@ -28,9 +28,9 @@ import com.original.service.channel.Account;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
+import com.original.service.channel.Constants.CHANNEL;
 import com.original.service.channel.Service;
 import com.original.service.channel.core.ChannelException;
-import com.original.service.channel.core.ChannelException.TYPE;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
 import com.original.util.log.OriLog;
@@ -100,7 +100,7 @@ public class WeiboService implements Service{
 	private void checkValidAccessToken(ChannelAccount account, String token) throws ChannelException
 	{
 		if(token == null || token.length() < 32) {
-			ChannelException ex = new ChannelException(account,TYPE.WEIBO,
+			ChannelException ex = new ChannelException(account,CHANNEL.WEIBO,
 					"You need to authorize your weibo account first " +
 					"before using WeiboService!");
 			throw ex;
@@ -116,11 +116,11 @@ public class WeiboService implements Service{
 		catch(WeiboException ex) {
 			if ("expired_token".equals(ex.getError()) || 21327 == ex.getErrorCode())
 			{
-				throw new ChannelException(account ,TYPE.WEIBO,
+				throw new ChannelException(account ,CHANNEL.WEIBO,
 						"Weibo AccessToken has been expired, " +
 						"you need to reauthorize your weibo account again!");
 			} else {
-			    throw new ChannelException(null, TYPE.WEIBO,  ex);
+			    throw new ChannelException(null, CHANNEL.WEIBO,  ex);
 			}
 		}
 	}

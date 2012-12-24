@@ -32,6 +32,7 @@ import javax.swing.text.html.StyleSheet;
 import com.original.serive.channel.ChannelGUI;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.border.DottedLineBorder;
+import com.original.serive.channel.border.SingleLineBorder;
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.server.ChannelAccesser;
 import com.original.serive.channel.ui.ChannelMessagePane.MessageContainer;
@@ -104,15 +105,37 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					new PropertyChangeEvent(this, changePropertyName, oldValue, newValue));
 		}
 	}
+	
+	/**
+	 * 直接将消息保存至消息列表中，注意不添加至面板中。
+	 * @param msg 消息对象
+	 */
+	public void addMessage2List(ChannelMessage msg)
+	{
+		if(msg != null) {
+			messageBodyList.add(msg);
+			
+			//同时改变消息数
+			if(ChannelMessage.MAIL.equals(msg.getClazz())) {
+				fireMessageChange(MAIL_COUNT_CHANGE_PROPERTY, 0, 1);
+			}
+			else if(ChannelMessage.QQ.equals(msg.getClazz())) {
+				fireMessageChange(QQ_COUNT_CHANGE_PROPERTY, 0, 1);
+			}
+			else if(ChannelMessage.WEIBO.equals(msg.getClazz())) {
+				fireMessageChange(WEIBO_COUNT_CHANGE_PROPERTY, 0, 1);
+			}
+		}
+	}
 
 	/**
 	 * 当前面板List中添加消息，默认添加在第一行。
 	 * @param msg 消息对象
 	 * @param addFirst 若为true则只添加最新一条(第一条)；若为false则添加全部
 	 */
-	public void addMessage(ChannelMessage msg, boolean addFirst, boolean showAll) 
+	public void addMessage(ChannelMessage msg, boolean addFirst) 
 	{
-		ChannelMessageBodyPane.Body body = new ChannelMessageBodyPane.Body(msg, addFirst, showAll);
+		ChannelMessageBodyPane.Body body = new ChannelMessageBodyPane.Body(msg, addFirst);
 		
 		if(addFirst) {		
 			this.removeAll();
@@ -130,7 +153,9 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 						new DottedLineBorder(DottedLineBorder.BOTTOM, new Color(213, 213, 213), new float[]{3f,4f})));
 			}
 			else { //第一个面板的边框
-				body.setBorder(new EmptyBorder(0, 10, 0, 10));
+				body.setBorder(BorderFactory.createCompoundBorder(
+						new EmptyBorder(0, 10, 0, 10), 
+						new SingleLineBorder(SingleLineBorder.BOTTOM, new Color(0, 0, 0, 0), true)));
 			}
 			this.add(body);
 			this.validate();
@@ -178,7 +203,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				ChannelMessagePane nw =  new ChannelMessagePane(new ChannelMessageTopBar());
 				for(ChannelMessage msg : messageBodyList)
 				{
-					nw.addMessage(msg, false,false);
+					nw.addMessage(msg, false);
 				}
 				nw.body.messageBodyList = messageBodyList;
 //				for(int i = 0; i< Math.min(old.body.getComponentCount(), nw.body.getComponentCount()); i++)
@@ -209,7 +234,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		boolean addFirst;
 		
 		public Body() { }
-		public Body(ChannelMessage msg, boolean addFirst, boolean showAll)
+		public Body(ChannelMessage msg, boolean addFirst)
 		{
 			this.iMsg = msg;
 			this.addFirst = addFirst;
@@ -230,9 +255,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 //			add(bottom);
 			
 			analyzeMessage(msg);
-			if(showAll) {
-				doQuickReply(true);
-			}
 		}
 		
 		/**

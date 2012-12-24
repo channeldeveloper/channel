@@ -95,7 +95,21 @@ public class MessageManager {
 	 */
 	public List<ChannelMessage> getMessages() {
 		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class).order(
-				"recievedDate");
+				"-recievedDate");
+		List<ChannelMessage> chmsgs = chmsgQuery.asList();
+
+		return chmsgs;
+	}
+	
+	public List<ChannelMessage> getMessages(Filter filter) {
+		
+		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class);
+		if(filter != null && filter.getField() != null) {
+			chmsgQuery = chmsgQuery.filter(filter.getField(), filter.getValue());
+		}
+		if(filter != null && filter.getOrderField() != null) {
+			chmsgQuery = chmsgQuery.order(filter.getOrderField() );
+		}
 		List<ChannelMessage> chmsgs = chmsgQuery.asList();
 
 		return chmsgs;
@@ -121,7 +135,7 @@ public class MessageManager {
 	public List<ChannelMessage> getMessagesByFrom(String fromAddr) {
 		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class)
 				.field("fromAddr").endsWithIgnoreCase(fromAddr)
-				.order("recievedDate");
+				.order("-recievedDate");
 		List<ChannelMessage> chmsgs = chmsgQuery.asList();
 		return chmsgs;
 	}
@@ -208,7 +222,7 @@ public class MessageManager {
 	{	
 		String field = "clazz";
 		String value = channelType;
-		String order = "recievedDate";
+		String order = "-recievedDate";
 		return get(field, value, order);
 	}
 	
@@ -234,7 +248,7 @@ public class MessageManager {
 	{
 		String field = "messageID";
 		String value = msgID;
-		String order = "recievedDate";
+		String order = "-recievedDate";
 		return get(field, value, order);
 	}
 	
@@ -247,7 +261,7 @@ public class MessageManager {
 	{
 		String field = "status";
 		String value = status;
-		String order = "recievedDate";
+		String order = "-recievedDate";
 		return get(field, value, order);
 	}
 	

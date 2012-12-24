@@ -152,13 +152,13 @@ public class ChannelMessagePane extends JPanel
 	 * @param msg 消息对象
 	 * @param addFirst 若为true则只添加最新一条(第一条)；若为false则添加全部
 	 */
-	public void addMessage(ChannelMessage msg, boolean addFirst, boolean showAll)
+	public void addMessage(ChannelMessage msg, boolean addFirst)
 	{
 		String uName = msg.getContactName();
 		if(uid == null) { //第一次添加，需要设置布局
 			uid = uName;
 
-			body.addMessage(msg, addFirst,showAll);
+			body.addMessage(msg, addFirst);
 			header.setContactName(uName);
 			
 			if(ChannelMessage.TYPE_RECEIVED.equals(msg.getType())) { //是接受过来的消息
@@ -168,7 +168,13 @@ public class ChannelMessagePane extends JPanel
 			}
 		}
 		else if(uid.equals(uName)) {
-			body.addMessage(msg, addFirst,showAll);
+			if(addFirst) {
+				body.addMessage2List(msg);
+			}
+			else
+			{
+				body.addMessage(msg, addFirst);
+			}
 			
 			changeMsgLayoutIfNeed(msg); //检查是否要改变消息布局方向
 		}
@@ -184,8 +190,8 @@ public class ChannelMessagePane extends JPanel
 		if(msg != null && msg.getMessageID() != null)
 		{
 			header.setContactName(msg.getContactName());
-			if(body instanceof NewMessageBodyPane) {
-				((NewMessageBodyPane) body).setMessage2GUI(msg);
+			if(statusBar instanceof NewMessageTopBar) {
+				((NewMessageTopBar) statusBar).setMessage(msg);
 			}
 			setPostMsgLayout();
 		}

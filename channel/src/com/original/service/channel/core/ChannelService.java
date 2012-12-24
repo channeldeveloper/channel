@@ -66,11 +66,7 @@ public class ChannelService implements Service {
 
 	java.util.logging.Logger logger;
 
-	//
-	Object channelAppOwner = null;// 当前主服务被使用者(即Channel应用程序)
-	private boolean isStartupAll = false;// 所有的子服务，如Mail、QQ、Weibo等是否全部启动成功
-	// 当ChannelAccount对应的服务未启动成功时，用户可以跳过
-	private Vector<ChannelAccount> skipAccounts = new Vector<ChannelAccount>();
+	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
 
 	/**
 	 * 
@@ -260,23 +256,6 @@ public class ChannelService implements Service {
 		this.listenerList = listenerList;
 	}
 
-	public boolean isStartupAll() {
-		return isStartupAll;
-	}
-
-	// public void setStartupAll(boolean isStartupAll)
-	// {
-	// this.isStartupAll = isStartupAll;
-	// }
-
-	public Object getChannelAppOwner() {
-		return channelAppOwner;
-	}
-
-	public void setChannelAppOwner(Object channelAppOwner) {
-		this.channelAppOwner = channelAppOwner;
-	}
-
 	private void initMongoDB() {
 		logger = Logger.getLogger("channer");
 		morphia = new Morphia();
@@ -314,70 +293,26 @@ public class ChannelService implements Service {
 		channelServer = new ChannelServer(morphia, mongo, ds);
 		peopleManager = new PeopleManager(morphia, mongo, ds);
 		serviceMap = new HashMap<ChannelAccount, Service>();
-	}
-
-	/**
-	 * 初始服务，可以由isStartupAll == false来判断(通常放在循环体中) Franz Pending
-	 * 渠道服务是自管理的，即主框架启动就启动，ChannelApp不启动也不影响
-	 * 
-	 * @throws Exception
-	 */
-	@Deprecated
-	public synchronized void initService() throws Exception {
-		if (isStartupAll) // 如果已经全部启动了，就不需要再次启动
-			return;
-
-		HashMap<String, ChannelAccount> cas = channelServer
-				.getChannelAccounts();
-
+		
+		HashMap<String, ChannelAccount> cas = channelServer.getChannelAccounts();
 		for (String key : cas.keySet()) {
 			ChannelAccount ca = cas.get(key);
-			// 表示忽略此服务启动 或者 该服务已经成功启动
-			if (skipAccounts.contains(ca) || serviceMap.containsKey(ca))
-				continue;
+			if (serviceMap.containsKey(ca))
+				continue; 
 
-			Service sc = createService(ca); // 这里可能会报错，一旦报错isStartupAll永远不会是true
-			if (sc != null) {
-				serviceMap.put(ca, sc);
-				sc.addMessageListener(new ChannelServiceListener());
+			try {
+				Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
+				if (sc != null) {
+					serviceMap.put(ca, sc);
+					sc.addMessageListener(new ChannelServiceListener());
+				}
+			}
+			catch(Exception ex) {
+				failedServiceAccounts.add(ca);
 			}
 		}
-
-		startupAll();
-
 	}
-
-	/**
-	 * 当ChannelAccount对应的服务未启动成功时，用户可以跳过
-	 * 
-	 * @param ca
-	 */
-
-	public synchronized void skipService(ChannelAccount ca) {
-		if (ca != null && !skipAccounts.contains(ca)) {
-			skipAccounts.add(ca);
-		}
-	}
-
-	// 服务和GUI要区分。
-
-	/**
-	 * 强制启动主线程程序，即使所有的子服务都没有启动成功！ 一般用于特殊情况，如捕获到未知异常等。
-	 */
-
-	public void startupAll() {
-		if (isStartupAll)
-			return;
-
-		isStartupAll = true;
-		if (channelAppOwner != null) {
-			synchronized (channelAppOwner) {
-				channelAppOwner.notifyAll();
-			}
-		}
-
-	}
-
+	
 	/**
 	 * Pending Use Plug-in register to do this.
 	 * 
@@ -401,7 +336,45 @@ public class ChannelService implements Service {
 		}
 		return null;
 	}
-
+	
+	/**
+	 * 对于未启动成功的服务可以再次重启
+	 * @throws Exception
+	 */
+	public synchronized void restartService() throws Exception {
+		if(!failedServiceAccounts.isEmpty()) {
+			ChannelAccount ca = failedServiceAccounts.firstElement();
+			restartService(ca);
+		}
+	}
+	public synchronized void restartService(ChannelAccount ca) throws Exception {
+		Service sc = createService(ca);
+		if (sc != null) {
+			serviceMap.put(ca, sc);
+			failedServiceAccounts.remove(ca);
+			sc.addMessageListener(new ChannelServiceListener());
+		}
+	}
+	
+	/**
+	 * 如果服务未启动成功，用户可以选择跳过
+	 * @param ca
+	 */
+	public void skipService(ChannelAccount ca) {
+		failedServiceAccounts.remove(ca);
+	}	
+	public void skipAllService() {
+		failedServiceAccounts.clear();
+	}
+	
+	/**
+	 * 判断服务是否都已启动成功
+	 * @return
+	 */
+	public boolean isStartupAll() {
+		return failedServiceAccounts.isEmpty();
+	}
+	
 	@Override
 	public List<ChannelMessage> get(String action, String query) {
 		// TODO Auto-generated method stub

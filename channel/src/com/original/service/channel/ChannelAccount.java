@@ -153,7 +153,7 @@ public class ChannelAccount implements Serializable{
 	@Override
 	public int hashCode()
 	{	
-		return id == null ? -1 : id.getInc();
+		return id == null ? -1 : id.hashCode();
 	}
 	@Override
 	public boolean equals(Object obj)

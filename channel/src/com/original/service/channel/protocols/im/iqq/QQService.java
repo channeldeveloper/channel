@@ -24,9 +24,9 @@ import org.apache.log4j.Logger;
 import com.original.service.channel.Account;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants.CHANNEL;
 import com.original.service.channel.Service;
 import com.original.service.channel.core.ChannelException;
-import com.original.service.channel.core.ChannelException.TYPE;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
 import com.original.util.log.OriLog;
@@ -78,7 +78,7 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 			}
 			catch(Exception ex) {
 				status = FAILED;
-				throw new ChannelException(ca, TYPE.QQ, ex.getMessage() + "\n是否重试？");
+				throw new ChannelException(ca, CHANNEL.QQ, ex.getMessage() + "\n是否重试？");
 			}
 		}
 	}
