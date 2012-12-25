@@ -1,13 +1,16 @@
 ﻿import java.util.Iterator;
+import java.util.List;
 
 import org.bson.types.ObjectId;
 
+import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.core.MessageFilter;
 import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
+import com.original.service.storage.GridFSUtil;
 
 
 
@@ -118,7 +121,32 @@ public class ChannelMain {
 		
 		System.out.println("Curent Message Count afer delete by mail:" +msgMg.getMessages().size());
 		
+		
+		//attachments
+		List<ChannelMessage> msgs = msgMg.getMessages();
+		
+		System.out.println("message count:" + msgs.size());
+		
+		for (ChannelMessage m : msgs)
+		{
+			List<Attachment> atts = m.getAttachments();
+			if (atts != null && atts.size() > 0)
+			{
+				for (Attachment a : atts)
+				{
+					//信息
+					System.out.println("Attachment:" + a);
+					System.out.println(a.getFileName());
+					System.out.println(a.getFileId());
+					System.out.println(a.getSize());
+					System.out.println(a.getType());
+					//写入本地文件
+					GridFSUtil.getGridFSUtil().writeFile( a.getFileId(), "c:/"+ a.getFileName());
+			
+				}
+			}
 
+		}
 
 //	
 
