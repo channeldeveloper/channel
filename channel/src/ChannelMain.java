@@ -1,10 +1,8 @@
-import java.util.Iterator;
-import java.util.List;
+﻿import java.util.Iterator;
 
 import org.bson.types.ObjectId;
 
 import com.original.service.channel.ChannelMessage;
-import com.original.service.channel.Constants;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.core.MessageFilter;
 import com.original.service.channel.core.MessageManager;
@@ -25,7 +23,8 @@ public class ChannelMain {
 		MyListener listner = new MyListener();
 		
 		//1 启动服务
-		ChannelService csc = new ChannelService();
+		ChannelService csc = ChannelService.instance();
+//		csc.initService();
 		
 		//加入自己的监听
 		csc.addMessageListener(listner);
@@ -58,7 +57,7 @@ public class ChannelMain {
 			String peopleAddr = m.getFromAddr();//
 //			System.out.println("peopleAddr:"+ peopleAddr);
 		}
-		//test quick reply
+		//test quickly reply
 		//方式1，原来的msg + 内容
 		ChannelMessage first = msgs1.get(0);
 		ChannelMessage replyMsg = first.clone();

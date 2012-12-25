@@ -7,10 +7,10 @@ import javax.swing.event.EventListenerList;
 
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
 import com.original.service.channel.Service;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
-import com.original.service.channel.protocols.email.oldimpl.Utils;
 
 public class EmailService implements Service {
 
@@ -137,6 +137,11 @@ public class EmailService implements Service {
 	public void put(String action, ChannelMessage msg) {
 		// TODO Auto-generated method stub
 		//发送消息
+		if (action.equalsIgnoreCase(Constants.ACTION_QUICK_REPLY))
+		{
+			msg.setSubject("Re:" + (msg.getSubject() == null ? "" : msg.getSubject()));
+		}
+		
 		this.sender.send(msg);
 		//派发事件给监听（存盘、更新视图）
 		ChannelMessage[] cmsg = new ChannelMessage[1];

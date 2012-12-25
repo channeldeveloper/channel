@@ -8,9 +8,11 @@ package com.original.service.channel;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import org.bson.types.ObjectId;
 
+import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Indexed;
@@ -82,7 +84,12 @@ public class ChannelMessage implements Cloneable, Constants{
 	private String subject;// 主题，邮件主题，微博主题
 	private String contentType;// plaintext, html,xml,json
 	private String body;//
+	
+	@Deprecated
 	private String[] attachmentIds;
+	
+	@Embedded
+	private List<Attachment> attachments;
 
 	/**
 	 * default constructor.
@@ -250,14 +257,6 @@ public class ChannelMessage implements Cloneable, Constants{
 	}
 
 	/**
-	 * @param flags
-	 *            the flags to set
-	 */
-	public void setFlags(HashMap flags) {
-		this.flags = flags;
-	}
-
-	/**
 	 * @return the subject
 	 */
 	public String getSubject() {
@@ -305,6 +304,7 @@ public class ChannelMessage implements Cloneable, Constants{
 	/**
 	 * @return the attachmentIds
 	 */
+	@Deprecated
 	public String[] getAttachmentIds() {
 		return attachmentIds;
 	}
@@ -313,8 +313,37 @@ public class ChannelMessage implements Cloneable, Constants{
 	 * @param attachmentIds
 	 *            the attachmentIds to set
 	 */
+	@Deprecated
 	public void setAttachmentIds(String[] attachmentIds) {
 		this.attachmentIds = attachmentIds;
+	}
+
+	/**
+	 * @return the attachments
+	 */
+	public List<Attachment> getAttachments() {
+		return attachments;
+	}
+
+	/**
+	 * @param attachments the attachments to set
+	 */
+	public void setAttachments(List<Attachment> attachments) {
+		this.attachments = attachments;
+	}
+
+	/**
+	 * @param extensions the extensions to set
+	 */
+	public void setExtensions(HashMap<String, String> extensions) {
+		this.extensions = extensions;
+	}
+
+	/**
+	 * @param flags the flags to set
+	 */
+	public void setFlags(HashMap<String, Integer> flags) {
+		this.flags = flags;
 	}
 
 	/**
@@ -333,13 +362,9 @@ public class ChannelMessage implements Cloneable, Constants{
 	}
 
 	/**
-	 * @param extensions
-	 *            the extensions to set
+	 * 
+	 * @return
 	 */
-	public void setExtensions(HashMap extensions) {
-		this.extensions = extensions;
-	}
-	
 	public String getClazz()
 	{
 		if(clazz == null && channelAccount != null) {

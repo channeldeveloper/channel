@@ -301,15 +301,15 @@ public class Channel {
 
 		morphia.map(com.original.service.channel.Channel.class);
 		// DB
-		Mongo mongo = new Mongo("localhost", 27017);
-		DB db = mongo.getDB("song");
+		Mongo mongo = new Mongo(Constants.Channel_DB_Server, Constants.Channel_DB_Server_Port);
+		DB db = mongo.getDB(Constants.Channel_DB_Name);
 
 		// db mapping to object
-		Datastore ds = morphia.createDatastore(mongo, "song");
+		Datastore ds = morphia.createDatastore(mongo, Constants.Channel_DB_Name);
 		ds.ensureIndexes();
 
 		// by mongo db
-		DBCursor cursor = db.getCollection("channel").find();
+		DBCursor cursor = db.getCollection(Constants.Channel_Collection_Channel).find();
 		while (cursor.hasNext()) {
 			System.out.println(cursor.next());
 		}

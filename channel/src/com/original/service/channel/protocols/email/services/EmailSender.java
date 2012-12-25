@@ -29,11 +29,14 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 
 import org.apache.log4j.Logger;
+import org.bson.types.ObjectId;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import com.mongodb.gridfs.GridFSDBFile;
+import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
@@ -41,9 +44,7 @@ import com.original.service.channel.protocols.email.model.EMail;
 import com.original.service.channel.protocols.email.model.EMailAttachment;
 import com.original.service.channel.protocols.email.vendor.EMailConfig;
 import com.original.service.channel.protocols.email.vendor.EMailServer;
-import com.original.service.storage.FileExchange;
-import com.original.service.storage.FileManager;
-import com.original.service.storage.StreamData;
+import com.original.service.storage.GridFSUtil;
 import com.original.util.log.OriLog;
 
 /**
@@ -72,29 +73,25 @@ public class EmailSender{// extends AbstractProcessingResource {
     private List<String> tempfiles = new ArrayList<String>();
     public EMailConfig config = EMailConfig.getEMailConfig();
 //    MailServerMonitor monitor;
+    /**
+     * 
+     * @param uid
+     * @param ca
+     */
     EmailSender(String uid, ChannelAccount ca)
     {
     	this.userId = uid;
     	this.mailAccount = new MailAuthentication("", ca.getAccount().getUser(), ca.getAccount().getPassword(), false);        
-//    	monitor = new MailServerMonitor();
     }
 
-    public EmailSender(String _userId) {
-        userId = _userId;
-        mailAccount = new MailAuthentication("Song XueYong", "franzsoong@gmail.com", "syzb1234", false);
-//        config = new EMailConfig(mailAccount);
-//        config.loadConfig();
-        
-    }
+//    public EmailSender(String _userId) {
+//        userId = _userId;
+//        mailAccount = new MailAuthentication("Song XueYong", "franzsoong@gmail.com", "syzb1234", false);
+//    }
     
-    public void start()
-    {
-    	
-    }
+	public void start() {
 
-
-
-
+	}
 
     /**
      *
@@ -133,6 +130,10 @@ public class EmailSender{// extends AbstractProcessingResource {
         return props;
     }
 
+    /**
+     * 
+     * @return
+     */
     private String initMessage() {
         mimeMsg = new MimeMessage((Session) null);
         mp = new MimeMultipart("related");
@@ -211,50 +212,6 @@ public class EmailSender{// extends AbstractProcessingResource {
         return null;
     }
 
-    /**
-     * 添加附件
-     */
-    private String addFileAffix(String list) {
-        try {
-            log.debug("Attach name = " + list);
-            if (list == null) {
-                return null;
-            }
-            list = list.trim().replace(",", ";");
-            if (list.length() == 0) {
-                return null;
-            }
-            String[] lists = list.split(";");
-            for (int i = 0; i < lists.length; i++) {
-                if (lists[i].trim().length() == 0) {
-                    continue;
-                }
-                BodyPart bp = new MimeBodyPart();
-                DataSource source = null;
-                StreamData sd = FileExchange.getInstance().getContextVariable(lists[i], true);
-                if (sd != null) {
-                    if (sd.getFilename() == null || sd.getFilename().length() == 0) {
-                        sd.setFilename(lists[i]);
-                    }
-                    source = sd;
-                } else {
-                    File file = new File(lists[i]);
-                    if (!file.isFile()) {
-                        log.error("File = " + lists[i] + " , not file!");
-                        continue;
-                    }
-                    source = new FileDataSource(file);
-                }
-                bp.setDataHandler(new DataHandler(source));
-                bp.setFileName(MimeUtility.encodeText(source.getName(), "UTF-8", "B"));
-                mp.addBodyPart(bp);
-            }
-        } catch (Exception e) {
-            log.error(OriLog.logStack(e));
-            return "Attach:" + e.getMessage();
-        }
-        return null;
-    }
 
     private String setFrom(String from) {
         try {
@@ -362,7 +319,7 @@ public class EmailSender{// extends AbstractProcessingResource {
      * @param from
      * @return
      */
-    public String createMessage(EMail email) {
+    private String createMessage(EMail email) {
         String receivers = email.getReceiver();
         String copyTo = email.getCc();
         String bccTo = email.getBcc();
@@ -370,8 +327,14 @@ public class EmailSender{// extends AbstractProcessingResource {
         String content = email.getContent();
         StringBuilder attachs = new StringBuilder();
         String sender = email.getMailname();
-/*        if (email.getAttachment() != null && email.getAttachment().get_List().size() > 0) { franz pending
-            List<EMailAttachment> attachments = email.getAttachment().get_List();
+        content = atts2TempFiles(email, content, attachs);
+        return this.createMessage(receivers, copyTo, bccTo, title, content, attachs.toString(), sender);
+    }
+
+	private String atts2TempFiles(EMail email, String content,
+			StringBuilder attachs) {
+		if (email.getAttachment() != null && email.getAttachments().size() > 0) {// franz pending
+            List<EMailAttachment> attachments = email.getAttachments();//get_List();
             for (EMailAttachment attach : attachments) {
                 String emailid = email.get_id();
                 StringBuilder buffer = new StringBuilder();
@@ -381,14 +344,25 @@ public class EmailSender{// extends AbstractProcessingResource {
                     buffer.append(workdir).append(emailid).append("/").append(attach.getFileName());
                 }
                 String filename = buffer.toString();
-                content = saveAttachmentToTemp(content, attach, filename);
+//                content = saveAttachmentToTemp(content, attach, filename);
                 attachs.append(filename).append(";");
             }
-        }*/
-        return this.createMessage(receivers, copyTo, bccTo, title, content, attachs.toString(), sender);
-    }
-
-    public String createMessage(String receivers, String copyTo, String bccTo, String title,
+        }
+		return content;
+	}
+	
+	/**
+	 * 
+	 * @param receivers
+	 * @param copyTo
+	 * @param bccTo
+	 * @param title
+	 * @param content
+	 * @param attachs
+	 * @param from
+	 * @return
+	 */
+    private String createMessage(String receivers, String copyTo, String bccTo, String title,
             String content, String attachs, String from) {
         String isSuccess = this.initMessage();
         if (isSuccess == null) {
@@ -409,15 +383,76 @@ public class EmailSender{// extends AbstractProcessingResource {
         if (isSuccess == null) {
             isSuccess = this.setBccTo(bccTo);
         }
-        if (isSuccess == null) {
-            isSuccess = this.addFileAffix(attachs);
-        }
+//        if (isSuccess == null) {
+//            isSuccess = this.addFileAtts(attachs);
+//        }
         if (isSuccess == null) {
             isSuccess = this.saveContent();
         }
         return isSuccess;
     }
 
+    ///////////////////New for send email ////////////////////////////////
+    
+    /**
+    *
+    * @param receivers
+    * @param copyTo
+    * @param bccTo
+    * @param title
+    * @param content
+    * @param attachs
+    * @return
+    */
+    @Deprecated
+   private boolean send(ChannelMessage chmsg, String receivers, String copyTo, String bccTo, String title, String content) {
+       String isSuccess = this.createMessage(receivers, copyTo, bccTo, title, content, mailAccount.getUserName());
+       if (isSuccess == null) {
+           isSuccess = send(mailAccount);
+       }
+       if (isSuccess != null) {
+           log.error(isSuccess);
+       }
+       addFileAtts(chmsg.getAttachments());
+       return (isSuccess == null ? true : false);
+   }
+   /**
+    * 
+    * @param receivers
+    * @param copyTo
+    * @param bccTo
+    * @param title
+    * @param content
+    * @param from
+    * @return
+    */
+   private String createMessage(String receivers, String copyTo, String bccTo, String title,
+           String content, String from) {
+       String isSuccess = this.initMessage();
+       if (isSuccess == null) {
+           isSuccess = this.setFrom(from);
+       }
+       if (isSuccess == null) {
+           isSuccess = this.setSubject(title.trim());
+       }
+       if (isSuccess == null) {
+           isSuccess = this.setBody(content.trim());
+       }
+       if (isSuccess == null) {
+           isSuccess = this.setTo(receivers);
+       }
+       if (isSuccess == null) {
+           isSuccess = this.setCopyTo(copyTo);
+       }
+       if (isSuccess == null) {
+           isSuccess = this.setBccTo(bccTo);
+       }
+       if (isSuccess == null) {
+           isSuccess = this.saveContent();
+       }
+       return isSuccess;
+   }
+   
   /**
    * 
    * @param msg
@@ -504,7 +539,8 @@ public class EmailSender{// extends AbstractProcessingResource {
      * @param content
      * @return
      */
-    public boolean send(String recevier, String title, String content) {
+    @Deprecated
+    private boolean send(String recevier, String title, String content) {
         return send(recevier, null, null, title, content, null);
     }
 
@@ -516,7 +552,8 @@ public class EmailSender{// extends AbstractProcessingResource {
      * @param attachments
      * @return
      */
-    public boolean send(String receivers, String title, String content, String attachments) {
+    @Deprecated
+    private boolean send(String receivers, String title, String content, String attachments) {
         return send(receivers, null, null, title, content, attachments);
     }
 
@@ -529,7 +566,8 @@ public class EmailSender{// extends AbstractProcessingResource {
      * @param attachments
      * @return
      */
-    public boolean send(HashMap auth, String receivers, String title, String content, String attachments) {
+    @Deprecated
+    private boolean send(HashMap auth, String receivers, String title, String content, String attachments) {
 //        EMailConfig.loadConfig(null);
         String username = (String) auth.get("username");
         String password = (String) auth.get("password");
@@ -545,25 +583,25 @@ public class EmailSender{// extends AbstractProcessingResource {
         return (isSuccess == null ? true : false);
     }
 
-    private String saveAttachmentToTemp(String content, EMailAttachment eatt, String filename) {
-        StreamData sd = FileManager.fetchBinaryFile(new String(eatt.getData()));
-        String content1 = content;
-        if (eatt.getCId() != null) {
-            content1 = content.replace("cid:" + eatt.getCId(), filename);
-            try {
-                log.debug("Write attachment to temp directory (" + filename + ").....");
-                sd.writeToFile(filename);
-                tempfiles.add(filename);
-            } catch (Exception ex) {
-                log.error(OriLog.logStack(ex));
-            }
-        } else {
-            if (sd != null) {
-                FileExchange.getInstance().addContextVariable(filename, sd);
-            }
-        }
-        return content1;
-    }
+//    private String saveAttachmentToTemp(String content, EMailAttachment eatt, String filename) {
+//        StreamData sd = FileManager.fetchBinaryFile(new String(eatt.getData()));
+//        String content1 = content;
+//        if (eatt.getCId() != null) {
+//            content1 = content.replace("cid:" + eatt.getCId(), filename);
+//            try {
+//                log.debug("Write attachment to temp directory (" + filename + ").....");
+//                sd.writeToFile(filename);
+//                tempfiles.add(filename);
+//            } catch (Exception ex) {
+//                log.error(OriLog.logStack(ex));
+//            }
+//        } else {
+//            if (sd != null) {
+//                FileExchange.getInstance().addContextVariable(filename, sd);
+//            }
+//        }
+//        return content1;
+//    }
 
     /**
      *
@@ -575,10 +613,8 @@ public class EmailSender{// extends AbstractProcessingResource {
      * @param attachs
      * @return
      */
-    public boolean send(String receivers, String copyTo, String bccTo, String title, String content, String attachs) {
-//        EMailConfig.loadConfig(null);
-      
-
+    
+    private boolean send(String receivers, String copyTo, String bccTo, String title, String content, String attachs) {
         String isSuccess = this.createMessage(receivers, copyTo, bccTo, title, content, attachs, mailAccount.getUserName());
         if (isSuccess == null) {
             isSuccess = send(mailAccount);
@@ -593,11 +629,11 @@ public class EmailSender{// extends AbstractProcessingResource {
      * 
      * @return
      */
-    public MimeMessage getMimeMsg() {
+    private MimeMessage getMimeMsg() {
         return mimeMsg;
     }
 
-    public void deleteTempfile() {
+    private void deleteTempfile() {
         for (String filename : tempfiles) {
             File f = new File(filename);
             f.delete();
@@ -605,6 +641,68 @@ public class EmailSender{// extends AbstractProcessingResource {
         tempfiles.clear();
     }
     
+    
+    ////////////////发送附件///////////////////
+    
+    //transfer FS to temp file
+    private void atts2TempFiles(ChannelMessage chmsg) {
+    	List<Attachment> atts = chmsg.getAttachments();
+    	if (atts != null)
+    	{
+    		for (Attachment att : atts)
+    		{
+    			//file path for send attachment
+    			if (att.getFilePath() != null)
+    			{
+    				continue;
+    			}
+    			//had save to file system.
+    			ObjectId fileId = att.getFileId();
+    			GridFSDBFile dbfile = GridFSUtil.getGridFSUtil().getFile(fileId);
+    			if (dbfile != null)
+    			{
+    				String filePath = workdir + att.getFileName();
+    				try
+    				{
+    					GridFSUtil.getGridFSUtil().writeFile(fileId, filePath);
+    					 tempfiles.add(filePath);
+    					att.setFilePath(filePath);
+    				}
+    				catch(Exception exp)
+    				{
+    					exp.printStackTrace();
+    				}
+    			}    			
+    		}
+    	}
+	}
+    
+
+    /**
+     * 文件名称列表，转换成FileDataSource
+     * (临时文件，可以改造DataSource([])不用临时文件）。
+     * 添加附件
+     */
+    private void addFileAtts(List<Attachment> atts) {
+        try {
+            log.debug("Attach count = " + atts.size());
+            if (atts == null) {
+                return;
+            }
+            for (Attachment att : atts){
+                if (att == null || att.getFilePath() == null) {
+                    continue;
+                }
+                MimeBodyPart bp = new MimeBodyPart();
+                DataSource source = new FileDataSource(att.getFilePath());
+                bp.setDataHandler(new DataHandler(source));
+                bp.setFileName(MimeUtility.encodeText(source.getName(), "UTF-8", "B"));
+                mp.addBodyPart(bp);
+            }
+        } catch (Exception e) {
+            log.error(OriLog.logStack(e));           
+        }
+    }
     
     
 

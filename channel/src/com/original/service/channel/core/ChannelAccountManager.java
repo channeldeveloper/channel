@@ -22,6 +22,7 @@ import com.mongodb.Mongo;
 import com.original.service.channel.Account;
 import com.original.service.channel.Channel;
 import com.original.service.channel.ChannelAccount;
+import com.original.service.channel.Constants;
 import com.original.service.profile.Profile;
 
 /**
@@ -34,8 +35,8 @@ import com.original.service.profile.Profile;
  * @create 2012-11-11 20:17:13
  */
 public class ChannelAccountManager {
-	public static final String ChannelDB = "song";
-	public static final String ChannelCollectiion = "channel";
+	public static final String ChannelDB = Constants.Channel_DB_Name;
+	public static final String ChannelCollection = Constants.Channel_Collection_Channel;
 	private java.util.logging.Logger logger;
 	/**
 	 * @return the logger
@@ -132,7 +133,7 @@ public class ChannelAccountManager {
 	 * @return the channelcollectiion
 	 */
 	public static String getChannelcollectiion() {
-		return ChannelCollectiion;
+		return ChannelCollection;
 	}
 
 	private HashMap<String, ChannelAccount> chAccountMap = new HashMap<String, ChannelAccount>();

@@ -20,19 +20,11 @@ import javax.mail.internet.MimeUtility;
 
 import org.apache.log4j.Logger;
 import org.bson.types.ObjectId;
-import org.dom4j.Element;
 
-import com.original.service.channel.protocols.email.services.EmailSender;
-import com.original.service.channel.protocols.email.services.MailAuthentication;
 import com.original.service.channel.protocols.email.services.MailParseUtil;
 import com.original.service.storage.GridFSUtil;
-//import com.original.storage.core.object.BaseObject;
-//import com.original.storage.core.object.BinaryObject;
-//import com.original.storage.core.object.QueryObject;
-//import com.original.storage.core.object.RuleObject;
-//import com.original.storage.util.Constants;
-//import com.original.storage.util.Utils;
 import com.original.util.log.OriLog;
+
 
 /**
  * (Class Annotation.)
@@ -354,8 +346,8 @@ public class EMailParser {
      * @return
      * @throws Exception
      */
-    public List<EMailAttachment> getAttach(Part part) throws Exception {
-        List<EMailAttachment> emailAttachments = new ArrayList<EMailAttachment>();
+    private List<EMailAttachment> getAttach(Part part) throws Exception {
+        List<EMailAttachment> list = new ArrayList<EMailAttachment>();
         if (part.isMimeType("multipart/*")) {
             Multipart mp = (Multipart) part.getContent();
             int count = mp.getCount();
@@ -364,32 +356,34 @@ public class EMailParser {
                 String disposition = mpart.getDisposition();
                 log.debug("disposition = " + disposition);
                 if (disposition != null && (disposition.equals(Part.ATTACHMENT))) {
-                    EMailAttachment emailAttachment = new EMailAttachment();
+                    EMailAttachment attachment = new EMailAttachment();
                     if (mpart.getHeader("Content-ID") != null) {
-                        emailAttachment.setCId(mpart.getHeader("Content-ID")[0].replace("<", "").replace(">", ""));
+                        attachment.setCId(mpart.getHeader("Content-ID")[0].replace("<", "").replace(">", ""));
                     }
                     String fileName = MailParseUtil.getMessageFileName(mpart.getFileName());
                     String extention = null;
                     if (fileName.contains(".") == true) {
                         extention = fileName.substring(fileName.indexOf(".") + 1);
-                        emailAttachment.setFileName(fileName);
+                        attachment.setFileName(fileName);
                     } else {
                         String contentType = mpart.getContentType().substring(0, mpart.getContentType().indexOf(";"));
                         extention = MailParseUtil.parseFileType(contentType);
                         fileName = fileName + "." + extention;
-                        emailAttachment.setFileName(fileName);
+                        attachment.setFileName(fileName);
                     }
-                    emailAttachment.setType(extention);
-                    //franz pending here should save to filesystem.
+                    attachment.setType(extention);
+                    //franz recoding here should save to filesystem.
+                    Object fileID = GridFSUtil.getGridFSUtil().saveFile(mpart.getInputStream(), fileName);
+                    attachment.setFileID((ObjectId)fileID);
 //                    emailAttachment.setData(BinaryObject.saveBinaryData(mpart.getInputStream(), extention));
-                    emailAttachment.setSize(mpart.getInputStream().available());
-                    emailAttachments.add(emailAttachment);
+                    attachment.setSize(mpart.getInputStream().available());
+                    list.add(attachment);
                 }
             }
         } else if (part.isMimeType("message/rfc822")) {
-            emailAttachments = getAttach((Part) part.getContent());
+            list = getAttach((Part) part.getContent());
         }
-        return emailAttachments;
+        return list;
     }
 
     /**
@@ -468,14 +462,14 @@ public class EMailParser {
     	{
 	    	List<EMailAttachment> emailAttachments = getAttach(msg);
 	    	 mail.setAttachments(emailAttachments);
-//	        if (emailAttachments.size() > 0) {
-//	            BaseObject attachment = new BaseObject();
-//	            attachment.set_Name("Attachment");
-//	            for (EMailAttachment attach : emailAttachments) {
-//	                attachment.addList(attach);
-//	            }
-//	            mail.setAttachment(attachment);
-//        }
+	     /*   if (emailAttachments.size() > 0) {
+	            BaseObject attachment = new BaseObject();
+	            attachment.set_Name("Attachment");
+	            for (EMailAttachment attach : emailAttachments) {
+	                attachment.addList(attach);
+	            }
+	            mail.setAttachment(attachment);
+        }*/
 	       
     	}
     	catch(Exception exp)

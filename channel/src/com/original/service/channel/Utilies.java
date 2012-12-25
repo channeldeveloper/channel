@@ -145,7 +145,7 @@ public class Utilies {
 	
 	/**
 	 * 将邮件内容中的图片等附件下载到系统缓存
-	 */
+	 * /
 	private static String saveAttachmentToTemp(String content, String emailid, EMailAttachment eatt) 
 	{
 		StreamData sd = FileManager.fetchBinaryFile(new String(eatt.getData()));
@@ -166,7 +166,7 @@ public class Utilies {
 		}
 		return content;
 	}
-	
+	*/
 	public static String parseMail(ChannelMessage msg) {
 		return parseMail(Utils.channel2Email(msg));
 	}
@@ -195,7 +195,7 @@ public class Utilies {
 				for (int l = 0; l < attachList.size(); l++) {
 					EMailAttachment eatt = (EMailAttachment) attachList.get(l);
 					attach.append(eatt.getFileName()).append(";");
-					content = saveAttachmentToTemp(content, emailid, eatt);
+//					content = saveAttachmentToTemp(content, emailid, eatt);
 				}
 				attachNames = attach.toString();
 			} 

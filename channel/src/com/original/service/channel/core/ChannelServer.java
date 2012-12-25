@@ -91,35 +91,7 @@ public class ChannelServer {
 		return channelMap.get(account.getUser());	
 	}
 	
-	private void inits() throws Exception
-	{
-		
-//		  Mongo mongo = new Mongo("localhost");
-//		  
-//	        mongo.dropDatabase("channel");
-//	        Morphia morphia = new Morphia();
-//
-//	        morphia.mapPackage("demo.gettingStarted.MyEntity");//mapping class to db collection.
-//	        
-//	        Datastore datastore = morphia.createDatastore(mongo, "channel");//create db
-//	        
-//	        datastore.ensureCaps();// //creates capped collections from @Entity
-//	        datastore.ensureIndexes();// //creates indexes from @Index annotations in your entities
-	        
-	        //get a collection's document.
-//	        MyEntity entity = datastore.get(MyEntity.class, "id");
-	        
-		//create db and collcetion
-		
-		//object mapping
-		
-		//reading people from db
-		//reading channel from db
-		
-		//reading channel from config and add new channel
-		//reading channel account from profile to add new channel acount
-		
-	}
+
 
 	// Channel
 	/**

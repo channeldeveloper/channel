@@ -67,7 +67,7 @@ public class EMailSaver {
 //        return manager.deleteEMail(filter);
     	return null;
     }
-
+/*
     public String sendEMail(Message msg, String username, String type, EMail mail) throws Exception {
         EMail email = handleMessage(msg, username, type, mail);
         return this.sendEMail(email);
@@ -76,9 +76,9 @@ public class EMailSaver {
     public String sendEMail(Message msg, String username, String type, String emailid) throws Exception {
         EMail email = handleMessage(msg, username, type, emailid);
         return this.sendEMail(email);
-    }
+    }*/
     
-    public String sendEMail(EMail email) {
+    /*public String sendEMail(EMail email) {
         Element returnroot = null;//Utils.createElement(Constants.DATABASE);
         try {
             EmailSender service = new EmailSender(userId);
@@ -121,7 +121,7 @@ public class EMailSaver {
         }
         return returnroot.asXML();
     }
-
+*/
     /**
      *
      * @param emailid
@@ -389,7 +389,7 @@ public class EMailSaver {
                         emailAttachment.setFileName(fileName);
                     }
                     emailAttachment.setType(extention);
-                    emailAttachment.setData(saveBinaryData(mpart.getInputStream(), extention));
+//                    emailAttachment.setData(saveBinaryData(mpart.getInputStream(), extention));
                     emailAttachment.setSize(mpart.getInputStream().available());
                     emailAttachments.add(emailAttachment);
                 }

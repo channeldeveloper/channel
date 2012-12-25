@@ -16,6 +16,18 @@ package com.original.service.channel;
  */
 public interface Constants {
 	
+	
+	//DB and collection names
+	public static String Channel_DB_Server = "localhost";
+	public static int     Channel_DB_Server_Port = 27017;
+	public static String Channel_DB_Name = "song";//tempdb later change to 
+	public static String Channel_Collection_Message = "messages";
+	public static String Channel_Collection_Channel = "channel";
+	public static String Channel_Collection_ChannelAccount = "channelAccount";
+	public static String Channel_Collection_Profile = "profile";
+	public static String Channel_Collection_People = "people";
+	
+	
 	public enum CHANNEL{MAIL, QQ, WEIBO}
 	
 	public static final String QQ = "QQ",

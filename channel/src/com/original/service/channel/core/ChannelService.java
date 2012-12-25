@@ -26,7 +26,9 @@ import com.original.service.channel.Attachment;
 import com.original.service.channel.Channel;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
 import com.original.service.channel.Service;
+import com.original.service.channel.config.Initializer;
 import com.original.service.channel.event.ChannelEvent;
 import com.original.service.channel.event.ChannelListener;
 import com.original.service.channel.event.MessageEvent;
@@ -48,30 +50,47 @@ import com.original.service.profile.Profile;
  * @author sxy
  * 
  */
-public class ChannelService implements Service {
+public final class  ChannelService implements Service {
 
 	private ChannelServer channelServer;
 
 	private HashMap<ChannelAccount, Service> serviceMap;
 	private MessageManager msgManager;
 	private PeopleManager peopleManager;
+//
+//	private String dbServer = "localhost";
+//	private String dbServerPort = "27017";
+//	private String channlDBName = "song";
+	
 
-	private String dbServer = "localhost";
-	private String dbServerPort = "27017";
-	private String channlDBName = "song";
-
+	private String dbServer;
+	private int dbServerPort;
+	private String channlDBName;
 	private Morphia morphia;
 	private Mongo mongo;
 	private Datastore ds;
 
 	java.util.logging.Logger logger;
+	private Initializer initializer;
 
 	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
+	
+	private static ChannelService singleton;
+	
+	public static ChannelService instance()
+	{
+		if (singleton == null)
+		{
+			singleton = new ChannelService();
+		}
+		return singleton;
+		
+	}
 
 	/**
 	 * 
 	 */
-	public ChannelService() {
+	private ChannelService() {
 		initMongoDB();
 		init();
 	}
@@ -139,7 +158,7 @@ public class ChannelService implements Service {
 	/**
 	 * @return the dbServerPort
 	 */
-	public String getDbServerPort() {
+	public int getDbServerPort() {
 		return dbServerPort;
 	}
 
@@ -147,7 +166,7 @@ public class ChannelService implements Service {
 	 * @param dbServerPort
 	 *            the dbServerPort to set
 	 */
-	public void setDbServerPort(String dbServerPort) {
+	public void setDbServerPort(int dbServerPort) {
 		this.dbServerPort = dbServerPort;
 	}
 
@@ -257,7 +276,7 @@ public class ChannelService implements Service {
 	}
 
 	private void initMongoDB() {
-		logger = Logger.getLogger("channer");
+		logger = Logger.getLogger("Channel Service");
 		morphia = new Morphia();
 		morphia.map(ChannelAccount.class);
 		morphia.map(Channel.class);
@@ -268,7 +287,11 @@ public class ChannelService implements Service {
 
 		// DB
 		try {
-			mongo = new Mongo(dbServer, Integer.valueOf(dbServerPort));
+			dbServer = Constants.Channel_DB_Server;
+			dbServerPort  = Constants.Channel_DB_Server_Port;
+			channlDBName = Constants.Channel_DB_Name;
+			
+			mongo = new Mongo(dbServer, Constants.Channel_DB_Server_Port);
 			// db mapping to object
 			ds = morphia.createDatastore(mongo, channlDBName);
 			ds.ensureIndexes();
@@ -289,6 +312,19 @@ public class ChannelService implements Service {
 	 */
 
 	private void init() {
+		
+		//db and collection
+		initializer = new Initializer(mongo);
+		try
+		{
+			initializer.init(false);
+		}
+		catch(Exception exp)
+		{
+			logger.log(Level.SEVERE,
+					"To init channel db fail!" + exp.toString());
+		}
+				
 		msgManager = new MessageManager(morphia, mongo, ds);
 		channelServer = new ChannelServer(morphia, mongo, ds);
 		peopleManager = new PeopleManager(morphia, mongo, ds);
@@ -331,8 +367,8 @@ public class ChannelService implements Service {
 		} else if (ca.getChannel().getName().startsWith("im_qq")) {
 			return new QQService("Cydow", ca);
 
-		} else if (ca.getChannel().getName().startsWith("sns_weibo")) {
-			return new WeiboService("Cydow", ca);
+		} else if (ca.getChannel().getName().startsWith("sns_weibo")) {		
+				return new WeiboService("Cydow", ca);			
 		}
 		return null;
 	}
@@ -348,7 +384,16 @@ public class ChannelService implements Service {
 		}
 	}
 	public synchronized void restartService(ChannelAccount ca) throws Exception {
-		Service sc = createService(ca);
+		Service sc = null;
+		try
+		{
+			sc = createService(ca);
+		}
+		catch(Exception exp)
+		{
+			logger.log(Level.INFO, "Fail to create Service !" + ca);
+			
+		}
 		if (sc != null) {
 			serviceMap.put(ca, sc);
 			failedServiceAccounts.remove(ca);
