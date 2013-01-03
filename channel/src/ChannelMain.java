@@ -141,7 +141,10 @@ public class ChannelMain {
 					System.out.println(a.getSize());
 					System.out.println(a.getType());
 					//写入本地文件
-					GridFSUtil.getGridFSUtil().writeFile( a.getFileId(), "c:/"+ a.getFileName());
+					String filePath = "c:/"+ a.getFileName();
+					GridFSUtil.getGridFSUtil().writeFile( a.getFileId(), filePath);
+					//用来测试发送邮件带附件（本地），也可以用从文档库中(注释下面的行）
+					a.setFilePath(filePath);
 			
 				}
 				
