@@ -3,6 +3,9 @@ package iqq.model;
 import java.awt.Color;
 import java.io.Serializable;
 
+import atg.taglib.json.util.JSONException;
+import atg.taglib.json.util.JSONObject;
+
 /**
  * QQ消息的默认样式
  * @author WMS
@@ -85,5 +88,25 @@ public class MessageStyle implements Serializable
 		if(hexValue.length() < 2)
 			hexValue = "0" + hexValue;
 		return hexValue;
+	}
+	
+	public static MessageStyle convert(JSONObject json)
+	{
+		MessageStyle ms = new MessageStyle();
+		if(json == null) 
+			return ms;
+		
+		try {
+			ms.setFontName(json.getString("family"));
+			ms.setFontSize(json.getInt("size"));
+			ms.setColor(json.getString("color"));
+			ms.setBold(json.getBoolean("bold"));
+			ms.setUnderline(json.getBoolean("underline"));
+			ms.setItalic(json.getBoolean("italic"));
+		}
+		catch(JSONException ex) {
+
+		}
+		return ms;
 	}
 }

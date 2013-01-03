@@ -69,7 +69,10 @@ public class LoginService {
     // 检查账号是否要验证码
     private String checkQQUrl = "http://check.ptlogin2.qq.com/check?uin=:account&appid=1003903&r=" + Math.random();
     // 登录url
-    private String loginUrl = "http://ptlogin2.qq.com/login?u=:account&p=:password&verifycode=:VCode&webqq_type=10&remember_uin=1&login2qq=1&aid=1003903&u1=:loginurl&h=1&ptredirect=0&ptlang=2052&from_ui=1&pttype=1&dumy=&fp=loginerroralert&action=7-24-1937704&mibao_css=m_webqq&t=1&g=1";
+    private String loginUrl = "http://ptlogin2.qq.com/login?u=:account&p=:password&verifycode=:VCode&webqq_type=10" +
+    		"&remember_uin=1&login2qq=1&aid=1003903&u1=:loginurl&h=1&ptredirect=0&ptlang=2052&from_ui=1" +
+    		"&pttype=1&dumy=&fp=loginerroralert&action=7-24-1937704&mibao_css=m_webqq&t=1&g=1";
+    
     // 进入登录渠道
     private String channelLoginUrl = "http://d.web2.qq.com/channel/login2";
 

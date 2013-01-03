@@ -4,7 +4,18 @@
  */
 package iqq.service;
 
-import java.io.*;
+import iqq.util.ErrorMessage;
+import iqq.util.Log;
+import iqq.util.Method;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -12,10 +23,6 @@ import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
-import iqq.util.ErrorMessage;
-import iqq.util.Log;
-import iqq.util.Method;
-import iqq.util.ThreadUtil;
 
 /**
  * Pending ! Service and GUI 分开！
