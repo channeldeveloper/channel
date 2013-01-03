@@ -17,8 +17,7 @@ public interface ChannelConstants
 			TEXT_CURSOR = new Cursor(Cursor.TEXT_CURSOR);
 	
 	//字体类
-	Font DEFAULT_FONT  =  new Font(
-			ChannelConfig.getPropValue("channelFont"),  Font.PLAIN, 14);
+	Font DEFAULT_FONT  =  new Font("微软雅黑",  Font.PLAIN, 14);
 	
 	//图标类
 	LocationIcon CLOSE_ICON = 	new LocationIcon(
