@@ -48,7 +48,9 @@ public class WeiboSender implements Constants{
 			if(action == ACTION_QUICK_REPLY) { //快速回复
 				Comments comments = new Comments();
 				comments.setToken(accessToken);
-				comments.createComment(WeiboParser.parseUTF8(msg.getBody()), 
+//				comments.createComment(WeiboParser.parseUTF8(msg.getBody()), 
+//						msg.getMessageID()); //注意这里的MessageID就是原微博ID，如假包换
+				comments.createComment(msg.getBody(), 
 						msg.getMessageID()); //注意这里的MessageID就是原微博ID，如假包换
 			}
 			else if(action == ACTION_REPLY) { //回复，其实就是发表一份微博，只是在最前面加上“@某人：”

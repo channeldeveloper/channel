@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.swing.text.html.HTMLDocument;
+
 import org.bson.types.ObjectId;
 
 import com.google.code.morphia.annotations.Embedded;
@@ -17,6 +19,7 @@ import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Indexed;
 import com.google.code.morphia.annotations.Reference;
+import com.google.code.morphia.annotations.Transient;
 import com.google.code.morphia.utils.IndexDirection;
 import com.google.gson.Gson;
 import com.original.service.channel.protocols.im.iqq.QQParser;
@@ -40,8 +43,7 @@ import com.original.service.channel.protocols.sns.weibo.WeiboParser;
  */
 @Entity(value = "messages", noClassnameStored = true)
 public class ChannelMessage implements Cloneable, Constants{
-	//分类(type)
-	private String clazz; //?!
+
 	
 	// 基本信息
 	// MessageHeader
@@ -84,12 +86,23 @@ public class ChannelMessage implements Cloneable, Constants{
 	private String subject;// 主题，邮件主题，微博主题
 	private String contentType;// plaintext, html,xml,json
 	private String body;//
-	
-	@Deprecated
-	private String[] attachmentIds;
-	
+//	private String[] attachmentIds;
 	@Embedded
 	private List<Attachment> attachments;
+	
+	//pending 
+	//分类(type)
+	private String clazz; //?!
+	
+	//Pending This var will deleted later
+	@Transient
+	private transient HTMLDocument doc = null;
+	public HTMLDocument getDoc() {
+		return doc;
+	}
+	public void setDoc(HTMLDocument doc) {
+		this.doc = doc;
+	}
 
 	/**
 	 * default constructor.
@@ -249,12 +262,6 @@ public class ChannelMessage implements Cloneable, Constants{
 		return extensions;
 	}
 
-	/**
-	 * @return the flags
-	 */
-	public HashMap getFlags() {
-		return flags;
-	}
 
 	/**
 	 * @return the subject
@@ -301,23 +308,21 @@ public class ChannelMessage implements Cloneable, Constants{
 		this.body = body;
 	}
 
-	/**
-	 * @return the attachmentIds
-	 */
-	@Deprecated
-	public String[] getAttachmentIds() {
-		return attachmentIds;
-	}
-
-	/**
-	 * @param attachmentIds
-	 *            the attachmentIds to set
-	 */
-	@Deprecated
-	public void setAttachmentIds(String[] attachmentIds) {
-		this.attachmentIds = attachmentIds;
-	}
-
+//	/**
+//	 * @return the attachmentIds
+//	 */
+//	public String[] getAttachmentIds() {
+//		return attachmentIds;
+//	}
+//
+//	/**
+//	 * @param attachmentIds
+//	 *            the attachmentIds to set
+//	 */
+//	public void setAttachmentIds(String[] attachmentIds) {
+//		this.attachmentIds = attachmentIds;
+//	}
+	
 	/**
 	 * @return the attachments
 	 */
@@ -330,20 +335,6 @@ public class ChannelMessage implements Cloneable, Constants{
 	 */
 	public void setAttachments(List<Attachment> attachments) {
 		this.attachments = attachments;
-	}
-
-	/**
-	 * @param extensions the extensions to set
-	 */
-	public void setExtensions(HashMap<String, String> extensions) {
-		this.extensions = extensions;
-	}
-
-	/**
-	 * @param flags the flags to set
-	 */
-	public void setFlags(HashMap<String, Integer> flags) {
-		this.flags = flags;
 	}
 
 	/**
@@ -361,10 +352,9 @@ public class ChannelMessage implements Cloneable, Constants{
 		this.messageID = messageID;
 	}
 
-	/**
-	 * 
-	 * @return
-	 */
+
+
+	
 	public String getClazz()
 	{
 		if(clazz == null && channelAccount != null) {
@@ -463,12 +453,30 @@ public class ChannelMessage implements Cloneable, Constants{
 			msg = (ChannelMessage)super.clone();
 			msg.setFlags(flags == null ? null : (HashMap)flags.clone());
 			msg.setExtensions(extensions == null ? null : (HashMap)extensions.clone());
-			msg.setAttachmentIds(attachmentIds == null ? null : attachmentIds.clone());
+//			msg.setAttachmentIds(attachmentIds == null ? null : attachmentIds.clone());
 		}
 		catch(CloneNotSupportedException ex)
 		{
 			
 		}
 		return msg;
+	}
+	/**
+	 * @return the flags
+	 */
+	public HashMap<String, Integer> getFlags() {
+		return flags;
+	}
+	/**
+	 * @param flags the flags to set
+	 */
+	public void setFlags(HashMap<String, Integer> flags) {
+		this.flags = flags;
+	}
+	/**
+	 * @param extensions the extensions to set
+	 */
+	public void setExtensions(HashMap<String, String> extensions) {
+		this.extensions = extensions;
 	}
 }

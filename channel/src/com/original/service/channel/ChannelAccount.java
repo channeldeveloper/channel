@@ -153,7 +153,7 @@ public class ChannelAccount implements Serializable{
 	@Override
 	public int hashCode()
 	{	
-		return id == null ? -1 : id.getInc();
+		return id == null ? -1 : id.hashCode();
 	}
 	@Override
 	public boolean equals(Object obj)
@@ -182,15 +182,15 @@ public class ChannelAccount implements Serializable{
 		morphia.map(com.original.service.channel.Channel.class);
 		morphia.map(com.original.service.profile.Profile.class);
 		// DB
-		Mongo mongo = new Mongo(Constants.Channel_DB_Server, Constants.Channel_DB_Server_Port);
-		DB db = mongo.getDB(Constants.Channel_DB_Name);
+		Mongo mongo = new Mongo("localhost", 27017);
+		DB db = mongo.getDB("song");
 
 		// db mapping to object
-		Datastore ds = morphia.createDatastore(mongo, Constants.Channel_DB_Name);
+		Datastore ds = morphia.createDatastore(mongo, "song");
 		ds.ensureIndexes();
 
 		// by mongo db
-		DBCursor cursor = db.getCollection(Constants.Channel_Collection_Channel).find();
+		DBCursor cursor = db.getCollection("channelAccount").find();
 		while (cursor.hasNext()) {
 			System.out.println(cursor.next());
 		}

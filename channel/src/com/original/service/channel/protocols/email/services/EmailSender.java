@@ -183,7 +183,7 @@ public class EmailSender{// extends AbstractProcessingResource {
      */
     private String setBody(String mailBody) {
         try {
-            List fileList = new ArrayList();
+            List<String> fileList = new ArrayList<String>();
             String body = changeDir(fileList, mailBody);
             MimeMultipart mp1 = new MimeMultipart("alternative");
             MimeBodyPart part2 = new MimeBodyPart();
@@ -194,7 +194,7 @@ public class EmailSender{// extends AbstractProcessingResource {
             MimeBodyPart text = new MimeBodyPart();
             text.setContent(mp1);
             mp.addBodyPart(text);
-            if (fileList.size() > 0) {
+            if (false){//fileList.size() > 0) {
                 for (int i = 0; i < fileList.size(); i++) {
                     MimeBodyPart part3 = new MimeBodyPart();
                     DataSource source = new FileDataSource(new File(fileList.get(i).toString()));
@@ -383,9 +383,9 @@ public class EmailSender{// extends AbstractProcessingResource {
         if (isSuccess == null) {
             isSuccess = this.setBccTo(bccTo);
         }
-//        if (isSuccess == null) {
+        if (isSuccess == null) {
 //            isSuccess = this.addFileAtts(attachs);
-//        }
+        }
         if (isSuccess == null) {
             isSuccess = this.saveContent();
         }

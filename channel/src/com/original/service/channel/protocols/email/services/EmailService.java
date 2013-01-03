@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.swing.event.EventListenerList;
 
+import com.original.service.channel.AbstractService;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
@@ -12,7 +13,7 @@ import com.original.service.channel.Service;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
 
-public class EmailService implements Service {
+public class EmailService extends AbstractService {
 
 	private EmailSender sender;
 	private EmailReceiver receiver;
@@ -133,15 +134,11 @@ public class EmailService implements Service {
 		return 0;
 	}
 
+	/**
+	 * 
+	 */
 	@Override
-	public void put(String action, ChannelMessage msg) {
-		// TODO Auto-generated method stub
-		//发送消息
-		if (action.equalsIgnoreCase(Constants.ACTION_QUICK_REPLY))
-		{
-			msg.setSubject("Re:" + (msg.getSubject() == null ? "" : msg.getSubject()));
-		}
-		
+	public void put(String action, ChannelMessage msg){		
 		this.sender.send(msg);
 		//派发事件给监听（存盘、更新视图）
 		ChannelMessage[] cmsg = new ChannelMessage[1];
@@ -149,10 +146,131 @@ public class EmailService implements Service {
 		cmsg[0] = msg;
 		//
 		MessageEvent evt = new MessageEvent(null, null,MessageEvent.Type_Added, cmsg, null,null);
-		fireMessageEvent(evt);
-		
-		
+		fireMessageEvent(evt);		
 	}
+	
+	/*public void PrePutDeal(String action, ChannelMessage msg) {		
+		if (action.equals(Constants.ACTION_SEND))
+		{
+	
+		}
+		quickReplyMessage(msg);		
+	}
+	
+	*//**
+	 * Forward Email will apend more info: such as 
+	 * Subject: 	Fwd: Packt Publishing: You are now unsubscribed
+	 * Body:
+	 * 	---------- Forwarded message ----------
+	 * 	From: packt@packtpub.com <marketing@packtpub.com>
+	 * 	Date: Sat, Dec 22, 2012 at 9:45 PM
+	 * 	Subject: Packt Publishing: You are now unsubscribed
+	 * 	To: franzsoong@gmail.com
+	 * @param msg
+	 *//*
+	private void quickReplyMessage(ChannelMessage msg)
+	{
+		
+		ChannelService cs = ChannelService.instance();
+		MessageManager mm = cs.getMsgManager();
+//		. Manager msgManager
+//	{		
+//		if (action
+//				.endsWith(com.original.service.channel.Constants.ACTION_QUICK_REPLY)) {
+			// Original message id.
+			if (msg.getId() != null) {
+				ChannelMessage chmsg = mm.getMessage(msg.getId());
+				if (chmsg != null) {
+					ChannelMessage replyMsg = chmsg.clone();
+					replyMsg.setId(null);
+	
+					replyMsg.setToAddr(chmsg.getFromAddr());
+					replyMsg.setFromAddr(chmsg.getToAddr());
+					replyMsg.setBody(msg.getBody());
+					replyMsg.setType(ChannelMessage.TYPE_SEND);
+					msg = replyMsg;
+				}
+			}
+//		}
+	}
+
+	
+	*//**
+	 * Forward Email will apend more info: such as 
+	 * Subject: 	Re: Packt Publishing: You are now unsubscribed
+	 * Body:
+	 * 	---------- Replied message ----------
+	* 	<blockquote style="margin: 0px 0px 0px 0.8ex; border-left-width: 1px; border-left-color: rgb(204, 204, 204); border-left-style: solid; padding-left: 1ex;">
+	* 	<u></u>
+	*   [原内容]
+	* 	</blockquote>
+	 * @param msg
+	 *//*
+	private void replyMessage(ChannelMessage msg)
+	{
+		
+		ChannelService cs = ChannelService.instance();
+		MessageManager mm = cs.getMsgManager();
+//		. Manager msgManager
+//	{		
+//		if (action
+//				.endsWith(com.original.service.channel.Constants.ACTION_QUICK_REPLY)) {
+			// Original message id.
+			if (msg.getId() != null) {
+				ChannelMessage chmsg = mm.getMessage(msg.getId());
+				if (chmsg != null) {
+					ChannelMessage replyMsg = chmsg.clone();
+					replyMsg.setId(null);
+	
+					replyMsg.setToAddr(chmsg.getFromAddr());
+					replyMsg.setFromAddr(chmsg.getToAddr());
+					replyMsg.setBody(msg.getBody());
+					replyMsg.setType(ChannelMessage.TYPE_SEND);
+					msg = replyMsg;
+				}
+			}
+//		}
+	}
+	*//**
+	 * Forward Email will apend more info: such as 
+	 * Subject: 	Fwd: Packt Publishing: You are now unsubscribed
+	 * Body:
+	 * 	---------- Forwarded message ----------
+	 * 	From: packt@packtpub.com <marketing@packtpub.com>
+	 * 	Date: Sat, Dec 22, 2012 at 9:45 PM
+	 * 	Subject: Packt Publishing: You are now unsubscribed
+	 * 	To: franzsoong@gmail.com
+	 * @param msg
+	 *//*
+	private void forwardMessage(ChannelMessage msg)
+	{
+		
+		ChannelService cs = ChannelService.instance();
+		MessageManager mm = cs.getMsgManager();
+//		. Manager msgManager
+//	{		
+//		if (action
+//				.endsWith(com.original.service.channel.Constants.ACTION_QUICK_REPLY)) {
+			// Original message id.
+			if (msg.getId() != null) {
+				ChannelMessage chmsg = mm.getMessage(msg.getId());
+				if (chmsg != null) {
+					ChannelMessage replyMsg = chmsg.clone();
+					replyMsg.setId(null);
+	
+					replyMsg.setToAddr(chmsg.getFromAddr());
+					replyMsg.setFromAddr(chmsg.getToAddr());
+					replyMsg.setBody(msg.getBody());
+					replyMsg.setType(ChannelMessage.TYPE_SEND);
+					msg = replyMsg;
+				}
+			}
+//		}
+	}
+	
+	*/
+	
+	
 
 	@Override
 	public void post(String action, ChannelMessage msg) {

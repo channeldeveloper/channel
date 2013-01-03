@@ -1,11 +1,20 @@
 package com.original.service.channel.protocols.im.iqq;
 
+import java.util.logging.Level;
+
+import javax.swing.text.BadLocationException;
+import javax.swing.text.html.HTMLDocument;
+
 import iqq.comm.Auth;
 import iqq.comm.Auth.AuthInfo;
 import iqq.service.MemberService;
 import iqq.service.MessageService;
+import iqq.ui.ChatPanel;
 
 import org.apache.log4j.Logger;
+
+import atg.taglib.json.util.JSONException;
+import atg.taglib.json.util.JSONObject;
 
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
@@ -19,6 +28,8 @@ public class QQSender implements Constants{
 	
 	private static MemberService memberService = MemberService.getInstance();//QQ成员服务
 	private static MessageService msgService = MessageService.getIntance();//QQ消息服务
+	
+	private boolean isAddIQQinfo = true;
 
 	public QQSender(String uid, ChannelAccount ca)
 	{
@@ -50,7 +61,26 @@ public class QQSender implements Constants{
 				msgService.sendMsg(ai, uin, msg.getBody());
 			}
 			else if(action == ACTION_REPLY) {//回复
+				String style = msg.getExtensions().get(QQ_FONT_STYLE);
+				JSONObject styleJSON = null;
+				try {
+					styleJSON = (style == null ? null : new JSONObject(style));
+				}
+				catch(JSONException ex) {
+					
+				}
 				
+				HTMLDocument doc = msg.getDoc();
+				if (isAddIQQinfo) {
+		            String from = "\n(Sent From iQQ For " + System.getProperty("os.name") + "...Web:http://code.google.com/p/iqq/)";
+		            try {
+		            	doc.insertString(doc.getLength(), from, null);
+		            } catch (BadLocationException ex) {
+		            	
+		            }
+		            isAddIQQinfo = false;
+		        }
+				msgService.sendMsg(ai, uin, doc, styleJSON);
 			}
 		}
 	}

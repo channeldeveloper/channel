@@ -24,7 +24,7 @@ public class EMailAttachment extends BaseObject {
     private String FileName = null;
     private String Type = null;
     private String CId = null;
-    //private byte[] Data = null;
+    private byte[] Data = null;
     private String infoId = null;
     
     private ObjectId fileID;
@@ -79,13 +79,13 @@ public class EMailAttachment extends BaseObject {
         return CId;
     }
 
-//    /**
-//     * 获取文件内容
-//     * @return
-//     */
-//    public byte[] getData() {
-//        return Data;
-//    }
+    /**
+     * 获取文件内容
+     * @return
+     */
+    public byte[] getData() {
+        return Data;
+    }
 
     /**
      * 获取信息片断标识
@@ -126,13 +126,13 @@ public class EMailAttachment extends BaseObject {
         this.CId = cid;
     }
 
-//    /**
-//     * 设置文件内容
-//     * @param data
-//     */
-//    public void setData(byte[] data) {
-//        this.Data = data;
-//    }
+    /**
+     * 设置文件内容
+     * @param data
+     */
+    public void setData(byte[] data) {
+        this.Data = data;
+    }
     /**
      * 设置信息片断标识
      * @param  infoid

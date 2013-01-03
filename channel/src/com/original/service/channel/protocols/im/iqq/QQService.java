@@ -12,6 +12,8 @@ import iqq.comm.Auth.AuthInfo;
 import iqq.service.CategoryService;
 import iqq.service.LoginService;
 import iqq.service.MemberService;
+import iqq.service.MessageService;
+import iqq.util.ThreadUtil;
 
 import java.util.EventListener;
 import java.util.HashMap;
@@ -21,6 +23,7 @@ import javax.swing.event.EventListenerList;
 
 import org.apache.log4j.Logger;
 
+import com.original.service.channel.AbstractService;
 import com.original.service.channel.Account;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
@@ -29,13 +32,14 @@ import com.original.service.channel.Service;
 import com.original.service.channel.core.ChannelException;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
+import com.original.service.people.People;
 import com.original.util.log.OriLog;
 
 /**
  *  iQQ 服务类
  * @author WMS
  */
-public class QQService implements Service{
+public class QQService extends AbstractService {
 
 private static Logger log = OriLog.getLogger(QQService.class);
 
@@ -74,7 +78,22 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 				loginService.login(loginMap);
 				ai = Auth.getAccountInfo(loginMap.get("account"));
 				//获取好友信息，这一步不能少！！！
-				categoryService.getFriends(ai);
+				 categoryService.getFriends(ai);
+				 
+				 //这里目前还不支持多QQ用户发送和收取信息：
+				 MessageService.setIsRun(true);
+				 MessageService.setLoginAI(ai);
+			     ThreadUtil.submit(MessageService.getIntance());
+			     
+//			     //account infomation
+//			     ca.setPresence(presence);
+//			     ca.getAccount().setName(memberService.get);
+////			     //save to GS 
+////			     ca.getAccount().setAvatar(avatar);
+////			     
+////			     ca.getAccount().setUser(user);
+//			     
+			     //friends information
 			}
 			catch(Exception ex) {
 				status = FAILED;
@@ -216,5 +235,17 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 	}
 
 	/////////////////////////////////////
+	
+	@Override
+	public ChannelAccount getChannelAccount() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<People> getContacts() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

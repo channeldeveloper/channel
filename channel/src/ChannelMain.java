@@ -1,10 +1,11 @@
-﻿import java.util.Iterator;
+import java.util.Iterator;
 import java.util.List;
 
 import org.bson.types.ObjectId;
 
 import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.core.MessageFilter;
 import com.original.service.channel.core.MessageManager;
@@ -26,8 +27,7 @@ public class ChannelMain {
 		MyListener listner = new MyListener();
 		
 		//1 启动服务
-		ChannelService csc = ChannelService.instance();
-//		csc.initService();
+		ChannelService csc = new ChannelService();
 		
 		//加入自己的监听
 		csc.addMessageListener(listner);
@@ -60,7 +60,7 @@ public class ChannelMain {
 			String peopleAddr = m.getFromAddr();//
 //			System.out.println("peopleAddr:"+ peopleAddr);
 		}
-		//test quickly reply
+		//test quick reply
 		//方式1，原来的msg + 内容
 		ChannelMessage first = msgs1.get(0);
 		ChannelMessage replyMsg = first.clone();
@@ -121,7 +121,7 @@ public class ChannelMain {
 		
 		System.out.println("Curent Message Count afer delete by mail:" +msgMg.getMessages().size());
 		
-		
+
 		//attachments
 		List<ChannelMessage> msgs = msgMg.getMessages();
 		
@@ -144,9 +144,23 @@ public class ChannelMain {
 					GridFSUtil.getGridFSUtil().writeFile( a.getFileId(), "c:/"+ a.getFileName());
 			
 				}
+				
+				//测试发邮件（带附件和内容)
+//				 * 	Subject: Packt Publishing: You are now unsubscribed
+//				 * 	To: franzsoong@gmail.com
+				 
+				ChannelMessage m0 = m.clone();
+				m0.setFromAddr(m0.getToAddr());m0.setToAddr("franzsong@163.com");
+				csc.put(Constants.ACTION_SEND, m0);
+//				csc.put(Constants.ACTION_QUICK_REPLY, m);
+//				csc.put(Constants.ACTION_REPLY, m);
+//				csc.put(Constants.ACTION_FORWARD, m);
+				break;
+				
 			}
 
 		}
+
 
 //	
 

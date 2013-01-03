@@ -22,6 +22,7 @@ import org.bson.types.ObjectId;
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
 import com.mongodb.Mongo;
+import com.original.service.channel.AbstractService;
 import com.original.service.channel.Attachment;
 import com.original.service.channel.Channel;
 import com.original.service.channel.ChannelAccount;
@@ -50,47 +51,32 @@ import com.original.service.profile.Profile;
  * @author sxy
  * 
  */
-public final class  ChannelService implements Service {
+public class ChannelService extends AbstractService {
 
 	private ChannelServer channelServer;
 
 	private HashMap<ChannelAccount, Service> serviceMap;
 	private MessageManager msgManager;
 	private PeopleManager peopleManager;
-//
-//	private String dbServer = "localhost";
-//	private String dbServerPort = "27017";
-//	private String channlDBName = "song";
-	
 
-	private String dbServer;
-	private int dbServerPort;
-	private String channlDBName;
+	private String dbServer = "localhost";
+	private int dbServerPort = 27017;
+	private String channlDBName = "song";
+
 	private Morphia morphia;
 	private Mongo mongo;
 	private Datastore ds;
 
 	java.util.logging.Logger logger;
-	private Initializer initializer;
 
 	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
 	
-	private static ChannelService singleton;
-	
-	public static ChannelService instance()
-	{
-		if (singleton == null)
-		{
-			singleton = new ChannelService();
-		}
-		return singleton;
-		
-	}
+	private Initializer initializer;
 
 	/**
 	 * 
 	 */
-	private ChannelService() {
+	public ChannelService() {
 		initMongoDB();
 		init();
 	}
@@ -276,7 +262,7 @@ public final class  ChannelService implements Service {
 	}
 
 	private void initMongoDB() {
-		logger = Logger.getLogger("Channel Service");
+		logger = Logger.getLogger("channer");
 		morphia = new Morphia();
 		morphia.map(ChannelAccount.class);
 		morphia.map(Channel.class);
@@ -287,11 +273,7 @@ public final class  ChannelService implements Service {
 
 		// DB
 		try {
-			dbServer = Constants.Channel_DB_Server;
-			dbServerPort  = Constants.Channel_DB_Server_Port;
-			channlDBName = Constants.Channel_DB_Name;
-			
-			mongo = new Mongo(dbServer, Constants.Channel_DB_Server_Port);
+			mongo = new Mongo(dbServer, dbServerPort);
 			// db mapping to object
 			ds = morphia.createDatastore(mongo, channlDBName);
 			ds.ensureIndexes();
@@ -324,7 +306,8 @@ public final class  ChannelService implements Service {
 			logger.log(Level.SEVERE,
 					"To init channel db fail!" + exp.toString());
 		}
-				
+		
+		
 		msgManager = new MessageManager(morphia, mongo, ds);
 		channelServer = new ChannelServer(morphia, mongo, ds);
 		peopleManager = new PeopleManager(morphia, mongo, ds);
@@ -367,8 +350,8 @@ public final class  ChannelService implements Service {
 		} else if (ca.getChannel().getName().startsWith("im_qq")) {
 			return new QQService("Cydow", ca);
 
-		} else if (ca.getChannel().getName().startsWith("sns_weibo")) {		
-				return new WeiboService("Cydow", ca);			
+		} else if (ca.getChannel().getName().startsWith("sns_weibo")) {
+			return new WeiboService("Cydow", ca);
 		}
 		return null;
 	}
@@ -391,8 +374,7 @@ public final class  ChannelService implements Service {
 		}
 		catch(Exception exp)
 		{
-			logger.log(Level.INFO, "Fail to create Service !" + ca);
-			
+			logger.log(Level.INFO, "Fail to create Service !" + ca);			
 		}
 		if (sc != null) {
 			serviceMap.put(ca, sc);
@@ -611,31 +593,30 @@ public final class  ChannelService implements Service {
 	@Override
 	public void put(String action, ChannelMessage msg) {
 		// TODO Auto-generated method stub
-		if (action
-				.endsWith(com.original.service.channel.Constants.ACTION_QUICK_REPLY)) {
-			// Original message id.
-			if (msg.getId() != null) {
-				ChannelMessage chmsg = msgManager.getMessage(msg.getId());
-				if (chmsg != null) {
-					ChannelMessage replyMsg = chmsg.clone();
-					replyMsg.setId(null);
-
-					replyMsg.setToAddr(chmsg.getFromAddr());
-					replyMsg.setFromAddr(chmsg.getToAddr());
-					replyMsg.setBody(msg.getBody());
-					replyMsg.setType(ChannelMessage.TYPE_SEND);
-					msg = replyMsg;
-				}
-			}
-		}
+//		if (action
+//				.endsWith(Constants.ACTION_QUICK_REPLY)) {
+//			// Original message id.
+//			if (msg.getId() != null) {
+//				ChannelMessage chmsg = msgManager.getMessage(msg.getId());
+//				if (chmsg != null) {
+//					ChannelMessage replyMsg = chmsg.clone();
+//					replyMsg.setId(null);
+//
+//					replyMsg.setToAddr(chmsg.getFromAddr());
+//					replyMsg.setFromAddr(chmsg.getToAddr());
+//					replyMsg.setBody(msg.getBody());
+//					replyMsg.setType(ChannelMessage.TYPE_SEND);
+//					msg = replyMsg;
+//				}
+//			}
+//		}
 
 		if (msg != null) {
 			ChannelAccount cha = msg.getChannelAccount();
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				try {
-					sc.put(action, msg); //下发消息
-					
+					sc.put(action, msg); //下发消息					
 					//如果下发成功，则需要保存此消息
 					msg.setType(ChannelMessage.TYPE_SEND); //强制转换
 					msgManager.save(msg);

@@ -6,6 +6,7 @@ package com.original.service.channel;
 import java.util.List;
 
 import com.original.service.channel.event.MessageListner;
+import com.original.service.people.People;
 
 /**
  * @author Song Xueyong
@@ -66,6 +67,17 @@ public interface Service {
 	
 	
 
+    /**
+     * 获得资金的账号信息。
+     * @return
+     */
+    public ChannelAccount getChannelAccount();
+    
+    /**
+     * 获得渠道的联系人列表。
+     * @return
+     */
+    public List<People> getContacts();
 	
 
 }
