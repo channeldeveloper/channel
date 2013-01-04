@@ -91,7 +91,9 @@ public class StackMessageService {
         }
 
         MainPanel mainPanel = (MainPanel) map.get("mainPanel");
-        mainPanel.addMessagePrompt(msgList);
+        if(mainPanel != null) {
+        	mainPanel.addMessagePrompt(msgList);
+        }
     }
 
     public synchronized boolean isOpenedTab(Message message) throws Exception {
