@@ -84,22 +84,6 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 				 MessageService.setIsRun(true);
 				 MessageService.setLoginAI(ai);
 			     ThreadUtil.submit(MessageService.getIntance());
-				 categoryService.getFriends(ai);
-				 
-				 //这里目前还不支持多QQ用户发送和收取信息：
-				 MessageService.setIsRun(true);
-				 MessageService.setLoginAI(ai);
-			     ThreadUtil.submit(MessageService.getIntance());
-			     
-//			     //account infomation
-//			     ca.setPresence(presence);
-//			     ca.getAccount().setName(memberService.get);
-////			     //save to GS 
-////			     ca.getAccount().setAvatar(avatar);
-////			     
-////			     ca.getAccount().setUser(user);
-//			     
-			     //friends information
 			}
 			catch(Exception ex) {
 				status = FAILED;
@@ -253,5 +237,4 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 	}
 
 	/////////////////////////////////////
-
 }

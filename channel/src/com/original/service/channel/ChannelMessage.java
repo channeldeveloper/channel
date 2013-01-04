@@ -466,4 +466,5 @@ public class ChannelMessage implements Cloneable, Constants{
 	public void setExtensions(HashMap<String, String> extensions) {
 		this.extensions = extensions;
 	}
+	
 }

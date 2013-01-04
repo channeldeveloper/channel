@@ -5,9 +5,17 @@
 3. 附件的处理
 4. channel serviced的自服务控制(Data/View分离 ChannelMessage对象； Service/GUI分离，初始化过程 /newwork内部检测)
 5. 联系人
-6. DB的操作
+6. DB的操作。
 7. 不能有存本地磁盘的数据(token,如果临时数据在内存中）。
 8.邮件转换/回复的界面（原来是tab）
 9.iQQ\weibo中 服务和内部的gui分类
 10. 发送的消息如何获得ID。
 11.自定义消息Tag(待办）
+12. 获取头像(QQ/IM)。
+13.收取自己的微博。
+14.信息重复（邮件、微博、。
+15.账号信息（头像，别名，签名）
+16. QQ的临时信息。
+17. ChannelMessage要删除HTMLDocument对象
+18. 设置面板。
+19. 输入人名提示、联系人提示。

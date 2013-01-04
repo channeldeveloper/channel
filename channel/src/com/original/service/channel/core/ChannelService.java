@@ -616,7 +616,7 @@ public class ChannelService extends AbstractService {
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				try {
-					sc.put(action, msg); //下发消息					
+					sc.put(action, msg); //下发消息
 					//如果下发成功，则需要保存此消息。注意，目前只有快速回复保存
 					if(action == Constants.ACTION_QUICK_REPLY) {
 						msg.setType(ChannelMessage.TYPE_SEND); //强制转换
