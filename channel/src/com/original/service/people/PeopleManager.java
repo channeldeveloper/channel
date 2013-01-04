@@ -1,7 +1,6 @@
 package com.original.service.people;
 
 import java.util.List;
-import java.util.regex.Matcher;
 
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
@@ -162,7 +161,7 @@ public class PeopleManager {
 				// how to get by one sentence
 				List<People> people = getPeople(name);
 				for (People qp : people) {
-					Account[] accs = qp.getAccounts();
+					List<Account> accs = qp.getAccounts();
 					if (accs != null) {
 						for (Account ac : accs) {
 							// 已经加入了
@@ -181,7 +180,7 @@ public class PeopleManager {
 				ac.setUser(addr);
 				ac.setChannelName(chMsg.getChannelAccount().getChannel()
 						.getName());
-				p.setAccounts(new Account[]{ac} );
+				p.addAccount(ac);
 				ds.save(p);
 			}
 		}

@@ -106,7 +106,7 @@ public class VerticalGridLayout extends ChannelGridLayout
 		case BOTTOM_TO_TOP:
 			for (int c = ncomponents,  x = insets.left, y = insets.top ; c > 0 ; c--, y += vgap) {
 				Component comp = parent.getComponent(c-1);
-				if(comp.isVisible()) {
+				if(!autoAdjust || comp.isVisible()) {
 					Dimension dim = comp.getPreferredSize();
 					comp.setBounds(x, y, w, dim.height);
 
@@ -122,7 +122,7 @@ public class VerticalGridLayout extends ChannelGridLayout
 		default:
 			for (int c = 0,  x = insets.left, y = insets.top ; c < ncomponents ; c++, y += vgap) {
 				Component comp = parent.getComponent(c);
-				if(comp.isVisible()) {
+				if(!autoAdjust || comp.isVisible()) {
 					Dimension dim = comp.getPreferredSize();
 					comp.setBounds(x, y, w, dim.height);
 

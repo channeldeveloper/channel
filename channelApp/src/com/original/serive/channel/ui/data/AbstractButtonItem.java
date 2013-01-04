@@ -21,8 +21,10 @@ public class AbstractButtonItem implements Serializable
 	
 	/** 选中图标或点击后图标 */
 	private transient Icon selectedIcon;
-	
+	/** 按钮大小，可以自定义 */
 	private transient Dimension size;
+	
+	private transient AbstractButton source;
 	
 	public AbstractButtonItem(String text, String actionCommand, Icon icon)
 	{
@@ -92,5 +94,12 @@ public class AbstractButtonItem implements Serializable
 	public void setSize(int width, int height)
 	{
 		this.size = new Dimension(width, height);
+	}
+
+	public AbstractButton getSource() {
+		return source;
+	}
+	public void setSource(AbstractButton source) {
+		this.source = source;
 	}
 }

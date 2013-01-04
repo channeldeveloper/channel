@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 
 import weibo4j.model.WeiboException;
 
+import com.original.service.channel.AbstractService;
 import com.original.service.channel.Account;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
@@ -33,6 +34,7 @@ import com.original.service.channel.Service;
 import com.original.service.channel.core.ChannelException;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
+import com.original.service.people.People;
 import com.original.util.log.OriLog;
 
 /**
@@ -40,7 +42,7 @@ import com.original.util.log.OriLog;
  * @author WMS
  *
  */
-public class WeiboService implements Service{
+public class WeiboService extends AbstractService {
 
 	private static Logger log = OriLog.getLogger(WeiboService.class);
 	
@@ -304,4 +306,18 @@ public class WeiboService implements Service{
 		return 0;
 	}
 
+	
+	/////////////////////////////////////
+	
+	@Override
+	public ChannelAccount getChannelAccount() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<People> getContacts() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

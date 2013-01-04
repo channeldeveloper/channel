@@ -66,4 +66,10 @@ public interface EventConstants
 	
 	/* 分享/抄送 */
 	String ADD_CC = "add cc";
+	
+	/* 字体样式设置 */
+	String BOLD_STYLE = "bold",
+			ITALIC_STYLE = "italic",
+			UNDERLINE_STYLE = "underline";
+	String CHOOSE_COLOR = "choose color";
 }

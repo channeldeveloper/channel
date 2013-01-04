@@ -80,7 +80,7 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 	 */
 	public void doClose() {
 		ChannelMessageBodyPane body = this.getMessageBody();
-		ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
+		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 		if(body != null)
 		{
 			ChannelMessageBodyPane.Body child, origin = null;

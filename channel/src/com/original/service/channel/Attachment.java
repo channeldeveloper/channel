@@ -13,8 +13,8 @@ import org.bson.types.ObjectId;
 
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
-import com.google.code.morphia.annotations.Entity;
-import com.google.code.morphia.annotations.Id;
+import com.google.code.morphia.annotations.Embedded;
+import com.google.code.morphia.annotations.Transient;
 import com.google.code.morphia.query.Query;
 import com.google.gson.Gson;
 import com.mongodb.DB;
@@ -28,17 +28,15 @@ import com.mongodb.Mongo;
  * @author sxy
  * 
  */
-@Entity(value = "attachment", noClassnameStored = true)
+@Embedded
 public class Attachment {
-
-	@Id
-	public ObjectId id;	
-	
 	public String fileName;	
 	private String type;
 	public int size;	
 	private ObjectId fileId;
 	private String contentId;//?
+	@Transient
+	private String filePath;//Use to send email from  local file.
 	 
 	 /**
 	  * 
@@ -46,21 +44,6 @@ public class Attachment {
 	public Attachment()
 	{
 		
-	}
-
-
-	/**
-	 * @return the id
-	 */
-	public ObjectId getId() {
-		return id;
-	}
-
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(ObjectId id) {
-		this.id = id;
 	}
 
 	/**
@@ -145,6 +128,20 @@ public class Attachment {
 			return "attachment";
 		}
 
+	}
+	
+	/**
+	 * @return the filePath
+	 */
+	public String getFilePath() {
+		return filePath;
+	}
+
+	/**
+	 * @param filePath the filePath to set
+	 */
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
 	}
 
 	/**

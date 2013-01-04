@@ -183,10 +183,10 @@ public class QQEnvironment {
             e.printStackTrace();
         }
         if (filePath.endsWith(".jar")) {
-            Log.println("项目已经打包:" + filePath);
+//            Log.println("项目已经打包:" + filePath);
             return true;
         }
-        Log.println("项目没有打包:" + filePath);
+//        Log.println("项目没有打包:" + filePath);
         return false;
     }
 }

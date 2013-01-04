@@ -148,35 +148,50 @@ public class ChannelMessagePane extends JPanel
 	}
 	
 	/**
-	 * 添加消息至ChannelMessageBodyPane中
-	 * @param msg 消息对象
-	 * @param addFirst 若为true则只添加最新一条(第一条)；若为false则添加全部
+	 * 初始化消息列表，用于{@link ChannelDesktopPane#initMessage(ChannelMessage)}时
+	 * @param msg
 	 */
-	public void addMessage(ChannelMessage msg, boolean addFirst)
+	public void initMessage(ChannelMessage msg) 
 	{
 		String uName = msg.getContactName();
-		if(uid == null) { //第一次添加，需要设置布局
+		if (uid == null) {// 第一次添加
 			uid = uName;
-
-			body.addMessage(msg, addFirst);
 			header.setContactName(uName);
-			
-			if(ChannelMessage.TYPE_RECEIVED.equals(msg.getType())) { //是接受过来的消息
+
+			if (ChannelMessage.TYPE_RECEIVED.equals(msg.getType())) { // 是接受过来的消息
 				setReceiveMsgLayout();
-			}else if (ChannelMessage.TYPE_SEND.equals(msg.getType())) { //是发送(回复)过去的消息
+			} else if (ChannelMessage.TYPE_SEND.equals(msg.getType())) { // 是发送(回复)过去的消息
 				setPostMsgLayout();
 			}
+
+			body.initMessage(msg);
+		} else if (uid.equals(uName)) {
+			body.initMessage(msg);
 		}
-		else if(uid.equals(uName)) {
-			if(addFirst) {
-				body.addMessage2List(msg);
+	}
+	
+	/**
+	 * 添加消息至ChannelMessageBodyPane中
+	 * @param msg 消息对象
+	 * @param toFirst 是否添加在顶部(即只显示一条)
+	 */
+	public void addMessage(ChannelMessage msg, boolean toFirst)
+	{
+		String uName = msg.getContactName();
+		if (uid == null) { // 第一次添加，需要设置布局
+			uid = uName;
+
+			body.addMessage(msg, toFirst);
+			header.setContactName(uName);
+
+			if (ChannelMessage.TYPE_RECEIVED.equals(msg.getType())) { // 是接受过来的消息
+				setReceiveMsgLayout();
+			} else if (ChannelMessage.TYPE_SEND.equals(msg.getType())) { // 是发送(回复)过去的消息
+				setPostMsgLayout();
 			}
-			else
-			{
-				body.addMessage(msg, addFirst);
-			}
-			
-			changeMsgLayoutIfNeed(msg); //检查是否要改变消息布局方向
+		} else if (uid.equals(uName)) {
+			body.addMessage(msg, toFirst);
+			changeMsgLayoutIfNeed(msg); // 检查是否要改变消息布局方向
 		}
 	}
 	

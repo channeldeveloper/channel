@@ -19,6 +19,8 @@ import iqq.util.Method;
 import iqq.util.QQImageUtil;
 import iqq.util.ThreadUtil;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Date;
@@ -29,6 +31,7 @@ import java.util.logging.Logger;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
 
 import atg.taglib.json.util.JSONArray;
 import atg.taglib.json.util.JSONException;
@@ -46,6 +49,8 @@ public class MessageService extends Thread {
     private static boolean isRun = false;
     private Member member = null;
     private int errorCount = 0;
+    
+    private static AuthInfo loginAI = Auth.getSingleAccountInfo();
 
     private MessageService() {
     }
@@ -68,18 +73,24 @@ public class MessageService extends Thread {
     	return retJ;
     }
 
-    @Override
+    public static AuthInfo getLoginAI() {
+		return loginAI;
+	}
+	public static void setLoginAI(AuthInfo ai) {
+		loginAI = ai;
+	}
+
+	@Override
     public void run() {
         while (isRun) {
             if (this.errorCount > 10) {
                 isRun = false;
-//                ErrorMessage.show("网络连接异常，请检查网络后重新登录！");
 
-                throw new java.lang.IllegalStateException("iQQ 已经在别处登录！");
+                throw new java.lang.IllegalStateException("网络连接异常，请检查网络后重新登录！");
             }
 
             try {
-                JSONObject retJ = openMessageChannel(Auth.getSingleAccountInfo());
+                JSONObject retJ = openMessageChannel(loginAI);
                 int retcode = retJ.getInt("retcode");
                 if (retcode == 0) {
                     JSONArray result = retJ.getJSONArray("result");
@@ -100,24 +111,17 @@ public class MessageService extends Thread {
                             receiveGroupMsg(Auth.getSingleAccountInfo(), value);
                             this.errorCount = 0;
                         } else if ("kick_message".equals(poll_type)) {
-                            isRun = false;
-//                            ErrorMessage.show("QQ已经在别处登录！");
-                            Log.println("QQ已经在别处登录！");
+                            isRun = false; //线程中断
                             throw new java.lang.IllegalStateException("iQQ 已经在别处登录！");
-//                            ThreadUtil.shutdown();
-
-                            // system_message 是系统消息 else if (retcode == 121)
                         }
                     }
                 }
                 //查询新信息，5秒后继续查询
                 Thread.sleep(5000);
-            } catch (Exception e) {
+            } catch (Exception ex) {
                 // TODO: handle exception
-                Log.println("errorCount:" + errorCount);
-                Log.println("Response PollMessage failure = " + e.getMessage());
-                e.printStackTrace();
                 this.errorCount++;
+                System.err.println(ex);
             }
         }
     }
@@ -259,36 +263,41 @@ public class MessageService extends Thread {
     }
     
     public boolean sendMsg(AuthInfo ai, long toUin, String text) {
+    	return sendMsg(ai, toUin, text, null);
+    }
+    
+    public boolean sendMsg(AuthInfo ai, long toUin, String text, JSONObject styleJSON) {
     	if(text != null && !text.isEmpty()) {
-    		HTMLDocument doc = new HTMLDocument();
-    		try {
-    			doc.insertString(0, text, null);
-    		}
-    		catch(BadLocationException ex) {
-    		}
-    		return sendMsg(ai, toUin, doc);
+    		HTMLEditorKit kit = new HTMLEditorKit();
+    		HTMLDocument doc = (HTMLDocument)kit.createDefaultDocument();
+    		StringReader sr = new StringReader(text);
+			try {
+				// doc.insertString(0, text, null);
+				kit.read(sr, doc, 0);
+			} catch (BadLocationException ex) {
+			} catch (IOException e) {
+			} finally {
+				sr.close();
+			}
+    		return sendMsg(ai, toUin, doc, styleJSON);
     	}
     	return false;
     }
     
     public boolean sendMsg(AuthInfo ai, long toUin, HTMLDocument doc) {
-    	return sendMsg(ai, toUin, doc, new MessageStyle());
+    	return sendMsg(ai, toUin, doc, null);
     }
 
-    public boolean sendMsg(AuthInfo ai, long toUin, HTMLDocument doc, MessageStyle mstyle) {
+    public boolean sendMsg(AuthInfo ai, long toUin, HTMLDocument doc, JSONObject styleJSON) {
         JSONArray msg = QQImageUtil.convertHTMLToFlag(doc);
+       
         try {
             JSONObject json = new JSONObject();
             json.put("to", toUin);// 要发送的人
             json.put("face", 0);
-
-//            JSONArray msg = new JSONArray();
-//            JSONArray face = new JSONArray();
-//            face.add("face");
-//            face.add(0);
-//            msg.add(face);
-//            msg.add(text);
-            if(mstyle == null) mstyle = new MessageStyle();
+            
+            //转换字体样式
+            MessageStyle mstyle = MessageStyle.convert(styleJSON);
             JSONArray font = new JSONArray();
             font.add("font");
 
@@ -304,7 +313,7 @@ public class MessageService extends Thread {
 
             font.add(font1);
             msg.add(font);
-
+            
             json.put("content", msg.toString());
             json.put("msg_id", new Random().nextInt(10000000));
             json.put("clientid", ai.getClientid());

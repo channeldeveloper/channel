@@ -6,6 +6,7 @@
  */
 package com.original.service.people;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -22,7 +23,6 @@ import com.mongodb.DB;
 import com.mongodb.DBCursor;
 import com.mongodb.Mongo;
 import com.original.service.channel.Account;
-import com.original.service.channel.ChannelMessage;
 
 /**
  * 
@@ -31,9 +31,18 @@ import com.original.service.channel.ChannelMessage;
  */
 @Entity(value = "people", noClassnameStored = true)
 public class People {
-	
+
 	@Id
 	private ObjectId id;
+	// 代表联系人系统用名(不同渠道可能使用不同的名称，这里选择1个或者自定义一个）
+	private String name;	
+	// 代表联系人头像(不同渠道可能使用不同的名称，这里选择1个或者自定义一个）
+	private ObjectId avatar;
+	//对应的多个渠道
+	@Embedded
+	private List<Account> accounts;
+	
+
 	
 	/**
 	 * @return the id
@@ -49,12 +58,7 @@ public class People {
 		this.id = id;
 	}
 
-	private String name;
-	
-	private ObjectId avatar;
-	
-	@Embedded
-	private Account[] accounts;
+
 
 	// pending
 	/**
@@ -92,15 +96,29 @@ public class People {
 	/**
 	 * @return the accounts
 	 */
-	public Account[] getAccounts() {
+	public List<Account> getAccounts() {
 		return accounts;
 	}
 
 	/**
 	 * @param accounts the accounts to set
 	 */
-	public void setAccounts(Account[] accounts) {
+	public void setAccounts(List<Account> accounts) {
 		this.accounts = accounts;
+	}
+	
+	/**
+	 * @param accounts the accounts to set
+	 */
+	public void addAccount(Account newAccount) {
+		if (accounts == null)
+		{
+			accounts = new ArrayList<Account>();
+		}
+		if (!accounts.contains(newAccount))
+		{
+			accounts.add(newAccount);
+		}
 	}
 
 	public String toString() {
@@ -145,9 +163,9 @@ public class People {
 		song.setName("Song XueYong");
 		song.setAvatar(null);
 		
-		Account[] acs = new Account[1];
+		List<Account> acs = new ArrayList<Account>();
 		Account acc = new Account();
-		acs[0] = acc;
+		acs.add(acc);
 		acc.setChannelName("gmail");
 		acc.setUser("franzsoong@gmail.com");
 		acc.setPassword("sxyb1234");
@@ -158,17 +176,17 @@ public class People {
 		 song = new People();
 		song.setName("宋砚之");
 		song.setAvatar(null);
-		acs = new Account[2];
+		acs  = new ArrayList<Account>();
 		acc = new Account();
 		acc.setChannelName("mailqq");
 		acc.setUser("franzsong@qq.com");
 		acc.setPassword("syzb%1234%");
-		acs[0] = acc;
+		acs.add(acc);
 		acc = new Account();
 		acc.setChannelName("mail163");
 		acc.setUser("franzsong@163.com");
 		acc.setPassword("syzb!1234!");
-		acs[1] = acc;
+		acs.add(acc);
 		song.setAccounts(acs);
 		
 		ds.save(song);

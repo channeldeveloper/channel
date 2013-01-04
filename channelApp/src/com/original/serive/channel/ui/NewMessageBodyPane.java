@@ -10,10 +10,14 @@ import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.Date;
+import java.util.HashMap;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
@@ -22,18 +26,27 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
+import atg.taglib.json.util.JSONException;
+
 import com.original.serive.channel.ChannelGUI;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.border.InnerShadowBorder;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.ChannelGridLayout;
 import com.original.serive.channel.layout.VerticalGridLayout;
+import com.original.serive.channel.server.ChannelAccesser;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
+import com.original.serive.channel.ui.data.FontStyle;
+import com.original.serive.channel.ui.widget.EditorHandler;
+import com.original.serive.channel.ui.widget.FontChooser;
 import com.original.serive.channel.util.ChannelConfig;
+import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
 import com.original.service.channel.Constants.CHANNEL;
+import com.original.service.channel.core.ChannelService;
 import com.original.widget.OScrollBar;
 import com.original.widget.OTextField;
 
@@ -55,6 +68,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			parentLayout = new CardLayout();
 	
 	private boolean isParent = true;
+	private CHANNEL channel = null;
 	
 	public NewMessageBodyPane() {
 		this(true);
@@ -83,11 +97,12 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			child = newChild(channel);
 			
 			if(child != null) {
+				child.newMsg = newMsg;
+				child.channel = channel;
 				((CardLayout)parentLayout).show(this, channel.name());
 			}
 		}
 	}
-	
 	private NewMessageBodyPane newChild(CHANNEL channel) {
 		NewMessageBodyPane child = null;
 		if((child = hasChild(channel)) != null)
@@ -96,24 +111,34 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		}
 		
 		child = new NewMessageBodyPane(false);
+		Top ttop = child.top;
 		Center ccenter = child.center;
 		switch(channel)
 		{
 		case WEIBO:
-			ccenter.setVisible(0, false); //不显示抄送
-			ccenter.setVisible(1, false);//不显示主题
+			ttop.setVisible(SAVE_TO_DRAFT, false);
 			
-			ccenter.setVisible(SET_FONT, false);//没有字体样式
-			ccenter.setVisible(ADD_FILE, false);//没有附件
+			ccenter.setVisible(0, false); //不显示抄送
+			ccenter.setVisible(1, false); //不显示主题
+			ccenter.setUsable(SET_FONT, false);//禁用字体样式
+			ccenter.setUsable(ADD_FILE, false);//禁用附件
+			ccenter.setSupportMultiImages(false);//不支持多张图片
 			break;
 		case QQ:
-			ccenter.setVisible(0, false); //不显示抄送
-			ccenter.setVisible(1, false);//不显示主题
+			ttop.setVisible(SAVE_TO_DRAFT, false);
 			
-			ccenter.setVisible(ADD_FILE, false);//没有附件
+			ccenter.setVisible(0, false); //不显示抄送
+			ccenter.setVisible(1, false); //不显示主题
+			ccenter.setUsable(ADD_FILE, false);//禁用附件
+			ccenter.setOverallStyle(true); //全局样式
+			
 			break;
 			
 		case MAIL: //默认邮件
+			ttop.setVisible(SAVE_TO_DRAFT, true);
+			
+			ccenter.setVisible(0, false);//默认不显示抄送，只有点击"分享/抄送"的时候才显示
+			ccenter.setOverallStyle(false); //非全局样式
 		default:
 				break;
 		}
@@ -127,7 +152,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	 * @param channel
 	 * @return
 	 */
-	private NewMessageBodyPane hasChild(CHANNEL channel)
+	public NewMessageBodyPane hasChild(CHANNEL channel)
 	{
 		if(isParent)
 		{
@@ -168,17 +193,60 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		return null;
 	}
 	
+	/**
+	 * 给当前显示的面板(如微博\QQ\邮件)显示消息
+	 * @param msg
+	 */
 	public void setMessage(ChannelMessage msg)
 	{
 		if(isParent) {
-			NewMessageBodyPane child = currentChild();
-			if(child != null) {
-				child.newMsg = msg;
-			}
-		}
-		else {
 			this.newMsg = msg;
 		}
+	}
+	
+	/**
+	 * 编辑消息，即收集当前编辑面板的消息
+	 * @return
+	 */
+	public ChannelMessage editMessage() {
+		ChannelMessage msg = null;
+		if(newMsg != null) {
+			msg = newMsg.clone();
+			
+			msg.setId(null); //注意，这里是关键
+			msg.setType(ChannelMessage.TYPE_SEND);
+			msg.setSentDate(new Date());
+			msg.setRecievedDate(msg.getSentDate());//设置和发送时间一样
+			
+			String clazz = newMsg.getClazz(); //类别
+			if (ChannelMessage.WEIBO.equals(clazz) 	||
+					ChannelMessage.QQ.equals(clazz)) 
+			{
+				msg.setBody(center.getText(true));
+			} else {
+				msg.setBody(center.getText(false));
+			}
+			
+			String type = newMsg.getType(); //消息类型
+			if (!ChannelMessage.TYPE_SEND.equals(type)) { // 方向不一致，需要交换一下发送和接受人的顺序
+				msg.setToAddr(newMsg.getFromAddr());
+				msg.setFromAddr(newMsg.getToAddr());
+			}
+			
+			//对于QQ、邮件还有字体样式：
+			HashMap<String, String> exts = msg.getExtensions();
+			exts.clear(); //先清空再添加
+			if(ChannelMessage.QQ.equals(clazz)) {
+				FontStyle fs = center.getFontStyle();
+				try {
+					exts.put(Constants.QQ_FONT_STYLE, fs.toJSONString());
+				} catch (JSONException ex) {
+					ex.printStackTrace();
+				}
+			}
+		}
+		
+		return msg;
 	}
 
 	//顶部功能按钮面板
@@ -188,6 +256,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			setLayout(new ChannelGridLayout(2, 0, new Insets(0, 10, 0, 0)));
 			setButtomItems(new AbstractButtonItem[] {
 				new AbstractButtonItem("发送", POST, null),
+				new AbstractButtonItem("存草稿", SAVE_TO_DRAFT, null),
 				new AbstractButtonItem("保存", SAVE, null),
 				new AbstractButtonItem("删除", DELETE, null),
 				new AbstractButtonItem("取消", CANCEL, null),	
@@ -233,19 +302,45 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 				}
 			}
 		}
+		
+		/**
+		 * 设置Top面板中某一按钮控件显示或隐藏
+		 * @param actionCommand 按钮名称
+		 * @param isVisible
+		 */
+		public void setVisible(String actionCommand, boolean isVisible)
+		{
+			for(int i=0; i<getComponentCount(); i++)
+			{
+				Component child = getComponent(i);
+				if(child instanceof AbstractButton
+						&& (((AbstractButton) child).getActionCommand() == actionCommand))
+				{
+					if(child.isVisible() != isVisible)
+						child.setVisible(isVisible);
+					break;
+				}
+			}
+		}
 
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
 			if(e.getActionCommand() == CANCEL) {
-				ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-//				NewMessageBodyPane child = currentChild();
-//				if(child != null && child.newMsg != null) {
-//					desktop.removeShowComp(PREFIX_NEW + child.newMsg.getContactName(), true);
-//				}
+				ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 				if(newMsg != null) {
 					desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName(), true);
 				}
+			}
+			else if(e.getActionCommand() == POST) { //发送
+				ChannelMessage sendMsg = editMessage();
+				if(sendMsg != null && !ChannelUtil.isEmpty(sendMsg.getBody())) {
+					ChannelService cs = 	ChannelAccesser.getChannelService();
+					cs.put(Constants.ACTION_REPLY, sendMsg);
+				}
+				
+				//清空文本
+				center.clearText();
 			}
 		}
 	}
@@ -275,6 +370,11 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		//文本面板
 		private JTextPane content = new JTextPane();
 		
+		//按钮对应的对话框
+		private FontChooser fontChooser = new FontChooser(content);
+		private JFileChooser fileChooser = new JFileChooser();
+		private EditorHandler handler = new EditorHandler(content);
+		
 		public Center() {
 			layoutMgr.setAnchor(GridBagConstraints.NORTHEAST); //靠右对齐，主要针对标签
 			layoutMgr.setInsets(new Insets(0, 0, 2, 2));
@@ -295,14 +395,21 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			layoutMgr.addComToModel(txtSubject, 1, 1, GridBagConstraints.HORIZONTAL);
 			layoutMgr.newLine(1);
 			
-			control.add(btnFont);
-			control.add(btnImage);
-			control.add(btnFile);
+			control.add(btnFont); //字体
+			control.add(btnImage);//图像
+			control.add(btnFile);//附件
+			btnFont.addActionListener(this);
+			btnImage.addActionListener(this);
+			btnFile.addActionListener(this);
 			layoutMgr.addComToModel(control,1,1,GridBagConstraints.HORIZONTAL);
 			layoutMgr.newLine();
 			
 			layoutMgr.addComToModel(new JLabel("内容："));
+//			content.setEditorKit(new HTMLEditorKit());
+//			content.addHyperlinkListener(new ChannelHyperlinkListener()); //可编辑状态下，不支持超链
+			content.setContentType("text/html; charset=gb2312");
 			content.setOpaque(false);
+			content.setCursor(ChannelConstants.TEXT_CURSOR);
 			content.setBackground(new Color(0, 0, 0, 0)); //设置文本面板透明的唯一方法
 			JScrollPane scrollPane = new JScrollPane(content,
 	                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
@@ -328,11 +435,21 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		}
 		
 		/**
-		 * 设置Center面板中某一按钮控件显示或隐藏
-		 * @param actionCommand 按钮名称
-		 * @param isVisible
+		 * 判断Center面板中某一行是否显示
+		 * @param lineIndex 行索引，从0开始编号
+		 * @return
 		 */
-		public void setVisible(String actionCommand, boolean isVisible)
+		public boolean isVisible(int lineIndex)
+		{
+			return layoutMgr.isLineVisible(lineIndex);
+		}
+		
+		/**
+		 * 设置Center面板中某一按钮控件可用或禁用
+		 * @param actionCommand 按钮名称
+		 * @param isUsable
+		 */
+		public void setUsable(String actionCommand, boolean isUsable)
 		{
 			for(int i=0; i<control.getComponentCount(); i++)
 			{
@@ -340,16 +457,82 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 				if(child instanceof AbstractButton
 						&& (((AbstractButton) child).getActionCommand() == actionCommand))
 				{
-					if(child.isVisible() != isVisible)
-						child.setVisible(isVisible);
+					if(!isUsable) {
+						child.setCursor(ChannelConstants.DEFAULT_CURSOR);
+						((AbstractButton) child).removeActionListener(this);
+					}
+					else {
+						child.setCursor(ChannelConstants.HAND_CURSOR);
+						((AbstractButton) child).addActionListener(this);
+					}
 					break;
 				}
 			}
 		}
+		
+		/**
+		 * 设置content的样式是否是全局的
+		 * @param isOverall
+		 */
+		public void setOverallStyle(boolean isOverall)
+		{
+			fontChooser.setOverallStyle(isOverall);
+		}
+		
+		/**
+		 * 设置是否支持多张图片插入
+		 * @param supportMultiImages
+		 */
+		public void setSupportMultiImages(boolean supportMultiImages) {
+			handler.setSupportMultiImages(supportMultiImages);
+		}
+		
+		/**
+		 * 获取当前content中的文本
+		 * @param isPlain 是否是纯文本
+		 * @return
+		 */
+		public String getText(boolean isPlain) {
+			String text = content.getText();
+			return isPlain ? handler.parseHTML(text) : text;
+		}
+		
+		/**
+		 * 清除content中的文本，并同时恢复默认样式等
+		 */
+		public void clearText () {
+			content.setText(null);
+			fontChooser.setFontStyle(null);  //恢复默认样式
+			fileChooser.setSelectedFile(null);  //清空选中文件
+		}
+		
+		/**
+		 * 获取当前字体选择器的样式
+		 * @return
+		 */
+		public FontStyle getFontStyle() {
+			return fontChooser.lookforFontStyle();
+		}
 
 		public void actionPerformed(ActionEvent e)
 		{
-			System.out.println(e.getActionCommand());
+			if(SET_FONT == e.getActionCommand()) {
+				ChannelUtil.showCustomedDialog(btnFont, "选择字体", false, fontChooser);
+			}
+			else if(ADD_IMAGE == e.getActionCommand()) {
+				if(channel == CHANNEL.QQ) {//QQ目前只显示表情框
+					ChannelUtil.showQQFaceDialog(btnImage, "选择表情", false, content);
+				}
+				else { //其他显示图片选择框
+					File imgFile = ChannelUtil.showImageChooserDialog(btnImage, "选择图片", true, fileChooser);
+					handler.insertImage(imgFile, 400, 300);
+				}
+			}
+			else if(ADD_FILE == e.getActionCommand()) {
+				//目前做测试用
+				System.out.println(handler.parseHTML(content.getText()));
+				System.out.println(content.getText());
+			}
 		}
 	}
 

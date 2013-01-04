@@ -17,8 +17,10 @@ public interface ChannelConstants
 			TEXT_CURSOR = new Cursor(Cursor.TEXT_CURSOR);
 	
 	//字体类
-	Font DEFAULT_FONT  =  new Font(
-			ChannelConfig.getPropValue("channelFont"),  Font.PLAIN, 14);
+	String DEFAULT_FONT_FAMILY = ChannelConfig.getPropValue("channelFont");
+	int DEFAULT_FONT_SIZE = 14;
+	Font DEFAULT_FONT  =  new Font(DEFAULT_FONT_FAMILY, Font.PLAIN, 
+			DEFAULT_FONT_SIZE);
 	
 	//图标类
 	LocationIcon CLOSE_ICON = 	new LocationIcon(

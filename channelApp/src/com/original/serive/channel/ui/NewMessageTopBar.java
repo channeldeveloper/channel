@@ -2,6 +2,7 @@ package com.original.serive.channel.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -46,10 +47,6 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 			newWeibo = new AbstractButtonItem(null, POST_WEIBO, 
 					IconFactory.loadIconByConfig("sendWeiboIcon"), 	IconFactory.loadIconByConfig("sendWeiboSelectedIcon"),
 					new Dimension(40, 40));
-	
-	JButton btnNewMail = ChannelUtil.createAbstractButton(newMail),
-			btnNewQQ = ChannelUtil.createAbstractButton(newQQ),
-			btnNewWeibo = ChannelUtil.createAbstractButton(newWeibo);
 			
 	JButton btnCC = ChannelUtil.createAbstractButton(
 			new AbstractButtonItem("分享/抄送", ADD_CC, null));
@@ -60,6 +57,9 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 	//由editable来决定是用lbMsgTo还是txtMsgTo
 	private JLabel lbMsgTo = new JLabel();
 	private JTextField txtMsgTo = new JTextField();
+	
+	//按钮控制面板，如选择联系人、添加分享/抄送等
+	private JPanel control = new  JPanel();
 	
 	private ChannelGridBagLayoutManager layoutMgr = 
 			new ChannelGridBagLayoutManager(this);
@@ -87,9 +87,9 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		
 		JPanel left = new JPanel(new ChannelGridLayout(0, 0, new Insets(0,0, 0, 0)));
 		MessageButtonGroup mbg = new MessageButtonGroup();//按钮控制组
-		left.add(mbg.addChild(btnNewMail));
-		left.add(mbg.addChild(btnNewQQ));
-		left.add(mbg.addChild(btnNewWeibo));
+		left.add(mbg.add(newMail));
+		left.add(mbg.add(newQQ));
+		left.add(mbg.add(newWeibo));
 		layoutMgr.addComToModel(left);
 		
 		JPanel center = new JPanel(new BorderLayout(5,0));
@@ -105,10 +105,12 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		}
 		layoutMgr.addComToModel(center,1,1,GridBagConstraints.HORIZONTAL);
 		
-		JPanel right = new JPanel(new ChannelGridLayout(-10, 0, new Insets(0, 0, 0, 0)));
-		right.add(btnLinker);
-		right.add(btnCC);
-		layoutMgr.addComToModel(right);
+		ChannelGridLayout controlLayout = new ChannelGridLayout(-10, 0, new Insets(0, 0, 0, 0));
+		controlLayout.setAutoAdjust(false); //不自动调整
+		control.setLayout(controlLayout);
+		control.add(btnLinker);
+		control.add(btnCC);
+		layoutMgr.addComToModel(control);
 		
 		setMessage2GUI();
 	}
@@ -154,48 +156,51 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		}
 	}
 	
-	public void setMessage(ChannelMessage msg)
+	/**
+	 * 设置Center面板中某一按钮控件显示或隐藏
+	 * @param actionCommand 按钮名称
+	 * @param isVisible
+	 */
+	public void setVisible(String actionCommand, boolean isVisible)
 	{
-//		if(msg != null) {
-//			setMessageTo(msg.getContactAddr());
-//			
-//			String msgClazz = msg.getClazz();
-//			if(ChannelMessage.MAIL.equals(msgClazz)) {
-//				btnNewMail.doClick();
-//			}
-//			else if(ChannelMessage.QQ.equals(msgClazz)) {
-//				btnNewQQ.doClick();
-//			}
-//			else if(ChannelMessage.WEIBO.equals(msgClazz)) {
-//				btnNewWeibo.doClick();
-//			}
-//			
-//			//注意放在最下面
-//			NewMessageBodyPane body = (NewMessageBodyPane)getMessageBody();
-//			body.setMessage(msg);
-//		}
-		
-		this.newMsg = msg;
+		for(int i=0; i<control.getComponentCount(); i++)
+		{
+			Component child = control.getComponent(i);
+			if(child instanceof AbstractButton
+					&& (((AbstractButton) child).getActionCommand() == actionCommand))
+			{
+				if(child.isVisible() != isVisible)
+					child.setVisible(isVisible);
+				break;
+			}
+		}
 	}
 	
+	/**
+	 * 给当前显示的面板(如微博\QQ\邮件)显示消息，外界调用的主接口
+	 * @param msg
+	 */
+	public void setMessage(ChannelMessage msg)
+	{
+		this.newMsg = msg;
+	}
 	private void setMessage2GUI() {
 		if(newMsg != null) {
 			setMessageTo(newMsg.getContactAddr());
 			
-			String msgClazz = newMsg.getClazz();
-			if(ChannelMessage.MAIL.equals(msgClazz)) {
-				btnNewMail.doClick();
-			}
-			else if(ChannelMessage.QQ.equals(msgClazz)) {
-				btnNewQQ.doClick();
-			}
-			else if(ChannelMessage.WEIBO.equals(msgClazz)) {
-				btnNewWeibo.doClick();
-			}
-			
-			//注意放在最下面
+			//同时设置Body父面板的消息
 			NewMessageBodyPane body = (NewMessageBodyPane)getMessageBody();
 			body.setMessage(newMsg);
+			
+			if(ChannelMessage.MAIL.equals(newMsg.getClazz())) {
+				newMail.getSource().doClick();
+			}
+			else if(ChannelMessage.QQ.equals(newMsg.getClazz())) {
+				newQQ.getSource().doClick();
+			}
+			else if(ChannelMessage.WEIBO.equals(newMsg.getClazz())) {
+				newWeibo.getSource().doClick();
+			}
 		}
 	}
 	
@@ -207,9 +212,11 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 	{
 		if(editable) {
 			txtMsgTo.setText(to);
+			setVisible(SELECT_LINKER, true);
 		}
 		else {
 			lbMsgTo.setText(to);
+			setVisible(SELECT_LINKER, false);
 		}
 	}
 	
@@ -217,7 +224,21 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 	@Override
 	public void actionPerformed(ActionEvent evt) {
 		// TODO Auto-generated method stub
-		
+		if(ADD_CC == evt.getActionCommand()) { //添加分享/抄送，功能就是显示或隐藏"分享/抄送"文本框
+			NewMessageBodyPane body = (NewMessageBodyPane)getMessageBody();
+			NewMessageBodyPane child = body.currentChild();
+			if(child != null) {
+				if(child.center.isVisible(0)) {
+					child.center.setVisible(0, false);
+				}
+				else {
+					child.center.setVisible(0, true);
+				}
+			}
+		}
+		else if(SELECT_LINKER == evt.getActionCommand()) {//选择联系人
+			
+		}
 	}
 	
 	/**
@@ -229,10 +250,10 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		Hashtable<AbstractButton,Icon> icons = new Hashtable<AbstractButton, Icon>(),
 				selectedIcons = new Hashtable<AbstractButton, Icon>();
 		
-		public AbstractButton addChild(final AbstractButton button)
+		public AbstractButton add(final AbstractButtonItem item)
 		{
-			if(button != null) {
-//				final	JButton button = (JButton)ChannelUtil.createAbstractButton(item);
+			if(item != null) {
+				final JButton button = ChannelUtil.createAbstractButton(item);
 				final ButtonModel model  = new JToggleButton.ToggleButtonModel() {
 					public void setSelected(boolean b)
 					{
@@ -277,12 +298,15 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		{
 			NewMessageBodyPane body = (NewMessageBodyPane)getMessageBody();
 			if(evt.getActionCommand() == POST_MAIL) {
+				setVisible(ADD_CC, true);//只有邮件显示分享/抄送
 				body.showChild(CHANNEL.MAIL);
 			}
 			else if(evt.getActionCommand() == POST_QQ) {
+				setVisible(ADD_CC, false);
 				body.showChild(CHANNEL.QQ);
 			}
 			else if(evt.getActionCommand() == POST_WEIBO) {
+				setVisible(ADD_CC, false);
 				body.showChild(CHANNEL.WEIBO);
 			}
 		}

@@ -5,7 +5,7 @@
 	"avatar" :  "02350923509237", 	 
 	"accounts" : [
 	              {"user": "franzsoong@gmail.com","password" : "syzb1234", "channelName" :  "email_gmail"},
-	              {"user": "franzsoong@gmail.com","password" : "syzb1234", "channelName" :  "im_gtalk"},
-	              {"user": "franzsong@163.com","password" :"syzb1234","channelName" :  "sns_weibo"}
+	               {"user": "1878606006","password" : "syzb1234", "channelName" :  "im_qq"},
+	              {"user": "franzsong@163.com","password" :"syzb1234$","channelName" :  "sns_weibo"}
 	              ]
 }

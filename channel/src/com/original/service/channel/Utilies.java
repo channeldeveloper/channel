@@ -7,7 +7,6 @@
 package com.original.service.channel;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
@@ -16,8 +15,6 @@ import com.original.service.channel.protocols.email.model.EMail;
 import com.original.service.channel.protocols.email.model.EMailAttachment;
 import com.original.service.channel.protocols.email.oldimpl.Utils;
 import com.original.service.channel.protocols.email.services.MailParseUtil;
-import com.original.service.storage.FileManager;
-import com.original.service.storage.StreamData;
 
 /**
  * 渠道的工具类。
@@ -145,7 +142,7 @@ public class Utilies {
 	
 	/**
 	 * 将邮件内容中的图片等附件下载到系统缓存
-	 */
+	 * /
 	private static String saveAttachmentToTemp(String content, String emailid, EMailAttachment eatt) 
 	{
 		StreamData sd = FileManager.fetchBinaryFile(new String(eatt.getData()));
@@ -166,7 +163,7 @@ public class Utilies {
 		}
 		return content;
 	}
-	
+	*/
 	public static String parseMail(ChannelMessage msg) {
 		return parseMail(Utils.channel2Email(msg));
 	}
@@ -195,7 +192,7 @@ public class Utilies {
 				for (int l = 0; l < attachList.size(); l++) {
 					EMailAttachment eatt = (EMailAttachment) attachList.get(l);
 					attach.append(eatt.getFileName()).append(";");
-					content = saveAttachmentToTemp(content, emailid, eatt);
+//					content = saveAttachmentToTemp(content, emailid, eatt);
 				}
 				attachNames = attach.toString();
 			} 
@@ -213,4 +210,52 @@ public class Utilies {
 		
 		return null;
 	}
+	
+	
+	/**
+	 * 把消息转换为快速发送、发送、转发的消息。
+	 * 
+	 * @param msg
+	 */
+	public static ChannelMessage convertMessageForEmail(String action, ChannelMessage original) {
+		if (action.equalsIgnoreCase(Constants.ACTION_SEND)) {
+			return original;
+		}
+		if (action.equalsIgnoreCase(Constants.ACTION_QUICK_REPLY)
+				|| action.equalsIgnoreCase(Constants.ACTION_REPLY)) {
+			original.setSubject("Re: " + original.getSubject());
+			String toAddr = original.getToAddr();
+			original.setToAddr(original.getFromAddr());
+			original.setFromAddr(toAddr);
+			String wrapper0 = " <blockquote style=\"margin: 0px 0px 0px 0.8ex; border-left-width: 1px; border-left-color: rgb(204, 204, 204); border-left-style: solid; padding-left: 1ex;\"><u></u>";
+			String wrapper1 = "</blockquote>";
+			original.setBody(wrapper0 + original.getBody() + wrapper1);
+			return original;
+		}
+		// * ---------- Forwarded message ----------
+		// * From: packt@packtpub.com <marketing@packtpub.com>
+		// * Date: Sat, Dec 22, 2012 at 9:45 PM
+		// * Subject: Packt Publishing: You are now unsubscribed
+		// * To: franzsoong@gmail.com
+		if (action.equalsIgnoreCase(Constants.ACTION_FORWARD)) {
+
+			String wrapper = " ---------- Forwarded message ----------"
+					+ "<br>";
+			wrapper += "From: " + original.getFromAddr() + "<br>";
+			wrapper += "Date: " + original.getRecievedDate() + "<br>";
+			wrapper += "Subject: " + original.getSubject() + "<br>";
+			wrapper += "To: " + original.getToAddr() + "<br>";
+
+			original.setBody(wrapper + original.getBody());
+			original.setSubject("Fwd: " + original.getSubject());
+
+			String toAddr = original.getToAddr();
+			original.setToAddr(original.getFromAddr());
+			original.setFromAddr(toAddr);
+			return original;
+
+		}
+		return original;
+	}
+
 }

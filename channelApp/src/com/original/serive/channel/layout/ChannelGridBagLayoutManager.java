@@ -156,6 +156,28 @@ public class ChannelGridBagLayoutManager
     }
     
     /**
+     * 判断某一行是否可见。只有这一行所有控件都不可见时，才为false。
+     * @param gridY 行索引，从0开始编号
+     * @param 如果为true，则是显示；否则隐藏
+     */
+    public boolean isLineVisible(int gridY)
+    {
+    	if(gridY < 0 || gridY > constraints.gridy)
+    		return false;
+    	
+    	GridBagLayout layout = (GridBagLayout)this.parent.getLayout();
+    	for(int i=0; i<parent.getComponentCount(); i++)
+    	{
+    		Component comp = parent.getComponent(i);
+    		if(comp.isVisible()  && layout.getConstraints(comp).gridy == gridY)
+    		{
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
+    /**
      * 复制控件一样大小的填充区域
      * @param comp
      * @return

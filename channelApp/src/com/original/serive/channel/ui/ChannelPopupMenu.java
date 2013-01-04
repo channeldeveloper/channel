@@ -129,15 +129,16 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 		{
 			//隐藏弹窗
 			ChannelPopupMenu popMenu = (ChannelPopupMenu)this.getParent();
+			focusBounds = null;
 			popMenu.setVisible(false);
 			
 			ChannelMessageBodyPane body = popMenu.getMessageBody();
 			if(body != null && !body.messageBodyList.isEmpty()) {
 				ChannelMessage newMsg = body.messageBodyList.firstElement();
 				
-				ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(false));
+				ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(true));
 				cmp.newMessage(newMsg); 
-				ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
+				ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 				desktop.addOtherShowComp(PREFIX_NEW+newMsg.getContactName(),  cmp);
 			}
 		}
@@ -147,7 +148,7 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 			Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
 			int width = getWidth()-1, height = getHeight()-1;
 			//阴影效果1px
-//			GraphicsHandler.fillShadow(g2d, 1, width, height, 8, 0.2f);
+			GraphicsHandler.fillShadow(g2d, 2, width, height, 8, 0.4f);
 			
 			//填充背景色
 			g2d.setColor(Color.white);

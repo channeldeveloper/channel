@@ -3,6 +3,7 @@ import java.util.List;
 
 import org.bson.types.ObjectId;
 
+import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.core.ChannelService;
@@ -10,6 +11,7 @@ import com.original.service.channel.core.MessageFilter;
 import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
+import com.original.service.storage.GridFSUtil;
 
 
 
@@ -119,6 +121,48 @@ public class ChannelMain {
 		
 		System.out.println("Curent Message Count afer delete by mail:" +msgMg.getMessages().size());
 		
+
+		//attachments
+		List<ChannelMessage> msgs = msgMg.getMessages();
+		
+		System.out.println("message count:" + msgs.size());
+		
+		for (ChannelMessage m : msgs)
+		{
+			List<Attachment> atts = m.getAttachments();
+			if (atts != null && atts.size() > 0)
+			{
+				for (Attachment a : atts)
+				{
+					//信息
+					System.out.println("Attachment:" + a);
+					System.out.println(a.getFileName());
+					System.out.println(a.getFileId());
+					System.out.println(a.getSize());
+					System.out.println(a.getType());
+					//写入本地文件
+					String filePath = "c:/"+ a.getFileName();
+					GridFSUtil.getGridFSUtil().writeFile( a.getFileId(), filePath);
+					//用来测试发送邮件带附件（本地），也可以用从文档库中(注释下面的行）
+					a.setFilePath(filePath);
+			
+				}
+				
+				//测试发邮件（带附件和内容)
+//				 * 	Subject: Packt Publishing: You are now unsubscribed
+//				 * 	To: franzsoong@gmail.com
+				 
+				ChannelMessage m0 = m.clone();
+				m0.setFromAddr(m0.getToAddr());m0.setToAddr("franzsong@163.com");
+				csc.put(Constants.ACTION_SEND, m0);
+//				csc.put(Constants.ACTION_QUICK_REPLY, m);
+//				csc.put(Constants.ACTION_REPLY, m);
+//				csc.put(Constants.ACTION_FORWARD, m);
+				break;
+				
+			}
+
+		}
 
 
 //	

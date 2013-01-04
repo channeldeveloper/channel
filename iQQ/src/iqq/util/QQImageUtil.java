@@ -23,10 +23,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
 import javax.swing.text.Element;
 import javax.swing.text.ElementIterator;
 import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLDocument;
+
+import org.apache.commons.lang.StringEscapeUtils;
 
 import atg.taglib.json.util.JSONArray;
 import atg.taglib.json.util.JSONException;
@@ -55,6 +58,33 @@ public class QQImageUtil {
         text = text.replaceAll("\\n|\\r", "<br>");
         return text;
     }
+    
+    /**
+	 * 将HTML格式的内容转换成纯文本内容，注意只保留图片标签(img)不做处理。
+	 * 是{@link #parseHTML(String)}的优化处理
+	 * @param text
+	 * @return
+	 */
+	public static String parseHTML2(String text)
+	{
+		if (text.contains("<html>")) {
+			text = text.replaceAll("\r?\n *", "\r\n");
+            text = text.substring(text.indexOf("<body>")+8, text.indexOf("\r\n</body>"));
+            String start = "<p style=\"margin-top: 0\">\r\n";
+            String end = "\r\n</p>";
+            text = text.replaceAll(start, "").replaceAll(end, "");
+            
+            start = "<font.*?>";
+            end = "</font>";
+            text = text.replaceAll(start, "").replaceAll(end, "");
+            
+            text = text.replaceAll("<b>|</b>|<u>|</u>|<i>|</i>", "");
+            
+            //最后转换一下中文编码：
+            text = StringEscapeUtils.unescapeHtml(text);
+        }
+        return text;
+	}
 
     public static String flagToHTML(String valStr) {
         //Log.println(valStr);
@@ -94,7 +124,7 @@ public class QQImageUtil {
         File f = new File(path);
         return faceUrl.replace("@name", valStr).replace("@img", f.toURI().toString());
     }
-
+    
     public static JSONArray convertHTMLToFlag(HTMLDocument htmlDoc) {
         boolean isExistFace = false;
         ElementIterator it = new ElementIterator(htmlDoc);
@@ -121,10 +151,10 @@ public class QQImageUtil {
         } catch (BadLocationException ex) {
             Logger.getLogger(QQImageUtil.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if (isExistFace) {
-            text = text.replaceFirst("\\n", "");
+        if (isExistFace || text.startsWith("\n")) {
+            text = text.replaceFirst("\n", "");
         }
-        //Log.println(text);
+//        Log.println(text);
         JSONArray msg = new JSONArray();
         String[] arr = text.split("~");
         for (int i = 0; i < arr.length; i++) {
@@ -151,7 +181,7 @@ public class QQImageUtil {
             }
         }
 
-        //Log.println(msg);
+//        Log.println(msg);
         return msg;
     }
 

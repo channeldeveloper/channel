@@ -11,7 +11,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,7 +51,7 @@ public class WeiboParser implements Constants
 			new SimpleDateFormat("MM月dd日 HH:mm");
 	
 	public static final String PREFIX_EMOTION = "emotion_";
-	public static final String IMAGE_PATTERN = "<img src='@url'></img>";
+	public static final String IMAGE_PATTERN = "<img .*src=\"@url\".*>";
 	private static Lock parserLock = new ReentrantLock();
 	
 	/**
@@ -328,7 +331,7 @@ public class WeiboParser implements Constants
 	public static String[] fetchImageURL(String content) {
 		if(content != null && !content.isEmpty()) {
 			String regex = Matcher.quoteReplacement(
-					IMAGE_PATTERN.replace("@url", "((file:/|http://|https://).+)"));
+					IMAGE_PATTERN.replace("@url", "((file:/|http://|https://).+?)"));
 			Matcher matcher = Pattern.compile(regex).matcher(content);
 			if(matcher.find()) {
 				return new String[]{matcher.group(), matcher.group(1)};
@@ -344,11 +347,10 @@ public class WeiboParser implements Constants
 	 * @throws WeiboException
 	 */
 	public static String parseUTF8(String content) throws WeiboException{
-//		try {
-//			content = java.net.URLEncoder.encode(content, "utf-8");
-//		} catch (UnsupportedEncodingException e1) {
-//			e1.printStackTrace();
-//		}
+		try {
+            content = URLEncoder.encode(content, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+        }
 		return content;
 	}
 	
@@ -369,8 +371,9 @@ public class WeiboParser implements Constants
 			//获取图片
 			String[] imgURLs = fetchImageURL(content);
 			if(imgURLs != null) {
-				content.replace(imgURLs[0], "");//清除图片内容
-				imgItem.setContent(parseBytes(imgURLs[1]));
+				content = content.replace(imgURLs[0], "");//清除图片内容
+				content = content.replaceAll("\r|\n", ""); //清除换行符
+				imgItem.setContent(parseBytes(imgURLs[1]));//提取图片
 			}
 			
 			imgItem.setText(parseUTF8("@" + msg.getToAddr() + "：" + content));
@@ -432,10 +435,15 @@ public class WeiboParser implements Constants
 	 */
 	public static byte[] parseBytes(String url) {
 		if(url != null && !url.isEmpty()) {
-			if(url.startsWith("file")) { //文件
-				return parseBytes(new File(url));
+			if(url.startsWith("file:/")) { //文件
+				try {
+					return parseBytes(new File(new URI(url)));
+				} catch (URISyntaxException ex) {
+					// TODO Auto-generated catch block
+					System.err.println(ex);
+				}
 			}
-			else if(url.startsWith("http")) { //网络文件
+			else if(url.startsWith("http://") || url.startsWith("https://")) { //网络文件
 				try {
 					HttpService hs = new HttpService(url, Method.GET);
 					return parseBytes(hs.getInputStream());
@@ -446,6 +454,5 @@ public class WeiboParser implements Constants
 			}
 		}
 		return null;
-    }
-	
+    }	
 }

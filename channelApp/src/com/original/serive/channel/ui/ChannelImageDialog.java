@@ -1,10 +1,10 @@
 package com.original.serive.channel.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -26,11 +26,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRootPane;
-import javax.swing.SwingUtilities;
-import javax.swing.event.MouseInputListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.original.serive.channel.border.ShadowBorder;
 import com.original.serive.channel.util.ChannelConstants;
+import com.original.serive.channel.util.ChannelDialogDragListener;
 import com.original.serive.channel.util.ChannelUtil;
 
 /**
@@ -48,15 +48,17 @@ public class ChannelImageDialog extends JDialog
 	public ChannelImageDialog(String imgURL) {
 		setLayout(new BorderLayout());
 		setUndecorated(true);
-		setSize(300, 200);
+		setSize(300, 50);
 		setLocationRelativeTo(getOwner());
 		getRootPane().setWindowDecorationStyle(JRootPane.NONE); //不显示标题栏
 
+		JPanel cp = (JPanel)getContentPane();
+		cp.setBorder(new ShadowBorder());
 		this.imgURL = imgURL;
 		tip = new JLabel("正在载入图片...退出请按Esc");
 		tip.setFont(ChannelConstants.DEFAULT_FONT);
 		tip.setHorizontalAlignment(JLabel.CENTER);
-		add(tip);
+		cp.add(tip);
 		
 		//Esc键监听
 		addKeyListener(new KeyAdapter() {
@@ -71,9 +73,9 @@ public class ChannelImageDialog extends JDialog
 		});
 		
 		//图片拖动监听
-		ImgDragListener listener = new ImgDragListener(this);
-		addMouseListener(listener);
-		addMouseMotionListener(listener);
+		ChannelDialogDragListener listener = new ChannelDialogDragListener(this);
+		cp.addMouseListener(listener);
+		cp.addMouseMotionListener(listener);
 		showThread = new ShowThread();
 		showThread.start();
 		
@@ -98,11 +100,11 @@ public class ChannelImageDialog extends JDialog
 				return;
 			}
 			
+			Container cp = getContentPane();
 			//添加图片加载面板，同时移除提示标签
 			JPanel imgPane = createImgPane();
-			
 			if (tip != null) {
-				remove(tip);
+				cp.remove(tip);
 			}
 			imgHeight = bi.getHeight();
 			imgWidth = bi.getWidth();
@@ -115,11 +117,11 @@ public class ChannelImageDialog extends JDialog
 			} else {
 				setLocationRelativeTo(getOwner());
 			}
-			add(imgPane);
-			validate();
+			cp.add(imgPane);
+			cp.validate();
 			
 			// 窗口的鼠标事件处理
-			addMouseListener(new MouseAdapter() { 
+			cp.addMouseListener(new MouseAdapter() { 
 				public void mousePressed(MouseEvent event) { // 点击鼠标
 					triggerEvent(event); // 调用triggerEvent方法处理事件
 				}
@@ -218,43 +220,5 @@ public class ChannelImageDialog extends JDialog
 		popupMenu.addSeparator();// 分割线
 		popupMenu.add(exitItem);
 		return popupMenu;
-	}
-
-	/**
-	 * 图片拖动的监听器
-	 */
-	class ImgDragListener implements MouseInputListener {// 鼠标事件处理
-		private JDialog owner;
-		Point point = new Point(0, 0); // 坐标点
-
-		public ImgDragListener(JDialog owner) {
-			this.owner = owner;
-		}
-
-		public void mouseDragged(MouseEvent e) {
-			Point newPoint = SwingUtilities.convertPoint(owner, e.getPoint(), getParent());
-			setLocation(getX() + (newPoint.x - point.x), 
-					getY() + (newPoint.y - point.y));
-			point = newPoint; // 更改坐标点
-		}
-
-		public void mousePressed(MouseEvent e) {
-			point = SwingUtilities.convertPoint(owner, e.getPoint(), owner.getParent()); // 得到当前坐标点
-		}
-
-		public void mouseMoved(MouseEvent e) {
-		}
-
-		public void mouseReleased(MouseEvent e) {
-		}
-
-		public void mouseEntered(MouseEvent e) {
-		}
-
-		public void mouseExited(MouseEvent e) {
-		}
-
-		public void mouseClicked(MouseEvent e) {
-		}
 	}
 }

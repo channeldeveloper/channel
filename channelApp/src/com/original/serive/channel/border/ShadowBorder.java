@@ -5,8 +5,6 @@ import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
-import java.awt.Rectangle;
-import java.awt.geom.Area;
 
 import javax.swing.border.AbstractBorder;
 
@@ -23,49 +21,91 @@ public class ShadowBorder extends AbstractBorder
 	private static final long serialVersionUID = -7295761980519089953L;
 	
 	private int thickness = 3; //阴影厚度	
+	private int radius = 10;//阴影圆角半径
+	private float alpha = 0.4f;//阴影透明度
+	
+	private Color fillColor = Color.white;//面板的背景色
+	
 	public ShadowBorder()
 	{
-		this(3);
+		this(2);
 	}
+	
 	public ShadowBorder(int thickness)
 	{
+		this(thickness, 10, 0.4f);
+	}
+	
+	/**
+	 * 阴影边框(统一圆角)
+	 * @param thickness 阴影厚度
+	 * @param shadowRadius 阴影圆角半径
+	 * @param alpha 阴影的透明度
+	 */
+	public ShadowBorder(int thickness, int shadowRadius, float alpha)
+	{
+		this(thickness, 10, 0.4f, Color.white);
+	}
+	
+	/**
+	 * 阴影边框(统一圆角)
+	 * @param thickness 阴影厚度
+	 * @param shadowRadius 阴影圆角半径
+	 * @param alpha 阴影的透明度
+	 * @param fillColor 面板的背景色，即当面板使用该边框时，也设置其背景色
+	 */
+	public ShadowBorder(int thickness, int shadowRadius, float alpha, Color fillColor)
+	{
 		this.thickness = thickness;
+		this.radius = shadowRadius;
+		this.alpha = alpha;
+		this.fillColor = fillColor;
+	}
+
+	public int getThickness() {
+		return thickness;
+	}
+	public void setThickness(int thickness) {
+		this.thickness = thickness;
+	}
+
+	public int getRadius() {
+		return radius;
+	}
+	public void setRadius(int radius) {
+		this.radius = radius;
+	}
+
+	public float getAlpha() {
+		return alpha;
+	}
+	public void setAlpha(float alpha) {
+		this.alpha = alpha;
+	}
+
+	public Color getFillColor() {
+		return fillColor;
+	}
+	public void setFillColor(Color fillColor) {
+		this.fillColor = fillColor;
 	}
 
 	@Override
 	public void paintBorder(Component c, Graphics gd, int x, int y, int width,
 			int height)
-	{
-		Color oldColor = gd.getColor();
-        Graphics2D g2 = GraphicsHandler.optimizeGraphics(gd);
-        java.awt.Paint oldPaint = g2.getPaint();
-        if(true)
-        {
-        	Color backColor = new Color(128, 128, 128);
-        	Color apc = new Color(backColor.getRed(), backColor.getGreen(), backColor.getBlue(), 0);
-            
-            Area a = new Area(new Rectangle(x, y, width, height));
-            Area b = new Area(new  Rectangle(x + thickness - 1, y + thickness - 1,  //1px为阴影的向右、下的偏移像素值
-            		width - thickness*2, height - thickness*2));
-            a.subtract(b);
-            g2.setClip(a);
-                        
-            for(int i = 0; i <= thickness; i++)
-            {
-            	if(i==thickness) {
-            		g2.setColor(backColor);
-            	}else {
-            		g2.setColor(GraphicsHandler.getColor(apc, backColor, thickness, i));
-            	}
-                g2.fillRoundRect(x + i, y + i, width - 2 * i, height - 2 * i, thickness*2,thickness*2);
-            }
-            
-            g2.setClip(null);
-        }
-        
-        g2.setPaint(oldPaint);
-        gd.setColor(oldColor);
-//        g2.setRenderingHints(GraphicsHandler.DEFAULT_RENDERING_HINT_OFF);
+	{		
+		Graphics2D g2d = GraphicsHandler.optimizeGraphics(gd);
+
+		//绘制阴影2px
+		GraphicsHandler.fillShadow(g2d, thickness, width-thickness, height-thickness, radius, alpha);
+
+		//填充背景
+		if(fillColor != null) {
+			g2d.setColor(fillColor);
+			g2d.fillRoundRect(0, 0, width-thickness, height-thickness, radius, radius);
+		}
+		
+//		GraphicsHandler.suspendRendering(g2d);
 	}
 
 	/**

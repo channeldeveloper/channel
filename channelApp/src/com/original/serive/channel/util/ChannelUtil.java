@@ -1,23 +1,41 @@
 ﻿package com.original.serive.channel.util;
 
+import iqq.ui.QQFaceDialog;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.awt.Frame;
+import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.Window;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
 
+import javax.swing.AbstractButton;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import sun.swing.SwingUtilities2;
-
 import weibo4j.http.AccessToken;
 import weibo4j.model.WeiboException;
 import chrriis.dj.nativeswing.swtimpl.NativeInterface;
@@ -27,12 +45,17 @@ import chrriis.dj.nativeswing.swtimpl.components.WebBrowserListener;
 import chrriis.dj.nativeswing.swtimpl.components.WebBrowserNavigationEvent;
 import chrriis.dj.nativeswing.swtimpl.components.WebBrowserWindowFactory;
 
+import com.original.serive.channel.border.ShadowBorder;
+import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.server.ChannelAccesser;
+import com.original.serive.channel.ui.ChannelMessageTopBar;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.ui.data.MenuItem;
+import com.original.serive.channel.ui.widget.FileChooserListener;
+import com.original.serive.channel.ui.widget.FilePreviewer;
 
 /**
- * 一些通用算法
+ * 一些通用算法，目前主要用于客户端界面应用，服务端类请勿使用。
  * @author WMS
  *
  */
@@ -57,6 +80,20 @@ public class ChannelUtil
 	public static boolean isEmpty(String text, boolean trim)
 	{
 		return text == null || (trim? text.trim() : text).isEmpty();
+	}
+	
+	/**
+	 * 比较两个对象是否相等
+	 * @param old
+	 * @param nw
+	 * @return
+	 */
+	public static boolean isEqual(Object old, Object nw)
+	{
+		if(old == nw)
+			return true;
+		
+		return old != null && old.equals(nw);
 	}
 	
 	/**
@@ -112,14 +149,69 @@ public class ChannelUtil
 	}
 	
 	/**
+	 * 按照设定的宽度、高度来设置图像的宽度、宽度，保持原图像的宽高比
+	 * @param image 原图像
+	 * @param width  设定宽度
+	 * @param height 设定高度
+	 * @return
+	 */
+	public static Dimension adjustImage(ImageIcon image, int width, int height)
+	{
+		Dimension dim = new Dimension();
+		if(image != null && width >0 && height > 0)
+		{
+			int iconWidth = image.getIconWidth(), iconHeight = image
+					.getIconHeight();
+			
+			//如果设定宽、高度和图片原来的宽、高度一致，就不需要调整了
+			if(width == iconWidth && height == iconHeight)
+			{
+				dim.width = width;
+				dim.height = height;
+				return dim;
+			}
+
+			double d1 = iconWidth / (double) iconHeight, d2 = width
+					/ (double) height;
+
+			if (d2 >= d1) { // 以高度为准
+				if (iconHeight > height)
+					iconHeight = height;
+				iconWidth = (int) (iconHeight * d1);
+			} else {// 以宽度为准
+				if (iconWidth > width)
+					iconWidth = width;
+				iconHeight = (int) (iconWidth / d1);
+			}
+			
+			dim.width = iconWidth;
+			dim.height = iconHeight;
+		}
+		return dim;
+	}
+	
+	/**
 	 * 由按钮项目构建按钮
 	 * @param item 按钮项目
 	 * @return
 	 */
 	public static JButton createAbstractButton(AbstractButtonItem item)
 	{
+		return createAbstractButton(item, JButton.class);
+	}
+	public static <T extends AbstractButton> T  createAbstractButton(AbstractButtonItem item, Class<T> clazz)
+	{
 		if(item != null) {
-			JButton button = new JButton(item.getText(), item.getIcon());
+			T button = null;
+			try{
+				button = clazz.newInstance();
+			}
+			catch(Exception ex) {
+				return button;
+			}
+			
+			button.setText(item.getText());
+			button.setIcon(item.getIcon());
 			button.setActionCommand(item.getActionCommand());
 			if(item.getSelectedIcon() != null)
 				button.setSelectedIcon(item.getSelectedIcon());
@@ -136,6 +228,7 @@ public class ChannelUtil
 							item.getIcon().getIconHeight()));
 				}
 			}
+			item.setSource(button);
 			return button;
 		}
 		return null;
@@ -153,6 +246,7 @@ public class ChannelUtil
 			if(item.getSize() != null) {
 				menuItem.setPreferredSize(item.getSize());
 			}
+			item.setSource(menuItem);
 			return menuItem;
 		}
 		return null;
@@ -269,5 +363,175 @@ NativeInterface.open();
 			NativeInterface.runEventPump();
 		}
 		catch(Exception ex) { }
+	}
+	
+	/**
+	 * 弹出对话框
+	 */
+	public static void showWithDialog(Component parent,
+			String title, boolean modal, Container cp) {
+		showWithDialog(null, parent, title, modal, cp);
+	}
+	public static void showWithDialog(Dimension size, Component parent,
+			String title, boolean modal, Container child) {
+		if (parent == null) {
+			parent = JOptionPane.getRootFrame();
+		}
+		JDialog d = createDialog(parent, title, modal);
+		d.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+		d.setContentPane(child);
+
+		if (size == null) {
+			d.pack();
+		} else {
+			d.setSize(size);
+		}
+		d.setLocationRelativeTo(parent);
+		d.setVisible(true);
+	}
+	
+	/**
+	 * 生成自定义对话框
+	 */
+	public static JDialog createDialog(Component parent, String title,
+			boolean modal) {
+		while ((parent != null) && (!(parent instanceof Frame))
+				&& (!(parent instanceof Dialog))) {
+			if (parent instanceof JPopupMenu) {
+				parent = ((JPopupMenu) parent).getInvoker();
+			}
+			parent = parent.getParent();
+		}
+
+		if (parent == null) {
+			parent = JOptionPane.getRootFrame();
+		}
+
+		if (parent instanceof Frame) {
+			return new JDialog((Frame) parent, title, modal);
+		} else {
+			return new JDialog((Dialog) parent, title, modal);
+		}
+	}
+	
+	/**
+	 * 创建自定义面板，与Channel主程序面板风格一致
+	 */
+	public static JPanel createCustomedPane(final JDialog dialog, final Container child)
+	{
+		JPanel body = new JPanel(new VerticalGridLayout(
+				VerticalGridLayout.TOP_TO_BOTTOM,0,0,new Insets(0, 0, 5, 2)));
+		body.setBorder(new ShadowBorder());
+		
+		ChannelMessageTopBar topBar = new ChannelMessageTopBar(true) {
+			@Override
+			public void doClose() {
+				// TODO Auto-generated method stub
+				if(dialog instanceof QQFaceDialog)
+					((QQFaceDialog) dialog).setTextEditor(null);
+				dialog.dispose();
+			}
+
+			@Override
+			protected void constructStatusBar() {
+				// TODO Auto-generated method stub
+				setPreferredSize(new Dimension(child.getPreferredSize().width, 25));
+			}
+		};
+		body.add(topBar);
+		//顶部栏添加鼠标拖动事件
+		ChannelDialogDragListener listener = new ChannelDialogDragListener(dialog);
+		topBar.addMouseListener(listener);
+		topBar.addMouseMotionListener(listener);
+		body.add(child);
+		return body;
+	}
+	
+	/**
+	 * 创建自定义的弹出对话框，与Channel主程序面板风格一致
+	 */
+	public static void showCustomedDialog(Component parent, 
+			String title, boolean modal,final Container child)
+	{
+		JDialog d = createDialog(parent, title, modal);
+		JPanel body = createCustomedPane(d, child);
+		
+		d.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+		d.setContentPane(body);
+		d.pack();
+		d.setLocationRelativeTo(parent);
+		d.setVisible(true);
+	}
+	
+	/**
+	 * 显示自定义颜色选择对话框
+	 */
+	public static Color showColorChooserDialog(Component c, String title, boolean modal,
+	      JColorChooser chooserPane) throws HeadlessException {
+		if(chooserPane == null) {
+			chooserPane = new JColorChooser();
+		}
+		JPanel body = new JPanel();
+		body.setBorder(new ShadowBorder());
+		
+		final	JDialog dialog = JColorChooser.createDialog(c, title, modal, chooserPane, null, null);
+		dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+		body.add(dialog.getContentPane());
+		dialog.setContentPane(body);
+		dialog.setVisible(true);
+		return chooserPane.getColor();
+	}
+	
+	/**
+	 * 显示自定义图片选择对话框
+	 */
+	public static File showImageChooserDialog(Component c, String title, boolean modal,
+		     JFileChooser chooserPane)
+	{
+		return showFileChooserDialog(c, title, modal, chooserPane,
+new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
+		"bmp", "gif", "jpg", "jpeg", "png"));
+	}
+	
+	/**
+	 * 显示自定义文件选择对话框
+	 */
+	public static File showFileChooserDialog(Component c, String title, boolean modal,
+		     JFileChooser chooserPane, FileFilter filter) {
+		if(chooserPane == null) {
+			chooserPane = new JFileChooser();
+		}
+		if(filter != null) {
+			chooserPane.setFileFilter(filter);
+			new FilePreviewer(chooserPane);
+		}
+		chooserPane.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		chooserPane.setOpaque(false);
+		
+		FileChooserListener fcl = new FileChooserListener(chooserPane);
+		chooserPane.addActionListener(fcl);
+		showCustomedDialog(c, title, true, chooserPane);
+		return fcl.getChooseFile();
+	}	
+	
+	/**
+	 * 显示QQ表情对话框
+	 */
+	public static void showQQFaceDialog(Component c, String title, boolean modal, 
+			JEditorPane editor)
+	{
+		QQFaceDialog dialog = QQFaceDialog.getInstance();
+		if(dialog.getTextEditor() == editor) {
+			dialog.setVisible(true);
+			return;
+		}
+		
+		dialog.setTextEditor(editor);
+JPanel body = createCustomedPane(dialog, dialog.getDefautFacePanel());
+dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+dialog.setContentPane(body);
+dialog.pack();
+dialog.setLocationRelativeTo(c);
+dialog.setVisible(true);
 	}
 }

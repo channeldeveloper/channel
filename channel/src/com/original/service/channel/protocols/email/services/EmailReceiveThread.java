@@ -42,7 +42,7 @@ public class EmailReceiveThread extends Thread {
         while (true) {
             try {
                 synchronized (receiver) {
-                	receiver.wait(10 * 1000);
+                	receiver.wait(1000);
                 }
             } catch (InterruptedException ex) {
                 break;

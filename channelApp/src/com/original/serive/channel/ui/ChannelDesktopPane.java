@@ -13,6 +13,8 @@ import java.awt.RadialGradientPaint;
 import java.awt.Rectangle;
 import java.awt.geom.Area;
 import java.awt.geom.Point2D;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -50,36 +52,41 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 			DEFAULT_UP_LAYOUT = 
 			new VerticalGridLayout(VerticalGridLayout.TOP_TO_BOTTOM, 0, 8, new Insets(0, 0, 0, 0));
 	
+	public static Lock channelLock = new ReentrantLock(); //用于控制消息的添加，即initMessage()和addMessage()的同步
 	
 	public ChannelDesktopPane() {
 		setLayout(layoutMgr);
-//		DEFAULT_PANE.setLayout(DEFAULT_DOWN_LAYOUT);
+		DEFAULT_PANE.setLayout(DEFAULT_UP_LAYOUT);
 		
 		addDefaultShowComp(DEFAULT_PANE);
 	}
 	
 	/**
-	 * 初始化桌面消息显示列表，注意和addMessage使用的布局方式不同，用法也不同
+	 * 初始化桌面消息显示列表，注意和addMessage使用的布局方式不同，用途也不同
 	 * @param msg
 	 */
-	public synchronized void initMessage(ChannelMessage msg)
+	public void initMessage(ChannelMessage msg)
 	{
 		if(!checkMsgValidity(msg))
 			return;
 		
-		ChannelMessagePane msgContainer = null;
-		if (DEFAULT_UP_LAYOUT != DEFAULT_PANE.getLayout()) {
-			DEFAULT_PANE.setLayout(DEFAULT_UP_LAYOUT);
-		}
-		
-		if((msgContainer = findMessage(msg)) == null) {
-			msgContainer = new ChannelMessagePane();
-			msgContainer.addMessage(msg, true);
-			DEFAULT_PANE.add(msgContainer);
-			DEFAULT_PANE.validate();
-		}
-		else {
-			msgContainer.addMessage(msg, true); //注意这里此时只保存msg，不添加面板
+		channelLock.lock();
+		try {
+			ChannelMessagePane msgContainer = null;
+//			if (DEFAULT_UP_LAYOUT != DEFAULT_PANE.getLayout()) {
+//				DEFAULT_PANE.setLayout(DEFAULT_UP_LAYOUT);
+//			}
+
+			if ((msgContainer = findMessage(msg)) == null) {
+				msgContainer = new ChannelMessagePane();
+				msgContainer.initMessage(msg);
+				DEFAULT_PANE.add(msgContainer);
+				DEFAULT_PANE.validate();
+			} else {
+				msgContainer.initMessage(msg);
+			}
+		} finally {
+			channelLock.unlock();
 		}
 	}
 	
@@ -87,31 +94,36 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 	 * 添加消息，这里是消息添加的入口，使用时最好由线程调用。
 	 * @param msg
 	 */
-	public synchronized void addMessage(ChannelMessage msg)
+	public void addMessage(ChannelMessage msg)
 	{
-		if(!checkMsgValidity(msg))
+		if (!checkMsgValidity(msg))
 			return;
-		
-		ChannelMessagePane msgContainer = null;
-		if((msgContainer = findMessage(msg)) == null) {
-			msgContainer = new ChannelMessagePane();
+
+		channelLock.lock();
+		try {
+			ChannelMessagePane msgContainer = null;
+			if ((msgContainer = findMessage(msg)) == null) {
+				msgContainer = new ChannelMessagePane();
+			}
+			msgContainer.addMessage(msg, true);
+			
+//			if (DEFAULT_DOWN_LAYOUT != DEFAULT_PANE.getLayout()) {
+//				DEFAULT_PANE.setLayout(DEFAULT_DOWN_LAYOUT);
+//			}
+			DEFAULT_PANE.add(msgContainer, 0);
+			DEFAULT_PANE.validate();
+
+			//如果当前显示界面已经切换到<显示全部>面板，则该面板也要添加最新消息
+			JPanel showComp = (JPanel) currentShowComp();
+			if (showComp != DEFAULT_PANE
+					&& showComp.getComponentCount() > 0
+					&& (showComp = (JPanel) showComp.getComponent(0)) instanceof ChannelMessagePane) {
+				msgContainer = (ChannelMessagePane) showComp;
+				msgContainer.addMessage(msg, false);
+			}
 		}
-		
-		msgContainer.addMessage(msg, true);
-		if(DEFAULT_DOWN_LAYOUT != DEFAULT_PANE.getLayout()) {
-			DEFAULT_PANE.setLayout(DEFAULT_DOWN_LAYOUT);
-		}
-		DEFAULT_PANE.add(msgContainer);
-		DEFAULT_PANE.validate();
-		
-		//如果当前显示界面已经切换到<显示全部>面板，则该面板也要添加最新消息
-		JPanel showComp = (JPanel)currentShowComp();
-		if(showComp != DEFAULT_PANE && 
-				showComp.getComponentCount() > 0 && 
-				(showComp = (JPanel)showComp.getComponent(0)) instanceof ChannelMessagePane)
-		{
-			msgContainer = (ChannelMessagePane)showComp;
-			msgContainer.addMessage(msg, false);
+		finally {
+			channelLock.unlock();
 		}
 	}
 	

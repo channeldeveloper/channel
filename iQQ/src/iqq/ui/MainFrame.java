@@ -55,6 +55,10 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
     public static MainFrame getMainFrame() {
+    	if (mainFrame == null)
+    	{
+    		new MainFrame();
+    	}
         return mainFrame;
     }
 

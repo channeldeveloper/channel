@@ -41,6 +41,12 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
     static final Insets DEFAULT_INSETS = new Insets(0, 0, 0, 5); 
     Insets insets;
     
+    /**
+     * When child compoent is invisible, you can set 'autoAdjust' to show or hide its bounds.
+     * if true, then hide; else show its bounds.
+     */
+    boolean autoAdjust = true;
+    
 
     /**
      * Creates a grid layout with a default of one column per component,
@@ -125,6 +131,16 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
 	public void setInsets(Insets insets)
 	{
 		this.insets = insets;
+	}
+	
+	public boolean isAutoAdjust() 
+	{
+		return autoAdjust;
+	}
+
+	public void setAutoAdjust(boolean autoAdjust) 
+	{
+		this.autoAdjust = autoAdjust;
 	}
 
 	/**
@@ -260,7 +276,7 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
 
 			for (int c = 0,  x = insets.left, y = insets.top ; c < ncomponents ; c++, x += hgap) {
 				Component comp = parent.getComponent(c);
-				if(comp.isVisible()) {
+				if(!autoAdjust || comp.isVisible()) {
 					Dimension dim = comp.getPreferredSize();
 					comp.setBounds(x, y, dim.width, h);
 
@@ -274,7 +290,7 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
 		else {
 			for (int c = ncomponents,  x = insets.left, y = insets.top ; c > 0 ; c++, x += hgap) {
 				Component comp = parent.getComponent(c-1);
-				if(comp.isVisible()) {
+				if(!autoAdjust || comp.isVisible()) {
 					Dimension dim = comp.getPreferredSize();
 					comp.setBounds(x, y, dim.width, h);
 

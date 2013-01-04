@@ -97,7 +97,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	 * @param oldValue 旧值
 	 * @param newValue 新值
 	 */
-	public void fireMessageChange(String changePropertyName, Object oldValue, Object newValue) {
+	private void fireMessageChange(String changePropertyName, Object oldValue, Object newValue) {
 		PropertyChangeListener[] listeners = changeSupport.getPropertyChangeListeners();
 		for(int i=0; i<listeners.length; i++)
 		{
@@ -105,46 +105,49 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					new PropertyChangeEvent(this, changePropertyName, oldValue, newValue));
 		}
 	}
-	
-	/**
-	 * 直接将消息保存至消息列表中，注意不添加至面板中。
-	 * @param msg 消息对象
-	 */
-	public void addMessage2List(ChannelMessage msg)
-	{
-		if(msg != null) {
-			messageBodyList.add(msg);
-			
-			//同时改变消息数
-			if(ChannelMessage.MAIL.equals(msg.getClazz())) {
-				fireMessageChange(MAIL_COUNT_CHANGE_PROPERTY, 0, 1);
-			}
-			else if(ChannelMessage.QQ.equals(msg.getClazz())) {
-				fireMessageChange(QQ_COUNT_CHANGE_PROPERTY, 0, 1);
-			}
-			else if(ChannelMessage.WEIBO.equals(msg.getClazz())) {
-				fireMessageChange(WEIBO_COUNT_CHANGE_PROPERTY, 0, 1);
-			}
+	public void fireMessageChange(ChannelMessage msg) {
+		if (ChannelMessage.MAIL.equals(msg.getClazz())) {
+			fireMessageChange(MAIL_COUNT_CHANGE_PROPERTY, 0, 1);
+		} else if (ChannelMessage.QQ.equals(msg.getClazz())) {
+			fireMessageChange(QQ_COUNT_CHANGE_PROPERTY, 0, 1);
+		} else if (ChannelMessage.WEIBO.equals(msg.getClazz())) {
+			fireMessageChange(WEIBO_COUNT_CHANGE_PROPERTY, 0, 1);
 		}
 	}
+	
+	/**
+	 * 初始化消息列表，用于{@link ChannelDesktopPane#initMessage(ChannelMessage)}时
+	 * @param msg
+	 */
+	public void initMessage(ChannelMessage msg) 
+	{
+		if(messageBodyList.isEmpty()) { //消息列表为空，表示还没有子面板，需要创建一个；以后直接保存在messageBodyList中，不再创建
+			ChannelMessageBodyPane.Body body = new ChannelMessageBodyPane.Body(msg, true);
+			body.setBorder(new EmptyBorder(0, 10, 0, 10));
+			this.add(body);
+		}
+		
+		messageBodyList.add(0, msg);
+		fireMessageChange(msg);
+	}
+	
 
 	/**
 	 * 当前面板List中添加消息，默认添加在第一行。
 	 * @param msg 消息对象
-	 * @param addFirst 若为true则只添加最新一条(第一条)；若为false则添加全部
+	 * @param toFirst 是否添加在顶部(即只显示一条)
 	 */
-	public void addMessage(ChannelMessage msg, boolean addFirst) 
-	{
-		ChannelMessageBodyPane.Body body = new ChannelMessageBodyPane.Body(msg, addFirst);
-		
-		if(addFirst) {		
-			this.removeAll();
-			
+	public void addMessage(ChannelMessage msg, boolean toFirst) 
+	{		
+		ChannelMessageBodyPane.Body body = new ChannelMessageBodyPane.Body(msg, toFirst);
+		if(toFirst) {
 			body.setBorder(new EmptyBorder(0, 10, 0, 10));
+			
+			this.removeAll();
 			this.add(body);
 			this.validate();
 			
-			messageBodyList.add(msg); //二次保存
+			messageBodyList.add(msg);
 		}
 		else {
 			if(this.getComponentCount() > 0) { //下余面板的边框，稍微复杂点
@@ -160,6 +163,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			this.add(body);
 			this.validate();
 		}
+		fireMessageChange(msg);
 	}
 	
 	/**
@@ -194,30 +198,19 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	 */
 	public void showAllMessage()
 	{
-		if(!messageBodyList.isEmpty()) {
-			ChannelMessage newMsg = messageBodyList.firstElement();
-
-			if(container != null)
-			{
-//				ChannelMessagePane old =  (ChannelMessagePane)container.getParent();
-				ChannelMessagePane nw =  new ChannelMessagePane(new ChannelMessageTopBar());
-				for(ChannelMessage msg : messageBodyList)
-				{
-					nw.addMessage(msg, false);
-				}
-				nw.body.messageBodyList = messageBodyList;
-//				for(int i = 0; i< Math.min(old.body.getComponentCount(), nw.body.getComponentCount()); i++)
-//				{
-//					Body oldBody = (Body)old.body.getComponent(i);
-//					Body nwBody = (Body)nw.body.getComponent(i);
-//					oldBody.copyTo(nwBody);
-//				}
-				
-				
-				ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-				desktop.addOtherShowComp(PREFIX_SHOWALL+newMsg.getContactName(), nw);
+		ChannelMessage newMsg = null;
+		ChannelMessagePane nw = new ChannelMessagePane(new ChannelMessageTopBar());
+		
+		for (ChannelMessage msg : messageBodyList) {
+			if (newMsg == null) {
+				newMsg = msg;
 			}
+			nw.addMessage(msg, false);
 		}
+		nw.body.messageBodyList = messageBodyList;// 复制一份消息列表
+
+		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+		desktop.addOtherShowComp(PREFIX_SHOWALL + newMsg.getContactName(), nw);
 	}
 	
 	/* ---------------------------------- 下面是面板的构成，使用人员无需关心 -------------------------------------------*/
@@ -231,18 +224,17 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		ChannelMessage iMsg;//消息对象
 
 		Body origin = null; //当使用copyTo(Body newBody)方法时，newBody.origin = this; 其实就是this的一个副本
-		boolean addFirst;
+		boolean toFirst; //是否添加至顶部(即是否只显示1条)
 		
 		public Body() { }
-		public Body(ChannelMessage msg, boolean addFirst)
+		public Body(ChannelMessage msg, boolean toFirst)
 		{
 			this.iMsg = msg;
-			this.addFirst = addFirst;
+			this.toFirst = toFirst;
 			
 			setPreferredSize(new Dimension(ChannelConfig.getIntValue("msgBodyWidth"),  
 							top.SIZE.height + center.SIZE.height + (!bottom.isVisible()?0:bottom.SIZE.height)));
 			setLayout(new BorderLayout(5,5));
-//			setLayout(new VerticalGridLayout(VerticalGridLayout.TOP_TO_BOTTOM,0,5,new Insets(0, 10, 0, 0)));
 			
 			//添加子控件
 			add(top, BorderLayout.NORTH);
@@ -250,9 +242,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			add(center, BorderLayout.CENTER);
 			
 			add(bottom, BorderLayout.SOUTH);
-//			add(top);
-//			add(center);
-//			add(bottom);
 			
 			analyzeMessage(msg);
 		}
@@ -269,16 +258,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			else
 				setBackground(new Color(186, 212, 229));
 
-			if(ChannelMessage.MAIL.equals(msg.getClazz())) {
-				fireMessageChange(MAIL_COUNT_CHANGE_PROPERTY, 0, 1);
-			}
-			else if(ChannelMessage.QQ.equals(msg.getClazz())) {
-				fireMessageChange(QQ_COUNT_CHANGE_PROPERTY, 0, 1);
-			}
-			else if(ChannelMessage.WEIBO.equals(msg.getClazz())) {
-				fireMessageChange(WEIBO_COUNT_CHANGE_PROPERTY, 0, 1);
-			}
-			
 			//为子控件赋值
 			top.createMessageHeader(msg);
 			center.showMessagePart(msg);
@@ -287,11 +266,10 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		//设置背景
 		public void setBackground(Color bg)
 		{			
-			if(!addFirst) //如果是全部添加，则设置自己的背景色\
+			if (!toFirst) // 如果是全部添加，则设置自己的背景色
 			{
 				super.setBackground(bg);
-			}
-			else if(container != null) //如果是添加最新一条(第一条)，则设置父面板的背景色
+			} else if (container != null) // 如果是添加最新一条(第一条)，则设置父面板的背景色
 			{
 				container.setBackground(bg);
 			}
@@ -360,7 +338,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			nw.showMessage(newMsg);
 			((ShowMessageBodyPane)nw.body).setMessageToGUI(newMsg);
 
-			ChannelDesktopPane desktop = (ChannelDesktopPane)ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
+			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
 		}
 		
@@ -689,8 +667,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
 					
 					//最后回复消息
-					ChannelDesktopPane desktop = (ChannelDesktopPane)
-							ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
+					ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 					desktop.addMessage(newMsg);
 				}
 			}

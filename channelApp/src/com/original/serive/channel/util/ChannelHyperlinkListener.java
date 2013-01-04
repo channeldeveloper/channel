@@ -28,7 +28,8 @@ public class ChannelHyperlinkListener implements HyperlinkListener {
 				showUser(despURL);
 			} else if (despURL.substring(0, 1).equals("#")) {
 				openURL("http://huati.weibo.com/k/" + despURL.substring(1));
-			} else if (despURL.startsWith("http://")	|| despURL.startsWith("https://")) {
+			} else if (despURL.startsWith("http://")	|| despURL.startsWith("https://") ||
+					despURL.startsWith("file:/")) {
 				openURL(despURL);
 			}
 		}

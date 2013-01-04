@@ -34,7 +34,7 @@ import com.original.service.channel.core.MessageManager;
 public class ChannelGUI extends JFrame
 {	
 	//对一些主要控件做一下本地缓存，以后使用时直接从缓存中获取对象。
-	public static Map<String, JComponent> channelNativeStore = 
+	private static Map<String, JComponent> channelNativeStore = 
 			new HashMap<String, JComponent>();	
 	
 	public static ChannelService cs = null;
@@ -52,9 +52,28 @@ public class ChannelGUI extends JFrame
 		setResizable(false);
 	}
 	
+	//获取一些本地缓存对象：
+	//1、获取工具栏上的用户头像
+	public static ChannelToolBar.ChannelUserHeadLabel getUserHeadLabel() {
+		return (ChannelToolBar.ChannelUserHeadLabel)channelNativeStore.get("ChannelUserHeadLabel");
+	}
+	//2、获取工具栏
+	public static ChannelToolBar getToolBar() {
+		return (ChannelToolBar)channelNativeStore.get("ChannelToolBar");
+	}
+	//3、获取桌面
+	public static ChannelDesktopPane getDesktop() {
+		return (ChannelDesktopPane)channelNativeStore.get("ChannelDesktopPane");
+	}
+	
 	//程序执行入口
 	public static void main(String[] args) throws Exception
 	{
+		//开始应用程序：
+				UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
+				UIManager.getDefaults().put("defaultFont", ChannelConstants.DEFAULT_FONT);
+				UIManager.put("ScrollBar.width",10); //滚动条默认宽度
+				
 		//1. Data 和 View 要分开
 		//2. 服务 和 应用(控制) 要分开
 		//3. 服务控制自服务，不由第3方应用外部控制，
@@ -105,11 +124,6 @@ public class ChannelGUI extends JFrame
 		}
 		cs.start();
 		
-		//开始应用程序：
-		UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
-		UIManager.getDefaults().put("defaultFont", ChannelConstants.DEFAULT_FONT);
-		UIManager.put("ScrollBar.width",10); //滚动条默认宽度
-
 		//使用层面板的方式来布局
 		JLayeredPane mp = main.getLayeredPane();
 		//用户头像(第1层)
@@ -136,7 +150,6 @@ public class ChannelGUI extends JFrame
 		main.setVisible(true);
 		
 //开始添加信息：
-      
 		MessageManager msm =ChannelAccesser.getMsgManager();
 		List<ChannelMessage> msgs = msm.getMessages(new MessageFilter(null, null, "-recievedDate"));
 		for (ChannelMessage m : msgs)

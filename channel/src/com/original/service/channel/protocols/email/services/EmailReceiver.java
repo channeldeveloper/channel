@@ -7,7 +7,9 @@
 package com.original.service.channel.protocols.email.services;
 
 import java.security.Security;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
 
 import javax.mail.Folder;
@@ -19,11 +21,13 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.log4j.Logger;
 
+import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.protocols.email.model.EMail;
+import com.original.service.channel.protocols.email.model.EMailAttachment;
 import com.original.service.channel.protocols.email.model.EMailParser;
 import com.original.service.channel.protocols.email.vendor.EMailConfig;
 import com.original.service.channel.protocols.email.vendor.EMailServer;
@@ -64,7 +68,7 @@ public class EmailReceiver {
 	 */
 	public void start()
 	{
-//		backgroud.start();
+		backgroud.start();
 	}
 
 	/**
@@ -174,7 +178,7 @@ public class EmailReceiver {
 		if (msgs.length <= 0) {
 			return;
 		}
-		EMailParser parser = new EMailParser("Song");
+		EMailParser parser = new EMailParser("cydow");
 		for (int i = 0; i < msgs.length; i++) {
 			try {
 				String newMsgId = ((MimeMessage) msgs[i]).getMessageID();
@@ -207,7 +211,7 @@ public class EmailReceiver {
 	{		
 		ChannelMessage msg = new ChannelMessage();
 		msg.setMessageID(email.getMsgId());
-//		msg.setAttachmentIds(email.getAttachments()); Pending franz deal attachment later
+		
 		msg.setBody(email.getContent());
 		msg.setChannelAccount(ca);
 		msg.setSize(email.getSize());
@@ -237,7 +241,42 @@ public class EmailReceiver {
 		msg.setToAddr(ca.getAccount().getUser());
 		
 		msg.setRecievedDate(email.getSendtime());
+		
+		//parse Attachments.
+		parseAttachments(msg, email);
 		return msg;
 	}
+	
+	/**
+	 * Parse Email attachment to channel message.
+	 * @return
+	 */
+	private void parseAttachments(ChannelMessage chmsg, EMail email)
+	{
+		List<EMailAttachment> emailAtts = email.getAttachments();
+		List<Attachment> atts = new ArrayList<Attachment>();
+		for (EMailAttachment ea : emailAtts)
+		{
+			atts.add(parseAttachment(ea));
+		}
+		chmsg.setAttachments(atts);
+	}
+	
+	/**
+	 * Parse Email attachment to channel message.
+	 * @return
+	 */
+	private Attachment parseAttachment(EMailAttachment ea)
+	{
+		Attachment att = new Attachment();
+		att.setContentId(ea.getCId());
+		att.setFileId(ea.getFileID());
+		att.setFileName(ea.getFileName());
+		att.setSize(ea.getSize());
+		att.setType(ea.getType());
+		return att;
+		
+	}
+
 
 }

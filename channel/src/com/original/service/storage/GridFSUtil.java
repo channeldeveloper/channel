@@ -6,12 +6,15 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.bson.types.ObjectId;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
+import com.original.service.channel.Constants;
 
 /**
  * 
@@ -37,7 +40,7 @@ public final class GridFSUtil {
 	{
 		if (singleton == null)
 		{
-			singleton = new GridFSUtil("localhost", 27017, "song");
+			singleton = new GridFSUtil(Constants.Channel_DB_Server, Constants.Channel_DB_Server_Port, Constants.Channel_DB_Name);
 		}
 		return singleton;
 	}
@@ -194,7 +197,7 @@ public final class GridFSUtil {
 	 * @return
 	 * @throws Exception
 	 */
-	private static byte[] LoadImage(String filePath) throws Exception {
+	public byte[] readFile(String filePath) throws Exception {
 		File file = new File(filePath);
 		int size = (int) file.length();
 		byte[] buffer = new byte[size];
@@ -203,10 +206,24 @@ public final class GridFSUtil {
 		in.close();
 		return buffer;
 	}
+	
+	/**
+	 * 
+	 * @param filePath
+	 * @return
+	 * @throws Exception
+	 */
+	public void writeFile(ObjectId dbfileID, String filePath) throws Exception {
+		GridFSDBFile out = fs.findOne(new BasicDBObject("_id", dbfileID));// one
+		FileOutputStream fOutStream = new FileOutputStream(
+				filePath);
+		out.writeTo(fOutStream);
+		fOutStream.close();
+	}
 
 	public static void main(String[] args) throws Exception {
 		// Load our image
-		byte[] imageBytes = LoadImage("C:/profile.json");
+		byte[] imageBytes = GridFSUtil.getGridFSUtil().readFile("C:/profile.json");
 		// Connect to database
 		Mongo mongo = new Mongo("127.0.0.1");
 		String dbName = "GridFSTestJava";

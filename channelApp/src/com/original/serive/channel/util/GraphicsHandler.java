@@ -7,7 +7,6 @@ import java.awt.RenderingHints;
 import java.awt.geom.Area;
 import java.awt.geom.RoundRectangle2D;
 
-import com.original.widget.draw.GeomOperator;
 import com.original.widget.draw.OriPainter;
 
 /**
@@ -118,20 +117,7 @@ return optimizeGraphics(g, DEFAULT_RENDERING_HINT_ON);
 	 * @param alpha 阴影透明度
 	 */
 	public static void fillShadow(Graphics2D g2d, int thick, int width, int height, int radius, float alpha)
-	{
-//		g2d.translate(thick, thick);
-//		Area shadowArea = new Area(new RoundRectangle2D.Double(0,0,width,height,radius,radius));
-////		Paint paint = new LinearGradientPaint(width/2, 0, width/2, height, new float[]{0.0f,1.0f}, 
-////				new Color[]{new Color(255,255,255,0), new Color(0,0,0,(int)(255*alpha))} );
-////		g2d.setPaint(paint);
-////		g2d.fill(shadowArea);
-////		
-////		paint = new LinearGradientPaint(0, height/2, width, height/2, new float[]{0.0f,1.0f}, 
-////				new Color[]{new Color(255,255,255,0), new Color(0,0,0,(int)(255*alpha))} );
-////		g2d.setPaint(paint);
-//		g2d.fill(shadowArea);
-//		g2d.translate(-thick, -thick);
-		
+	{		
 		RoundRectangle2D r2d= new RoundRectangle2D.Double(
                 thick,
                 thick,

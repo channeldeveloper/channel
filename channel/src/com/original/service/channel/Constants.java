@@ -16,6 +16,18 @@ package com.original.service.channel;
  */
 public interface Constants {
 	
+	
+	//DB and collection names
+	public static String Channel_DB_Server = "localhost";
+	public static int     Channel_DB_Server_Port = 27017;
+	public static String Channel_DB_Name = "song";//tempdb later change to 
+	public static String Channel_Collection_Message = "messages";
+	public static String Channel_Collection_Channel = "channel";
+	public static String Channel_Collection_ChannelAccount = "channelAccount";
+	public static String Channel_Collection_Profile = "profile";
+	public static String Channel_Collection_People = "people";
+	
+	
 	public enum CHANNEL{MAIL, QQ, WEIBO}
 	
 	public static final String QQ = "QQ",
@@ -114,6 +126,7 @@ public interface Constants {
 
 	public static final String ACTION_REPLY = "reply";
 	public static final String ACTION_QUICK_REPLY = "quick reply";
+	public static final String ACTION_FORWARD = "forward";
 	
 	public static final String ACTION_POST = "post";
 	public static final String ACTION_COMMENT = "comment";
@@ -155,4 +168,7 @@ public interface Constants {
 	String Weibo_ThumbNail_Pic = "weibo thumbnail pic"; //微博小图片地址
 	String Weibo_Middle_Pic = "weibo middle pic";//微博中型图片地址
 	String Weibo_Original_Pic = "weibo original pic";//微博原始图片地址
+	
+	/* ---------------------------------------------------- QQ -------------------------------------------------------------*/
+	String QQ_FONT_STYLE = "QQ Font Style";//qq字体样式
 }

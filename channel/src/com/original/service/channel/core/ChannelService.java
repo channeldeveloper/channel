@@ -22,11 +22,14 @@ import org.bson.types.ObjectId;
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
 import com.mongodb.Mongo;
+import com.original.service.channel.AbstractService;
 import com.original.service.channel.Attachment;
 import com.original.service.channel.Channel;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
 import com.original.service.channel.Service;
+import com.original.service.channel.config.Initializer;
 import com.original.service.channel.event.ChannelEvent;
 import com.original.service.channel.event.ChannelListener;
 import com.original.service.channel.event.MessageEvent;
@@ -48,7 +51,7 @@ import com.original.service.profile.Profile;
  * @author sxy
  * 
  */
-public class ChannelService implements Service {
+public class ChannelService extends AbstractService {
 
 	private ChannelServer channelServer;
 
@@ -57,7 +60,7 @@ public class ChannelService implements Service {
 	private PeopleManager peopleManager;
 
 	private String dbServer = "localhost";
-	private String dbServerPort = "27017";
+	private int dbServerPort = 27017;
 	private String channlDBName = "song";
 
 	private Morphia morphia;
@@ -67,6 +70,8 @@ public class ChannelService implements Service {
 	java.util.logging.Logger logger;
 
 	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
+	
+	private Initializer initializer;
 
 	/**
 	 * 
@@ -139,7 +144,7 @@ public class ChannelService implements Service {
 	/**
 	 * @return the dbServerPort
 	 */
-	public String getDbServerPort() {
+	public int getDbServerPort() {
 		return dbServerPort;
 	}
 
@@ -147,7 +152,7 @@ public class ChannelService implements Service {
 	 * @param dbServerPort
 	 *            the dbServerPort to set
 	 */
-	public void setDbServerPort(String dbServerPort) {
+	public void setDbServerPort(int dbServerPort) {
 		this.dbServerPort = dbServerPort;
 	}
 
@@ -268,7 +273,7 @@ public class ChannelService implements Service {
 
 		// DB
 		try {
-			mongo = new Mongo(dbServer, Integer.valueOf(dbServerPort));
+			mongo = new Mongo(dbServer, dbServerPort);
 			// db mapping to object
 			ds = morphia.createDatastore(mongo, channlDBName);
 			ds.ensureIndexes();
@@ -289,6 +294,20 @@ public class ChannelService implements Service {
 	 */
 
 	private void init() {
+		
+		//db and collection
+		initializer = new Initializer(mongo);
+		try
+		{
+			initializer.init(false);
+		}
+		catch(Exception exp)
+		{
+			logger.log(Level.SEVERE,
+					"To init channel db fail!" + exp.toString());
+		}
+		
+		
 		msgManager = new MessageManager(morphia, mongo, ds);
 		channelServer = new ChannelServer(morphia, mongo, ds);
 		peopleManager = new PeopleManager(morphia, mongo, ds);
@@ -348,7 +367,15 @@ public class ChannelService implements Service {
 		}
 	}
 	public synchronized void restartService(ChannelAccount ca) throws Exception {
-		Service sc = createService(ca);
+		Service sc = null;
+		try
+		{
+			sc = createService(ca);
+		}
+		catch(Exception exp)
+		{
+			logger.log(Level.INFO, "Fail to create Service !" + ca);			
+		}
 		if (sc != null) {
 			serviceMap.put(ca, sc);
 			failedServiceAccounts.remove(ca);
@@ -566,34 +593,35 @@ public class ChannelService implements Service {
 	@Override
 	public void put(String action, ChannelMessage msg) {
 		// TODO Auto-generated method stub
-		if (action
-				.endsWith(com.original.service.channel.Constants.ACTION_QUICK_REPLY)) {
-			// Original message id.
-			if (msg.getId() != null) {
-				ChannelMessage chmsg = msgManager.getMessage(msg.getId());
-				if (chmsg != null) {
-					ChannelMessage replyMsg = chmsg.clone();
-					replyMsg.setId(null);
-
-					replyMsg.setToAddr(chmsg.getFromAddr());
-					replyMsg.setFromAddr(chmsg.getToAddr());
-					replyMsg.setBody(msg.getBody());
-					replyMsg.setType(ChannelMessage.TYPE_SEND);
-					msg = replyMsg;
-				}
-			}
-		}
+//		if (action
+//				.endsWith(Constants.ACTION_QUICK_REPLY)) {
+//			// Original message id.
+//			if (msg.getId() != null) {
+//				ChannelMessage chmsg = msgManager.getMessage(msg.getId());
+//				if (chmsg != null) {
+//					ChannelMessage replyMsg = chmsg.clone();
+//					replyMsg.setId(null);
+//
+//					replyMsg.setToAddr(chmsg.getFromAddr());
+//					replyMsg.setFromAddr(chmsg.getToAddr());
+//					replyMsg.setBody(msg.getBody());
+//					replyMsg.setType(ChannelMessage.TYPE_SEND);
+//					msg = replyMsg;
+//				}
+//			}
+//		}
 
 		if (msg != null) {
 			ChannelAccount cha = msg.getChannelAccount();
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				try {
-					sc.put(action, msg); //下发消息
-					
-					//如果下发成功，则需要保存此消息
-					msg.setType(ChannelMessage.TYPE_SEND); //强制转换
-					msgManager.save(msg);
+					sc.put(action, msg); //下发消息					
+					//如果下发成功，则需要保存此消息。注意，目前只有快速回复保存
+					if(action == Constants.ACTION_QUICK_REPLY) {
+						msg.setType(ChannelMessage.TYPE_SEND); //强制转换
+						msgManager.save(msg);
+					}
 				}
 				catch(Exception ex) {
 					ex.printStackTrace();
@@ -690,6 +718,18 @@ public class ChannelService implements Service {
 		MessageEvent evt = new MessageEvent(null, null,
 				MessageEvent.Type_Removed, null, msgs, null);
 		fireMessageEvent(evt);
+	}
+
+	@Override
+	public ChannelAccount getChannelAccount() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<People> getContacts() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
