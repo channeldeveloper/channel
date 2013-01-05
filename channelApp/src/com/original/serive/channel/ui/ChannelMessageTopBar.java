@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 
 import com.original.serive.channel.ChannelGUI;
+import com.original.serive.channel.ui.data.TitleItem;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.GraphicsHandler;
 import com.original.serive.channel.util.LocationIcon;
@@ -23,6 +24,8 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 {
 	private LocationIcon closeIcon = null;
 	private boolean drawSeparateLine = true; //是否显示分割线
+	
+	private TitleItem[] titleItems = null; //标题，可以有多个，支持多种样式
 	
 	public ChannelMessageTopBar() {
 		this(true);
@@ -114,15 +117,45 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 		
 		int width = getWidth(), height = getHeight();
 		g2d.fillRoundRect(0, 0, width, height, 10, 10);
-		if(closeIcon != null) {
+		
+		if (titleItems != null) { //标题
+			for (int i = 0, j = 12; i < titleItems.length; i++, j += 5) {
+				g2d.setFont(titleItems[i].getFont());
+				g2d.setColor(titleItems[i].getColor());
+				g2d.drawString(titleItems[i].getTitle(), j, (height + titleItems[i].getFontSize()) / 2 - 2); //-2上移微调2px
+			}
+		}
+		
+		if(closeIcon != null) { //关闭按钮
 			g2d.drawImage(closeIcon.getImage(), width-closeIcon.getWidth()-12, (height-closeIcon.getHeight())/2, this);
 			closeIcon.setBounds(width-closeIcon.getWidth()-12, (height-closeIcon.getHeight())/2,
 					closeIcon.getWidth(), closeIcon.getHeight());
 		}
 		
-		if(drawSeparateLine) {
+		if(drawSeparateLine) { //分割线
 			g2d.setColor(Color.gray);
 			g2d.drawLine(0, height-1, width, height-1);
+		}
+	}
+
+	public TitleItem[] getTitleItems() {
+		return titleItems;
+	}
+	public void setTitleItems(TitleItem[] titleItems) {
+		this.titleItems = titleItems;
+		repaint();
+	}
+	public void addTitleItem(TitleItem titleItem) {
+		if(titleItem != null) {
+			TitleItem[] newItems = null;
+			if (titleItems == null) {
+				newItems = new TitleItem[] { titleItem };
+			} else {
+				newItems = new TitleItem[titleItems.length + 1];
+				System.arraycopy(titleItems, 0, newItems, 0, titleItems.length);
+				newItems[titleItems.length] = titleItem;
+			}
+			setTitleItems(newItems);
 		}
 	}
 }

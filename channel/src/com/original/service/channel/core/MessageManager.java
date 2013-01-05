@@ -64,7 +64,7 @@ public class MessageManager {
 			}
 			catch(Exception exp)
 			{
-				exp.printStackTrace();
+//				exp.printStackTrace();
 			}
 		}
 		return false;

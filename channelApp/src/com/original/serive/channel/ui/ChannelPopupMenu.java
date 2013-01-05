@@ -136,7 +136,7 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 			if(body != null && !body.messageBodyList.isEmpty()) {
 				ChannelMessage newMsg = body.messageBodyList.firstElement();
 				
-				ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(true));
+				ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(false));
 				cmp.newMessage(newMsg); 
 				ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 				desktop.addOtherShowComp(PREFIX_NEW+newMsg.getContactName(),  cmp);

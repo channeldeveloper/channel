@@ -104,6 +104,8 @@ public class ShadowBorder extends AbstractBorder
 			g2d.setColor(fillColor);
 			g2d.fillRoundRect(0, 0, width-thickness, height-thickness, radius, radius);
 		}
+		
+//		GraphicsHandler.suspendRendering(g2d);
 	}
 
 	/**

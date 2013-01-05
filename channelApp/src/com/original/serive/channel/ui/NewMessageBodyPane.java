@@ -13,6 +13,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -38,11 +39,13 @@ import com.original.serive.channel.server.ChannelAccesser;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.ui.data.FontStyle;
 import com.original.serive.channel.ui.widget.EditorHandler;
+import com.original.serive.channel.ui.widget.FileAttacher;
 import com.original.serive.channel.ui.widget.FontChooser;
 import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
+import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.Constants.CHANNEL;
@@ -205,7 +208,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	}
 	
 	/**
-	 * 编辑消息，即收集当前编辑面板的消息
+	 * 编辑消息，即收集当前编辑面板的所有消息：包括主体、内容、字体样式等等。
 	 * @return
 	 */
 	public ChannelMessage editMessage() {
@@ -219,12 +222,16 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			msg.setRecievedDate(msg.getSentDate());//设置和发送时间一样
 			
 			String clazz = newMsg.getClazz(); //类别
-			if (ChannelMessage.WEIBO.equals(clazz) 	||
-					ChannelMessage.QQ.equals(clazz)) 
-			{
+			if (ChannelMessage.WEIBO.equals(clazz)) {
 				msg.setBody(center.getText(true));
-			} else {
+				
+			} else if (ChannelMessage.QQ.equals(clazz)) {
+				msg.setBody(center.getText(true));
+
+			} else if (ChannelMessage.MAIL.equals(clazz)) {
+				msg.setSubject(center.getSubject());// 主体
 				msg.setBody(center.getText(false));
+				msg.setAttachments(center.getAttachments());//附件
 			}
 			
 			String type = newMsg.getType(); //消息类型
@@ -340,7 +347,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 				}
 				
 				//清空文本
-				center.clearText();
+				center.clearAll();
 			}
 		}
 	}
@@ -374,6 +381,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		private FontChooser fontChooser = new FontChooser(content);
 		private JFileChooser fileChooser = new JFileChooser();
 		private EditorHandler handler = new EditorHandler(content);
+		private FileAttacher fileAttacher = new FileAttacher();
 		
 		public Center() {
 			layoutMgr.setAnchor(GridBagConstraints.NORTHEAST); //靠右对齐，主要针对标签
@@ -504,6 +512,18 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			content.setText(null);
 			fontChooser.setFontStyle(null);  //恢复默认样式
 			fileChooser.setSelectedFile(null);  //清空选中文件
+			fileAttacher.clearAttachments(); //清空所有的附件
+		}
+		
+		/**
+		 * 清空文本和所有文本输入框中的内容
+		 */
+		public void clearAll() {
+			txtCC.setText(null);
+			txtSubject.setText(null);
+			
+			clearText();
+			setVisible(0, false);//隐藏抄送地址
 		}
 		
 		/**
@@ -512,6 +532,21 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		 */
 		public FontStyle getFontStyle() {
 			return fontChooser.lookforFontStyle();
+		}
+		
+		/** 获取主题 */
+		public String getSubject() {
+			return txtSubject.getText();
+		}
+		
+		/**  获取抄送地址 */
+		public String getCC() {
+			return txtCC.getText();
+		}
+		
+		/** 获取附件列表 */
+		public List<Attachment> getAttachments() {
+			return fileAttacher.convertToAttachments();
 		}
 
 		public void actionPerformed(ActionEvent e)
@@ -530,8 +565,9 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			}
 			else if(ADD_FILE == e.getActionCommand()) {
 				//目前做测试用
-				System.out.println(handler.parseHTML(content.getText()));
-				System.out.println(content.getText());
+//				System.out.println(handler.parseHTML(content.getText()));
+//				System.out.println(content.getText());
+				ChannelUtil.showCustomedDialog(btnFile, "添加附件", true, fileAttacher);
 			}
 		}
 	}

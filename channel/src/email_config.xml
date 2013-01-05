@@ -24,7 +24,7 @@
 	<EMailServer mailname="sohu.com" mailtype="pop3" smtpserver="smtp.sohu.com" 
 		smtpport="25" popserver="pop3.sohu.com" popport="110" issmtpauth="true" securityprotocol="none"/>
 
-	<EMailServer mailname="qq.com" mailtype="pop" smtpserver="smtp.qq.com" 
+	<EMailServer mailname="qq.com" mailtype="pop3" smtpserver="smtp.qq.com" 
 		smtpport="25" popserver="pop.qq.com" popport="110" issmtpauth="true" securityprotocol="none"/>
 
 	<EMailServer mailname="yahoo.cn" mailtype="pop" smtpserver="smtp.mail.yahoo.cn" 

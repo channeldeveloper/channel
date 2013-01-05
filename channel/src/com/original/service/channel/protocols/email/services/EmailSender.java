@@ -7,6 +7,7 @@
 package com.original.service.channel.protocols.email.services;
 
 import java.io.File;
+import java.net.URI;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,7 +18,6 @@ import java.util.Properties;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
-import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -171,9 +171,11 @@ public class EmailSender{// extends AbstractProcessingResource {
         for (int i = 0; i < media.size(); i++) {
             Element a = (Element) media.get(i);
             String filename = a.attr("src");//获取本地图片路径
-            fileList.add(filename);
-            a.removeAttr("src");
-            a.attr("src", "cid:Part" + i + "." + messageid);
+            if(filename.startsWith("file:")) {
+            	fileList.add(filename);
+            	a.removeAttr("src");
+            	a.attr("src", "cid:Part" + i + "." + messageid);
+            }
         }
         return doc.html();
     }
@@ -194,10 +196,11 @@ public class EmailSender{// extends AbstractProcessingResource {
             MimeBodyPart text = new MimeBodyPart();
             text.setContent(mp1);
             mp.addBodyPart(text);
-            if (false){//fileList.size() > 0) {
+            if (fileList.size() > 0) {
                 for (int i = 0; i < fileList.size(); i++) {
                     MimeBodyPart part3 = new MimeBodyPart();
-                    DataSource source = new FileDataSource(new File(fileList.get(i).toString()));
+                    File file = new File(new URI(fileList.get(i).toString()));
+                    DataSource source = new FileDataSource(file);
                     part3.setDataHandler(new DataHandler(source));
                     part3.setFileName(MimeUtility.encodeText(source.getName(), "UTF-8", "B"));
                     part3.setContentID("<" + "Part" + i + "." + messageid + ">");
@@ -319,17 +322,17 @@ public class EmailSender{// extends AbstractProcessingResource {
      * @param from
      * @return
      */
-    private String createMessage(EMail email) {
-        String receivers = email.getReceiver();
-        String copyTo = email.getCc();
-        String bccTo = email.getBcc();
-        String title = email.getMailtitle();
-        String content = email.getContent();
-        StringBuilder attachs = new StringBuilder();
-        String sender = email.getMailname();
-        content = atts2TempFiles(email, content, attachs);
-        return this.createMessage(receivers, copyTo, bccTo, title, content, attachs.toString(), sender);
-    }
+//    private String createMessage(EMail email) {
+//        String receivers = email.getReceiver();
+//        String copyTo = email.getCc();
+//        String bccTo = email.getBcc();
+//        String title = email.getMailtitle();
+//        String content = email.getContent();
+//        StringBuilder attachs = new StringBuilder();
+//        String sender = email.getMailname();
+//        content = atts2TempFiles(email, content, attachs);
+//        return this.createMessage(receivers, copyTo, bccTo, title, content, attachs.toString(), sender);
+//    }
 
 	private String atts2TempFiles(EMail email, String content,
 			StringBuilder attachs) {
@@ -363,7 +366,7 @@ public class EmailSender{// extends AbstractProcessingResource {
 	 * @return
 	 */
     private String createMessage(String receivers, String copyTo, String bccTo, String title,
-            String content, String attachs, String from) {
+            String content, List<Attachment> attachs, String from) {
         String isSuccess = this.initMessage();
         if (isSuccess == null) {
             isSuccess = this.setFrom(from);
@@ -384,7 +387,7 @@ public class EmailSender{// extends AbstractProcessingResource {
             isSuccess = this.setBccTo(bccTo);
         }
         if (isSuccess == null) {
-//            isSuccess = this.addFileAtts(attachs);
+            isSuccess = this.addFileAtts(attachs);
         }
         if (isSuccess == null) {
             isSuccess = this.saveContent();
@@ -454,13 +457,13 @@ public class EmailSender{// extends AbstractProcessingResource {
    }
    
   /**
-   * 
+   * main interface for outer
    * @param msg
    * @return
    */
     public void send(ChannelMessage msg) {
     	String to = msg.getToAddr();
-    	String from = msg.getFromAddr();
+//    	String from = msg.getFromAddr();
     	HashMap<String, String> exts = msg.getExtensions();
     	
     	msg.setSentDate(new Date());
@@ -471,7 +474,7 @@ public class EmailSender{// extends AbstractProcessingResource {
     	}
     	String content = msg.getBody();
     	String title = msg.getSubject();
-    	this.send(to, from, bccTo, title, content, null);    	
+    	this.send(to, null, bccTo, title, content, msg.getAttachments());    	//注意这里的抄送不应该用fromAddr，待以后由用户自己输入，暂时设为null。
     }
     Transport transport;
     /**
@@ -553,7 +556,7 @@ public class EmailSender{// extends AbstractProcessingResource {
      * @return
      */
     @Deprecated
-    private boolean send(String receivers, String title, String content, String attachments) {
+    private boolean send(String receivers, String title, String content, List<Attachment> attachments) {
         return send(receivers, null, null, title, content, attachments);
     }
 
@@ -566,22 +569,22 @@ public class EmailSender{// extends AbstractProcessingResource {
      * @param attachments
      * @return
      */
-    @Deprecated
-    private boolean send(HashMap auth, String receivers, String title, String content, String attachments) {
-//        EMailConfig.loadConfig(null);
-        String username = (String) auth.get("username");
-        String password = (String) auth.get("password");
-        String userid = (String) auth.get("userId");
-        MailAuthentication auth1 = new MailAuthentication(userid, username, password, false);
-        String isSuccess = this.createMessage(receivers, null, null, title, content, attachments, username);
-        if (isSuccess == null) {
-            isSuccess = send(auth1);
-        }
-        if (isSuccess != null) {
-            log.error(isSuccess);
-        }
-        return (isSuccess == null ? true : false);
-    }
+//    @Deprecated
+//    private boolean send(HashMap auth, String receivers, String title, String content, String attachments) {
+////        EMailConfig.loadConfig(null);
+//        String username = (String) auth.get("username");
+//        String password = (String) auth.get("password");
+//        String userid = (String) auth.get("userId");
+//        MailAuthentication auth1 = new MailAuthentication(userid, username, password, false);
+//        String isSuccess = this.createMessage(receivers, null, null, title, content, attachments, username);
+//        if (isSuccess == null) {
+//            isSuccess = send(auth1);
+//        }
+//        if (isSuccess != null) {
+//            log.error(isSuccess);
+//        }
+//        return (isSuccess == null ? true : false);
+//    }
 
 //    private String saveAttachmentToTemp(String content, EMailAttachment eatt, String filename) {
 //        StreamData sd = FileManager.fetchBinaryFile(new String(eatt.getData()));
@@ -614,7 +617,7 @@ public class EmailSender{// extends AbstractProcessingResource {
      * @return
      */
     
-    private boolean send(String receivers, String copyTo, String bccTo, String title, String content, String attachs) {
+    private boolean send(String receivers, String copyTo, String bccTo, String title, String content, List<Attachment> attachs) {
         String isSuccess = this.createMessage(receivers, copyTo, bccTo, title, content, attachs, mailAccount.getUserName());
         if (isSuccess == null) {
             isSuccess = send(mailAccount);
@@ -683,11 +686,11 @@ public class EmailSender{// extends AbstractProcessingResource {
      * (临时文件，可以改造DataSource([])不用临时文件）。
      * 添加附件
      */
-    private void addFileAtts(List<Attachment> atts) {
+    private String addFileAtts(List<Attachment> atts) {
         try {
             log.debug("Attach count = " + atts.size());
-            if (atts == null) {
-                return;
+            if (atts == null || atts.isEmpty()) {
+                return null;
             }
             for (Attachment att : atts){
                 if (att == null || att.getFilePath() == null) {
@@ -701,7 +704,9 @@ public class EmailSender{// extends AbstractProcessingResource {
             }
         } catch (Exception e) {
             log.error(OriLog.logStack(e));           
+            return "Attach: " + e.getMessage();
         }
+        return null;
     }
     
     

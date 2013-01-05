@@ -86,10 +86,10 @@ public class MailParseUtil {
     public static String parseAddresser(String encoding, String addresser) {
         try {
             if ("8bit".equalsIgnoreCase(encoding)) {
-                return new String(addresser.getBytes("iso-8859-1"), "gb2312");
+                return new String(addresser.getBytes("iso-8859-1"), "utf8");
             }
             if (addresser.indexOf("=?x-unknown?") >= 0) {
-                addresser = addresser.replace("x-unknown", "gbk");
+                addresser = addresser.replace("x-unknown", "utf8");
             }
         } catch (Exception ex) {
             OriLog.getLogger(MailParseUtil.class).error(OriLog.logStack(ex));

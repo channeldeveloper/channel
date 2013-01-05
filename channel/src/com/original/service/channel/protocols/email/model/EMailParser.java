@@ -222,9 +222,9 @@ public class EMailParser {
 //    }
 
     private EMail handleMessage(Message msg, String username, String type, EMail mail) throws Exception {
-        String encoding = "";
+        String encoding = "utf8";
         try {
-            encoding = msg.getHeader("Content-Transfer-Encoding")[0];
+//            encoding = msg.getHeader("Content-Transfer-Encoding")[0];
         } catch (Exception ex) {
             log.error(OriLog.logStack(ex));
         }
@@ -551,9 +551,9 @@ public class EMailParser {
      */
     private EMail parseMail(Message msg, String username, String type, EMail mail) throws Exception {
     	//编码类型
-        String encoding = "";
+        String encoding = "utf8";
         try {
-            encoding = msg.getHeader("Content-Transfer-Encoding")[0];
+//            encoding = msg.getHeader("Content-Transfer-Encoding")[0];
         } catch (Exception ex) {
             log.error(OriLog.logStack(ex));
         }

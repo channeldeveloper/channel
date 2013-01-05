@@ -135,6 +135,8 @@ public class Utils {
     	email.setMailtitle(msg.getSubject());
     	email.setSendtime(ChannelMessage.TYPE_SEND.equals(msg.getType()) ? 
     			msg.getSentDate() : msg.getRecievedDate());
+    	
+    	//where're attachments??
 		return email;
 	}
 	

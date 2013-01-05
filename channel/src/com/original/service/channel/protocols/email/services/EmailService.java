@@ -8,7 +8,6 @@ import javax.swing.event.EventListenerList;
 import com.original.service.channel.AbstractService;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
-import com.original.service.channel.Constants;
 import com.original.service.channel.Service;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
@@ -140,13 +139,6 @@ public class EmailService extends AbstractService {
 	@Override
 	public void put(String action, ChannelMessage msg){		
 		this.sender.send(msg);
-		//派发事件给监听（存盘、更新视图）
-		ChannelMessage[] cmsg = new ChannelMessage[1];
-		//邮件的消息转换为渠道的消息
-		cmsg[0] = msg;
-		//
-		MessageEvent evt = new MessageEvent(null, null,MessageEvent.Type_Added, cmsg, null,null);
-		fireMessageEvent(evt);		
 	}
 	
 	/*public void PrePutDeal(String action, ChannelMessage msg) {		

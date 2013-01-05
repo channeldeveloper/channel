@@ -51,6 +51,7 @@ import com.original.serive.channel.server.ChannelAccesser;
 import com.original.serive.channel.ui.ChannelMessageTopBar;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.ui.data.MenuItem;
+import com.original.serive.channel.ui.data.TitleItem;
 import com.original.serive.channel.ui.widget.FileChooserListener;
 import com.original.serive.channel.ui.widget.FilePreviewer;
 
@@ -417,7 +418,7 @@ NativeInterface.open();
 	/**
 	 * 创建自定义面板，与Channel主程序面板风格一致
 	 */
-	public static JPanel createCustomedPane(final JDialog dialog, final Container child)
+	public static JPanel createCustomedPane(final JDialog dialog, final Container child, final String title)
 	{
 		JPanel body = new JPanel(new VerticalGridLayout(
 				VerticalGridLayout.TOP_TO_BOTTOM,0,0,new Insets(0, 0, 5, 2)));
@@ -438,6 +439,7 @@ NativeInterface.open();
 				setPreferredSize(new Dimension(child.getPreferredSize().width, 25));
 			}
 		};
+		topBar.addTitleItem(new TitleItem(title).setFontSize(15).setColor(Color.black));
 		body.add(topBar);
 		//顶部栏添加鼠标拖动事件
 		ChannelDialogDragListener listener = new ChannelDialogDragListener(dialog);
@@ -454,7 +456,7 @@ NativeInterface.open();
 			String title, boolean modal,final Container child)
 	{
 		JDialog d = createDialog(parent, title, modal);
-		JPanel body = createCustomedPane(d, child);
+		JPanel body = createCustomedPane(d, child, title);
 		
 		d.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		d.setContentPane(body);
@@ -527,7 +529,7 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		}
 		
 		dialog.setTextEditor(editor);
-JPanel body = createCustomedPane(dialog, dialog.getDefautFacePanel());
+JPanel body = createCustomedPane(dialog, dialog.getDefautFacePanel(), title);
 dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 dialog.setContentPane(body);
 dialog.pack();

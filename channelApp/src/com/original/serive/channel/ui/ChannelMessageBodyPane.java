@@ -160,8 +160,10 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 						new EmptyBorder(0, 10, 0, 10), 
 						new SingleLineBorder(SingleLineBorder.BOTTOM, new Color(0, 0, 0, 0), true)));
 			}
-			this.add(body);
-			this.validate();
+			if(this.getLayout() instanceof VerticalGridLayout) {//程序有时运行时，不知为何变成CardLayout布局
+				this.add(body);
+				this.validate();
+			}
 		}
 		fireMessageChange(msg);
 	}

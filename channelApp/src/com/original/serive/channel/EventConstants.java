@@ -72,4 +72,8 @@ public interface EventConstants
 			ITALIC_STYLE = "italic",
 			UNDERLINE_STYLE = "underline";
 	String CHOOSE_COLOR = "choose color";
+	
+	/* 添加、删除附件 */
+	String ADD_ATTACHMENT = "add attachment",
+			DEL_ATTACHMENT = "del attachment";
 }

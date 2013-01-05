@@ -134,7 +134,6 @@ public class EmailReceiver {
 		if (server == null) {
 			return false;
 		}
-		System.out.println("server=" + server);
 		String mailType = server.getMailtype().value();
 		if (!"none".equalsIgnoreCase(server.getSecurityprotocol().value())) {
 			Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
@@ -147,8 +146,6 @@ public class EmailReceiver {
 			props.setProperty("mail." + mailType.toLowerCase()
 					+ ".socketFactory.port", "" + server.getPopport());
 		}
-		log.debug("======>type=" + mailType + ",server="
-				+ server.getPopserver() + ",port=" + server.getPopport() + "!");
 		Session session = Session.getInstance(props, null);
 		URLName urln = new URLName(mailType, server.getPopserver(),
 				server.getPopport(), null, account.getUserName(),
@@ -162,8 +159,8 @@ public class EmailReceiver {
 			msgs = folder.getMessages();
 			
 		} catch (Exception e) {
-//			e.printStackTrace();
-			log.error(OriLog.logStack(e));		
+			e.printStackTrace();
+//			log.error(OriLog.logStack(e));		
 			return false;
 		}
 		//消息解析成MailMessage ，然后再转化成 Message，发现给外部
