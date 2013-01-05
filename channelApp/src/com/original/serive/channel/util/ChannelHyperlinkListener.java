@@ -1,5 +1,9 @@
 package com.original.serive.channel.util;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.net.URI;
+
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 
@@ -11,7 +15,7 @@ import com.original.serive.channel.server.ChannelAccesser;
 import com.original.serive.channel.ui.ChannelImageDialog;
 
 /**
- * 处理微博客户端中的超链接等
+ * 处理微博、邮件客户端中的超链接等
  * @author WMS
  */
 public class ChannelHyperlinkListener implements HyperlinkListener {
@@ -43,8 +47,19 @@ public class ChannelHyperlinkListener implements HyperlinkListener {
 		String lastOfUrl = despURL.substring(despURL.lastIndexOf(".") + 1);
 		if ("|gif|jpg|jpeg|png|bmp|".indexOf("|" + lastOfUrl + "|") > -1) {
 			new ChannelImageDialog(despURL);
-		} else {
+		} else if (despURL.startsWith("http://")
+				|| despURL.startsWith("https://")) {
 			ChannelUtil.showBrowser(null, despURL);
+		} else if (despURL.startsWith("file:/")) {
+			Desktop desktop = null;
+			if (Desktop.isDesktopSupported()) {
+				desktop = Desktop.getDesktop();
+				try {
+					desktop.open(new File(new URI(despURL)));
+				} catch (Exception ex) { // 打开本地文件出错
+					
+				}
+			}
 		}
 	}
 

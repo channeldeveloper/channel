@@ -32,7 +32,7 @@ import com.mongodb.Mongo;
 public class Attachment {
 	public String fileName;	
 	private String type;
-	public long size;	
+	public int size;	
 	private ObjectId fileId;
 	private String contentId;//?
 	@Transient
@@ -77,14 +77,14 @@ public class Attachment {
 	/**
 	 * @return the size
 	 */
-	public long getSize() {
+	public int getSize() {
 		return size;
 	}
 
 	/**
 	 * @param size the size to set
 	 */
-	public void setSize(long size) {
+	public void setSize(int size) {
 		this.size = size;
 	}
 

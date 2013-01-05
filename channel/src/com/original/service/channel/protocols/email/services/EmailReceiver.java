@@ -158,17 +158,18 @@ public class EmailReceiver {
 			folder.open(Folder.READ_WRITE);
 			msgs = folder.getMessages();
 			
+			//消息解析成MailMessage ，然后再转化成 Message，发现给外部
+			if (msgs != null && msgs.length > 0)
+			{
+				parse(msgs);    		
+				store.close();
+			}
+			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
-//			log.error(OriLog.logStack(e));		
+//			log.error(OriLog.logStack(e));	
 			return false;
 		}
-		//消息解析成MailMessage ，然后再转化成 Message，发现给外部
-		if (msgs != null && msgs.length > 0)
-		{
-			parse(msgs);    		
-		}
-		return true;
 	}
 	
 	private void parse(Message[] msgs) {
@@ -198,6 +199,7 @@ public class EmailReceiver {
 				// fireEvent to Outer
 
 			} catch (Exception e) {
+				e.printStackTrace();
 				log.error(OriLog.logStack(e));
 			}
 		}

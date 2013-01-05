@@ -8,6 +8,7 @@ package com.original.service.channel.protocols.email.model;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.ImageIcon;
 
@@ -25,6 +26,7 @@ public class EMail extends BaseObject {
 
     private String type = null;
     private int size;
+    
     /**
 	 * @return the size
 	 */
@@ -64,6 +66,7 @@ public class EMail extends BaseObject {
     private String replayTo = null;
     private String content = null;
     private List<EMailAttachment> attachments;
+    private Map<String, String> attachParts;
 	private BaseObject attachment = null;
     private Integer isReplay = null;
     private Integer isSign = null;
@@ -493,4 +496,11 @@ public class EMail extends BaseObject {
    	public void setAttachments(List<EMailAttachment> attachments) {
    		this.attachments = attachments;
    	}
+
+	public Map<String, String> getAttachParts() {
+		return attachParts;
+	}
+	public void setAttachParts(Map<String, String> attachParts) {
+		this.attachParts = attachParts;
+	}
 }

@@ -24,6 +24,7 @@ public class EMailAttachment extends BaseObject {
     private String FileName = null;
     private String Type = null;
     private String CId = null;
+    private String CDir = null;
     private byte[] Data = null;
     private String infoId = null;
     
@@ -140,4 +141,12 @@ public class EMailAttachment extends BaseObject {
     public void setInfoId(String infoid) {
         infoId = infoid;
     }
+    
+
+	public String getCDir() {
+		return CDir;
+	}
+	public void setCDir(String cDir) {
+		CDir = cDir;
+	}
 }

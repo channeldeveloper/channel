@@ -16,12 +16,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
 
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.ChannelGridLayout;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.util.ChannelConfig;
+import com.original.serive.channel.util.ChannelHyperlinkListener;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Utilies;
@@ -58,6 +60,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 		
 		//设置一些控件的属性
 		content.setEditorKit(new HTMLEditorKit());
+		content.addHyperlinkListener(new ChannelHyperlinkListener());
 		content.setOpaque(false);
 		content.setEditable(false);
 		content.setBackground(new Color(0, 0, 0, 0)); //设置文本面板透明的唯一方法
@@ -93,7 +96,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 				title.setText(msg.getSubject());
 				//对于邮件类型，再添加一些其他按钮
 				addControlItems(false, 
-						new AbstractButtonItem("保存", SAVE, null));
+						new AbstractButtonItem("转发", POST, null));
 				addControlItems(true, 
 						new AbstractButtonItem("设置为垃圾邮件", PUT_INTO_TRASH, null));
 				

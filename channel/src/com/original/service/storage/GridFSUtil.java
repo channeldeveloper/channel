@@ -82,22 +82,11 @@ public final class GridFSUtil {
 		gfsin.save();
 		return gfsin.getId();
 	}
-	/**
-	 * Save.
-	 * @param file
-	 * @return
-	 */
+	
 	public Object saveFile(File file) throws Exception{
-
-		int size = (int) file.length();
-		byte[] buffer = new byte[size];
-		FileInputStream in = new FileInputStream(file);
-		in.read(buffer);
-		in.close();
-
 		// Create GridFS object and save into database
 
-		GridFSInputFile gfsin = fs.createFile(buffer);
+		GridFSInputFile gfsin = fs.createFile(file);
 		gfsin.setFilename(file.getName());
 		gfsin.save();
 		return gfsin.getId();
@@ -214,9 +203,12 @@ public final class GridFSUtil {
 	 * @throws Exception
 	 */
 	public void writeFile(ObjectId dbfileID, String filePath) throws Exception {
+		File file = new File(new URI(filePath));
+		if(file.exists())
+			return;
+		
 		GridFSDBFile out = fs.findOne(new BasicDBObject("_id", dbfileID));// one
-		FileOutputStream fOutStream = new FileOutputStream(
-				filePath);
+		FileOutputStream fOutStream = new FileOutputStream(file);
 		out.writeTo(fOutStream);
 		fOutStream.close();
 	}

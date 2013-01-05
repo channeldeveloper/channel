@@ -9,7 +9,9 @@ package com.original.service.channel.protocols.email.model;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.mail.Message;
 import javax.mail.Multipart;
@@ -21,6 +23,7 @@ import javax.mail.internet.MimeUtility;
 import org.apache.log4j.Logger;
 import org.bson.types.ObjectId;
 
+import com.original.service.channel.Utilies;
 import com.original.service.channel.protocols.email.services.MailParseUtil;
 import com.original.service.storage.GridFSUtil;
 import com.original.util.log.OriLog;
@@ -44,217 +47,41 @@ public class EMailParser {
         userId = _userId;
         manager = new EMailManager(_userId);
     }
-
-//    public String deleteMail(EMail email) {
-//        String ids = email.get_id();
-//        QueryObject filter = new QueryObject();
-//        filter.setJoin(Constants.AND);
-//        if (ids == null) {
-//            String mailname = email.getMailname();
-//            String type = email.getType();
-//            filter.addRule(new RuleObject("mailname", mailname));//账户名
-//            filter.addRule(new RuleObject("type", type));//邮箱类型
-//        } else {
-//            if (ids.indexOf(";") > 0) {
-//                filter.addRule(new RuleObject(Constants._ID, ids, Constants.$IN, Constants.STRING, ";"));
-//            } else {
-//                filter.addRule(new RuleObject(Constants._ID, ids));
-//            }
-//        }
-//        return manager.deleteEMail(filter);
-//    }
 //
-//    public String sendEMail(Message msg, String username, String type, EMail mail) throws Exception {
-//        EMail email = handleMessage(msg, username, type, mail);
-//        return this.sendEMail(email);
-//    }
-//
-//    public String sendEMail(Message msg, String username, String type, String emailid) throws Exception {
-//        EMail email = handleMessage(msg, username, type, emailid);
-//        return this.sendEMail(email);
-//    }
-//    
-//    public String sendEMail(EMail email) {
-//        Element returnroot = Utils.createElement(Constants.DATABASE);
+//    private EMail handleMessage(Message msg, String username, String type, EMail mail) throws Exception {
+//        String encoding = "utf8";
 //        try {
-//            EmailSender service = new EmailSender(userId);
-//            EMailParser savemail = new EMailParser(userId);
-//            String mailname = email.getMailname();
-//            String mailtype = email.getType();
-//            String emailid = email.get_id();
-//            MailAuthentication auth = service.getMailAccout();//.config.getAccounts().get(0);//EMailConfig..fetchAccountFromPIPS(userId, mailname);
-//            String isCreated = service.createMessage(email);
-//            if (isCreated == null) {
-//                String success = null;
-//                String type = "draftbox";
-//                if (email.getType().equalsIgnoreCase("outbox") || "reply".equalsIgnoreCase(mailtype)
-//                        || "replyall".equalsIgnoreCase(mailtype)) {
-//                    success = service.send(auth);
-//                    if ("reply".equalsIgnoreCase(mailtype) || "replyall".equalsIgnoreCase(mailtype)) {
-//                        if (email.getIsReplay() != 1 && emailid != null) {
-//                            EMail em = new EMail();
-//                            em.setIsReplay(1);
-//                            savemail.updateMail(em, emailid);
-//                        }
-//                    }
-//                    type = (success == null ? "sendedbox" : "outbox");
-//                }
-//                // new email;
-//                email.set_id(null);
-//                String returnxml = saveEMail(service.getMimeMsg(), mailname, type, email);
-//                if (("draftbox".equalsIgnoreCase(mailtype) || email.getType().equalsIgnoreCase("outbox"))
-//                        && emailid != null) {
-//                    savemail.deleteMail(emailid);
-//                }
-//                return returnxml;
-//            } else {
-//                service.deleteTempfile();
-//                returnroot.addAttribute(Constants.RETURNMSG, isCreated);
-//            }
-//        } catch (Exception e) {
-//            log.error(OriLog.logStack(e));
-//            returnroot.addAttribute(Constants.RETURNMSG, e.getMessage());
+////            encoding = msg.getHeader("Content-Transfer-Encoding")[0];
+//        } catch (Exception ex) {
+//            log.error(OriLog.logStack(ex));
 //        }
-//        return returnroot.asXML();
-//    }
+//        mail.setIsRead(0);
+//        mail.setIsProcess(0);
+//        mail.setIsDelete(0);
+//        mail.setIsReplay(0);
+//        mail.setIsTrash(0);
+//        mail.setType(type);
+//        mail.setMailname(username);
+//        mail.setMsgId(((MimeMessage) msg).getMessageID());
 //
-//    /**
-//     *
-//     * @param emailid
-//     */
-//    public String deleteMail(String emailid) {
-//        QueryObject filter = new QueryObject();
-//        if (emailid.indexOf(";") > 0) {
-//            filter.addRule(new RuleObject(Constants._ID, emailid, Constants.$IN, Constants.STRING, ";"));
+//        String from = getFrom(msg);
+//        mail.setAddresser(MailParseUtil.parseAddresser(encoding, from));
+//        mail.setReceiver(getMailAddress(msg, "TO"));
+//        mail.setCc(getMailAddress(msg, "CC"));
+//        mail.setBcc(getMailAddress(msg, "BCC"));
+//        mail.setReplayTo(MailParseUtil.parseAddresser(encoding, from));
+//        mail.setMailtitle(MailParseUtil.parseMailSubject(encoding, msg.getSubject()));
+//        if (msg.getSentDate() != null) {
+//            mail.setSendtime(msg.getSentDate());
 //        } else {
-//            filter.addRule(new RuleObject(Constants._ID, emailid));
+//            mail.setSendtime(new Date());
 //        }
-//        return manager.deleteEMail(filter);
+//        String content = getContent(msg);
+//        mail.setContent("<![CDDATA[" + MailParseUtil.parseContent(content) + "]]");
+//
+//        return mail;
 //    }
 //
-//    /**
-//     *
-//     * @param emailids
-//     */
-//    public String deleteMail(List<String> emailids) {
-//        String ret = "";
-//        for (String id : emailids) {
-//            ret = this.deleteMail(id);
-//            Element retele = Utils.getRoot(ret);
-//            if (retele.attributeValue(Constants.RETURNMSG) != null) {
-//                return ret;
-//            }
-//        }
-//        return ret;
-//    }
-//
-//    /**
-//     *
-//     * @param mail
-//     * @param emailid
-//     */
-//    public String updateMail(EMail mail, String emailid) {
-//        QueryObject filter = new QueryObject();
-//        filter.addRule(new RuleObject("_id", emailid));
-//        return manager.updateEMail(mail, filter);
-//    }
-//
-//    /**
-//     *
-//     * @param mail
-//     */
-//    public String updateMail(EMail mail) {
-//        if (mail.getAttachment() != null) {
-//            List lists = new ArrayList<EMail>();
-//            lists.add(mail);
-//            return manager.createEMail(lists);
-//        }
-//        String emailid = mail.get_id();
-//        QueryObject filter = new QueryObject();
-//        if (emailid.indexOf(";") > 0) {
-//            filter.addRule(new RuleObject(Constants._ID, emailid, Constants.$IN, Constants.STRING, ";"));
-//        } else {
-//            filter.addRule(new RuleObject(Constants._ID, emailid));
-//        }
-//        return manager.updateEMail(mail, filter);
-//    }
-//
-//    /**
-//     *
-//     * @param mail
-//     * @param emailids
-//     */
-//    public String updateMail(EMail mail, List<String> emailids) {
-//        String ret = "";
-//        for (String id : emailids) {
-//            ret = this.updateMail(mail, id);
-//            Element retele = Utils.getRoot(ret);
-//            if (retele.attributeValue(Constants.RETURNMSG) != null) {
-//                return ret;
-//            }
-//        }
-//        return ret;
-//    }
-
-//    public String save(EMail email) {
-//        List<EMail> emails = new ArrayList<EMail>();
-//        emails.add(email);
-//        return manager.createEMail(emails);
-//    }
-
-//    /**
-//     *
-//     * @param msg
-//     * @param username
-//     * @param type
-//     * @param emailid
-//     * @return
-//     * @throws Exception
-//     */
-//    public String saveEMail(Message msg, String username, String type, EMail mail) throws Exception {
-//        EMail email = handleMessage(msg, username, type, mail);
-//        return this.save(email);
-//    }
-
-//    public String saveEMail(Message msg, String username, String type, String emailid) throws Exception {
-//        EMail email = handleMessage(msg, username, type, emailid);
-//        return this.save(email);
-//    }
-
-    private EMail handleMessage(Message msg, String username, String type, EMail mail) throws Exception {
-        String encoding = "utf8";
-        try {
-//            encoding = msg.getHeader("Content-Transfer-Encoding")[0];
-        } catch (Exception ex) {
-            log.error(OriLog.logStack(ex));
-        }
-        mail.setIsRead(0);
-        mail.setIsProcess(0);
-        mail.setIsDelete(0);
-        mail.setIsReplay(0);
-        mail.setIsTrash(0);
-        mail.setType(type);
-        mail.setMailname(username);
-        mail.setMsgId(((MimeMessage) msg).getMessageID());
-
-        String from = getFrom(msg);
-        mail.setAddresser(MailParseUtil.parseAddresser(encoding, from));
-        mail.setReceiver(getMailAddress(msg, "TO"));
-        mail.setCc(getMailAddress(msg, "CC"));
-        mail.setBcc(getMailAddress(msg, "BCC"));
-        mail.setReplayTo(MailParseUtil.parseAddresser(encoding, from));
-        mail.setMailtitle(MailParseUtil.parseMailSubject(encoding, msg.getSubject()));
-        if (msg.getSentDate() != null) {
-            mail.setSendtime(msg.getSentDate());
-        } else {
-            mail.setSendtime(new Date());
-        }
-        String content = getContent(msg);
-        mail.setContent("<![CDDATA[" + MailParseUtil.parseContent(content) + "]]");
-
-        return mail;
-    }
-
 //    private EMail handleMessage(Message msg, String username, String type, String emailid) throws Exception {
 //        EMail mail = new EMail();
 //        mail.set_id(emailid);
@@ -356,13 +183,13 @@ public class EMailParser {
                 String disposition = mpart.getDisposition();
                 log.debug("disposition = " + disposition);
                 if (disposition != null && (disposition.equals(Part.ATTACHMENT))) {
-                    EMailAttachment attachment = new EMailAttachment();
+                   EMailAttachment attachment = new EMailAttachment();
                     if (mpart.getHeader("Content-ID") != null) {
                         attachment.setCId(mpart.getHeader("Content-ID")[0].replace("<", "").replace(">", ""));
                     }
-                    String fileName = MailParseUtil.getMessageFileName(mpart.getFileName());
+                   String fileName = MailParseUtil.getMessageFileName(mpart.getFileName());
                     String extention = null;
-                    if (fileName.contains(".") == true) {
+                    if (fileName.contains(".")) {
                         extention = fileName.substring(fileName.indexOf(".") + 1);
                         attachment.setFileName(fileName);
                     } else {
@@ -371,12 +198,20 @@ public class EMailParser {
                         fileName = fileName + "." + extention;
                         attachment.setFileName(fileName);
                     }
-                    attachment.setType(extention);
-                    //franz recoding here should save to filesystem.
+                    attachment.setType(extention);     
+                    
+                    //store to db
                     Object fileID = GridFSUtil.getGridFSUtil().saveFile(mpart.getInputStream(), fileName);
                     attachment.setFileID((ObjectId)fileID);
-//                    emailAttachment.setData(BinaryObject.saveBinaryData(mpart.getInputStream(), extention));
                     attachment.setSize(mpart.getInputStream().available());
+                    
+                    //save to native file
+                    String tempDir = Utilies.getTempDir(fileID, fileName); //fileID is unique
+                    GridFSUtil.getGridFSUtil().writeFile((ObjectId)fileID, tempDir);
+                    if(attachment.getCId() != null) {
+                    	attachment.setCDir(tempDir);
+                    }
+                    
                     list.add(attachment);
                 }
             }
@@ -462,14 +297,16 @@ public class EMailParser {
     	{
 	    	List<EMailAttachment> emailAttachments = getAttach(msg);
 	    	 mail.setAttachments(emailAttachments);
-	     /*   if (emailAttachments.size() > 0) {
-	            BaseObject attachment = new BaseObject();
-	            attachment.set_Name("Attachment");
-	            for (EMailAttachment attach : emailAttachments) {
-	                attachment.addList(attach);
-	            }
-	            mail.setAttachment(attachment);
-        }*/
+	    	 
+	    	 if(!emailAttachments.isEmpty()) {//process cid:part
+	    		 Map<String, String> attachParts = new HashMap<String, String>();
+	    		 for(EMailAttachment attach : emailAttachments) {
+		    		 if(attach.getCId() != null) {
+		    			 attachParts.put("cid:"+attach.getCId(), attach.getCDir());
+		    		 }
+		    	 }
+	    		 mail.setAttachParts(attachParts);
+	    	 }
 	       
     	}
     	catch(Exception exp)
@@ -586,12 +423,25 @@ public class EMailParser {
         } else {
             mail.setSendtime(new Date());
         }
-        String content = getContent(msg);
+        String content = MailParseUtil.parseContent(getContent(msg));
 //        mail.setContent("<![CDDATA[" + MailParseUtil.parseContent(content) + "]]");
-        mail.setContent(MailParseUtil.parseContent(content));
+        content = parseCidParts(content, mail);
+        mail.setContent(content);
 
         return mail;
-    }
+    }    
     
+    private String parseCidParts(String content, EMail mail) {
+    	Map<String, String> attachParts = mail.getAttachParts();
+    	if(attachParts == null ||
+    			attachParts.isEmpty())
+    		return content;
+    	
+    	for(Map.Entry<String, String> entry : attachParts.entrySet())
+    	{
+    		content = content.replace(entry.getKey(), entry.getValue());
+    	}
+    	return content;
+    }
     ///////////////////////////////////New Parse///////////////////////////////
 }
