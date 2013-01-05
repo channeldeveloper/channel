@@ -37,8 +37,23 @@ public class Attachment {
 	private String contentId;//?
 	@Transient
 	private String filePath;//Use to send email from  local file.
+	private String contentType;//attachment inline
 	 
 	 /**
+	 * @return the contentType
+	 */
+	public String getContentType() {
+		return contentType;
+	}
+
+	/**
+	 * @param contentType the contentType to set
+	 */
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	/**
 	  * 
 	  */
 	public Attachment()

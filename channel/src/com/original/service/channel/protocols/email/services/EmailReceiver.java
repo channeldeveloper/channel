@@ -273,6 +273,8 @@ public class EmailReceiver {
 		att.setFileName(ea.getFileName());
 		att.setSize(ea.getSize());
 		att.setType(ea.getType());
+		att.setFilePath(ea.getCDir());
+		att.setContentType(ea.getCType());//attachment inline
 		return att;
 		
 	}

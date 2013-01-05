@@ -20,7 +20,21 @@ import com.original.service.channel.protocols.email.oldimpl.BaseObject;
  */
 public class EMailAttachment extends BaseObject {
 
-    private Integer Size = null;
+	private String cType;
+    /**
+	 * @return the cType
+	 */
+	public String getCType() {
+		return cType;
+	}
+
+	/**
+	 * @param cType the cType to set
+	 */
+	public void setCType(String cType) {
+		this.cType = cType;
+	}
+	private Integer Size = null;
     private String FileName = null;
     private String Type = null;
     private String CId = null;
