@@ -212,7 +212,7 @@ public class LoginProcessPanel extends javax.swing.JPanel {
         } else {
             mainFrame.setContentPane(new LoginPanel());
         }
-        CategoryService.setCategoryList(null);
+        CategoryService.setCategoryList(loginAI, null);
         mainFrame.getMap().clear();
         mainFrame.setMap(null);
         mainFrame.validate();

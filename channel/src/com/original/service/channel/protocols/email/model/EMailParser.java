@@ -12,6 +12,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
 
 import javax.mail.Message;
 import javax.mail.Multipart;
@@ -167,59 +169,128 @@ public class EMailParser {
         }
     }
 
-    /**
-     * get mail attachment
-     * @param part
-     * @return
-     * @throws Exception
-     */
+	/**
+	 * 
+	 *附件的格式
+	  *Content-Type: application/octet-stream; charset="ISO-8859-1"; name="Innovation.png" 
+	 * Content-Disposition: attachment; filename="Innovation.png" 
+	 * Content-Transfer-Encoding: base64
+	 * iVBORw0KGgoAAAAN AAAAAAAAAAAAAA==
+	 * 
+	 * 
+	 * 内嵌图片
+	 * ------=_NextPart_50E82649_D5CD4EC0_1CFFCFF2 、
+	 * Content-Type: application/octet-stream; name="E2E042E4@41707E5B.4926E850.png"
+	 * Content-Transfer-Encoding: base64 
+	 * Content-ID: <E2E042E4@41707E5B.4926E850.png>
+	 * 
+	 * iVBORw0KGgoAAAANSUhEUgAAAKAAA AAAC==
+	 * ------=_NextPart_50E82649_D5CD4EC0_1CFFCFF2
+	 * 
+	 * get mail attachment
+	 * 
+	 * @param part
+	 * @return
+	 * @throws Exception
+	 */
     private List<EMailAttachment> getAttach(Part part) throws Exception {
         List<EMailAttachment> list = new ArrayList<EMailAttachment>();
         if (part.isMimeType("multipart/*")) {
             Multipart mp = (Multipart) part.getContent();
             int count = mp.getCount();
             for (int k = 1; count > 1 && k < count; k++) {
-                Part mpart = mp.getBodyPart(k);
-                String disposition = mpart.getDisposition();
-//                log.debug("disposition = " + disposition);
-                if (disposition != null && (disposition.equals(Part.ATTACHMENT))) {
-                   EMailAttachment attachment = new EMailAttachment();
-                    if (mpart.getHeader("Content-ID") != null) {
-                        attachment.setCId(mpart.getHeader("Content-ID")[0].replace("<", "").replace(">", ""));
-                    }
-                   String fileName = MailParseUtil.getMessageFileName(mpart.getFileName());
-                    String extention = null;
-                    if (fileName.contains(".")) {
-                        extention = fileName.substring(fileName.indexOf(".") + 1);
-                        attachment.setFileName(fileName);
-                    } else {
-                        String contentType = mpart.getContentType().substring(0, mpart.getContentType().indexOf(";"));
-                        extention = MailParseUtil.parseFileType(contentType);
-                        fileName = fileName + "." + extention;
-                        attachment.setFileName(fileName);
-                    }
-                    attachment.setType(extention);     
-                    
-                    //store to db
-                    Object fileID = GridFSUtil.getGridFSUtil().saveFile(mpart.getInputStream(), fileName);
-                    attachment.setFileID((ObjectId)fileID);
-                    attachment.setSize(mpart.getInputStream().available());
-                    
-                    //save to native file
-                    String tempDir = Utilies.getTempDir(fileID, fileName); //fileID is unique
-                    GridFSUtil.getGridFSUtil().writeFile((ObjectId)fileID, tempDir);
-                    if(attachment.getCId() != null) {
-                    	attachment.setCDir(tempDir);
-                    }
-                    
-                    list.add(attachment);
-                }
-            }
+				Part mpart = mp.getBodyPart(k);
+				String fileName = null;
+				EMailAttachment attachment = null;
+
+				String disposition = mpart.getDisposition();
+				if ((disposition != null) && (disposition.equals(Part.ATTACHMENT) 
+								|| disposition.equals(Part.INLINE))) {
+					attachment = new EMailAttachment();
+					attachment.setCType(disposition);
+					if (mpart.getHeader("Content-ID") != null) {
+						attachment.setCId(mpart.getHeader("Content-ID")[0].replace("<", "").replace(">", ""));
+					}
+					fileName = MailParseUtil.getMessageFileName(mpart.getFileName());
+					
+				} else { // 处理内嵌图片的附件问题，dispose可能为null
+					String contype = mpart.getContentType();
+					if (contype.toLowerCase().indexOf("application") != -1
+							|| contype.toLowerCase().indexOf("name") != -1) {
+						// Properties p = getContenttypeAndCharset("Content-Type", mpart.getContentType());
+						String[] cid = mpart.getHeader("Content-ID");
+						if (cid != null && cid.length > 0) {
+							attachment = new EMailAttachment();
+							attachment.setCType(Part.INLINE);
+
+							if (mpart.getHeader("Content-ID") != null) {
+								attachment.setCId(mpart.getHeader("Content-ID")[0].replace("<", "").replace(">", ""));
+								fileName = attachment.getCId();// MailParseUtil.getMessageFileName(mpart.getFileName());
+							}
+						}
+					}
+				}
+
+				if(attachment == null) continue;
+				
+				String extention = null;
+				if (fileName.contains(".")) {
+					extention = fileName.substring(fileName.lastIndexOf(".") + 1);
+					attachment.setFileName(fileName);
+				} else {
+					String contentType = mpart.getContentType().substring(0, mpart.getContentType().indexOf(";"));
+					extention = MailParseUtil.parseFileType(contentType);
+					fileName = fileName + "." + extention;
+					attachment.setFileName(fileName);
+				}
+				attachment.setType(extention);
+
+				// store to db
+				Object fileID = GridFSUtil.getGridFSUtil().saveFile(mpart.getInputStream(), fileName);
+				attachment.setFileID((ObjectId) fileID);
+				attachment.setSize(mpart.getInputStream().available());
+
+				// save to native file
+				String tempDir = Utilies.getTempDir(fileID, fileName); // fileID is unique
+				GridFSUtil.getGridFSUtil().writeFile((ObjectId) fileID, tempDir);
+				if (attachment.getCId() != null) {
+					attachment.setCDir(tempDir);
+				}
+				list.add(attachment);
+			}
         } else if (part.isMimeType("message/rfc822")) {
             list = getAttach((Part) part.getContent());
         }
         return list;
     }
+    
+    private Properties getContenttypeAndCharset(String hdr, String str) {
+		boolean basicValueSet = false;
+		Properties props = new Properties();
+		int colonIdx = str.indexOf(':');
+		for (StringTokenizer st = new StringTokenizer(
+				str.substring(colonIdx + 1), ";"); st.hasMoreTokens();) {
+			String avp = st.nextToken().trim();
+			int equalIdx = avp.indexOf('=');
+			if (equalIdx == -1) {
+				if (!avp.equals("")) {
+					if (!basicValueSet) {
+						props.put(hdr, avp);
+						basicValueSet = true;
+					} else {
+						props.put(avp.toLowerCase(), avp.toLowerCase());
+					}
+				}
+			} else {
+				String attr = avp.substring(0, equalIdx).trim().toLowerCase();
+				String val = avp.substring(equalIdx + 1).trim();
+				val = val.replaceFirst("^\"", "").replaceFirst("\"$", "");
+				props.put(attr, val);
+			}
+
+		}
+		return props;
+	}
 
     /**
      *

@@ -148,16 +148,16 @@ private static MessageService msgService = MessageService.getIntance(); //QQ消�
 									}
 								} else if ("buddies_status_change".equals(poll_type)) {// 好友上下线
 								} else if ("group_message".equals(poll_type)) {// 群消息
-								} else if ("kick_message".equals(poll_type)) {
+								} else if ("kick_message".equals(poll_type)) {//被踢
 									isRun = false; // 线程中断
 								}
 							}
 						}
 					} catch (Exception ex) {
 						ex.printStackTrace();
-					} finally { // 不管是否有错误，即是否成功收到消息，都sleep 2s
+					} finally { // 不管是否有错误，即是否成功收到消息，都sleep 2~3s
 						try {
-							Thread.sleep(2000);
+							Thread.sleep(((int)(Math.random() + 2.5d))*1000);
 						} catch (InterruptedException ex) {
 							isRun = false;
 						}
@@ -190,9 +190,6 @@ private static MessageService msgService = MessageService.getIntance(); //QQ消�
 			// those that are interested in this event
 			for (int i = listeners.length - 2; i >= 0; i -= 2) {
 				if (listeners[i] == MessageListner.class) {
-					// Lazily create the event:
-					// if (e == null)
-					// e = new ListSelectionEvent(this, firstIndex, lastIndex);
 					((MessageListner) listeners[i + 1]).change(e);
 				}
 			}

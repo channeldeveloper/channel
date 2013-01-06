@@ -121,7 +121,6 @@ public class EmailReceiver {
 		}		
 		return false;
 	}
-//List 用来缓存 MessageID
 	/**
 	 * 
 	 * @return
@@ -161,13 +160,12 @@ public class EmailReceiver {
 			//消息解析成MailMessage ，然后再转化成 Message，发现给外部
 			if (msgs != null && msgs.length > 0)
 			{
-				parse(msgs);    		
-				store.close();
+				parse(msgs);
 			}
+			store.close();
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();
-//			log.error(OriLog.logStack(e));	
 			return false;
 		}
 	}
@@ -180,7 +178,6 @@ public class EmailReceiver {
 		for (int i = 0; i < msgs.length; i++) {
 			try {
 				String newMsgId = ((MimeMessage) msgs[i]).getMessageID();
-				// check this msg is existing or not
 				boolean existing = cacheMsg.containsKey(newMsgId);
 				// 已经放入池内，并且已经解析完成
 				if (existing && cacheMsg.get(newMsgId)) {
@@ -196,14 +193,12 @@ public class EmailReceiver {
 				emailService.fireMessageEvent(evt);
 				// 解析完毕，内存缓存。
 				cacheMsg.put(newMsgId, Boolean.TRUE);
-				// fireEvent to Outer
 
 			} catch (Exception e) {
 				e.printStackTrace();
 				log.error(OriLog.logStack(e));
 			}
 		}
-
 	}
 	
 	private ChannelMessage mailMessage2Message(EMail email)
@@ -273,6 +268,8 @@ public class EmailReceiver {
 		att.setFileName(ea.getFileName());
 		att.setSize(ea.getSize());
 		att.setType(ea.getType());
+		att.setFilePath(ea.getCDir());
+		att.setContentType(ea.getCType());//attachment inline
 		return att;
 		
 	}

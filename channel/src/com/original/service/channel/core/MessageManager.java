@@ -46,7 +46,6 @@ public class MessageManager {
 		this.mongo = mongo;
 		this.morphia = morphia;
 		this.ds = ds;
-//		init();
 	}
 	/**
 	 * 
@@ -55,16 +54,11 @@ public class MessageManager {
 	 */
 	public boolean save(ChannelMessage chMsg)
 	{
-		if (chMsg != null && chMsg.getMessageID() != null)
-		{
-			try
-			{
+		if (chMsg != null && chMsg.getMessageID() != null) {
+			try {
 				ds.save(chMsg);
 				return true;
-			}
-			catch(Exception exp)
-			{
-//				exp.printStackTrace();
+			} catch (Exception exp) {
 			}
 		}
 		return false;
@@ -75,16 +69,13 @@ public class MessageManager {
 	 * @param chMsgs
 	 */
 	public void save(ChannelMessage[] chMsgs)
-	{		
-		//save Message
-		if (chMsgs != null && chMsgs.length > 0)
-		{
-			for (ChannelMessage chmsg : chMsgs)
-			{
+	{
+		// save Message
+		if (chMsgs != null && chMsgs.length > 0) {
+			for (ChannelMessage chmsg : chMsgs) {
 				save(chmsg);
 			}
 		}
-		
 	}
 
 	// find

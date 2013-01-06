@@ -493,22 +493,17 @@ public class ChannelService extends AbstractService {
 		@Override
 		public void change(MessageEvent evnt) {
 			// TODO Auto-generated method stub
-
-			// Franz Pending save Message
-			ChannelMessage[] chmsgs = evnt.getAdded();
-			// 保存联系人
-			peopleManager.savePeople(chmsgs);
-			// 保存信息
-			msgManager.save(chmsgs);
-
-			// proxy fire event
-			try {
-				fireMessageEvent(evnt);
-			} catch (Exception exp) {
-				exp.printStackTrace();
+			if(evnt.getType() == MessageEvent.Type_Added) {
+				ChannelMessage[] chmsgs = evnt.getAdded();
+				// 保存联系人
+				peopleManager.savePeople(chmsgs[0]);
+				// 保存信息
+				if(msgManager.save(chmsgs[0]))
+				{
+					fireMessageEvent(evnt); // notify to GUI App to add message only when save successfully!
+				}
 			}
 		}
-
 	}
 
 	// ///////////////////Event///////////////////////
@@ -530,9 +525,6 @@ public class ChannelService extends AbstractService {
 			// those that are interested in this event
 			for (int i = listeners.length - 2; i >= 0; i -= 2) {
 				if (listeners[i] == MessageListner.class) {
-					// Lazily create the event:
-					// if (e == null)
-					// e = new ListSelectionEvent(this, firstIndex, lastIndex);
 					((MessageListner) listeners[i + 1]).change(e);
 				}
 			}
@@ -593,34 +585,20 @@ public class ChannelService extends AbstractService {
 	@Override
 	public void put(String action, ChannelMessage msg) {
 		// TODO Auto-generated method stub
-//		if (action
-//				.endsWith(Constants.ACTION_QUICK_REPLY)) {
-//			// Original message id.
-//			if (msg.getId() != null) {
-//				ChannelMessage chmsg = msgManager.getMessage(msg.getId());
-//				if (chmsg != null) {
-//					ChannelMessage replyMsg = chmsg.clone();
-//					replyMsg.setId(null);
-//
-//					replyMsg.setToAddr(chmsg.getFromAddr());
-//					replyMsg.setFromAddr(chmsg.getToAddr());
-//					replyMsg.setBody(msg.getBody());
-//					replyMsg.setType(ChannelMessage.TYPE_SEND);
-//					msg = replyMsg;
-//				}
-//			}
-//		}
-
 		if (msg != null) {
 			ChannelAccount cha = msg.getChannelAccount();
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				try {
 					sc.put(action, msg); //下发消息
+					
 					//如果下发成功，则需要保存此消息。注意，目前只有快速回复保存
-					if(action == Constants.ACTION_QUICK_REPLY) {
-						msg.setType(ChannelMessage.TYPE_SEND); //强制转换
-						msgManager.save(msg);
+					if (action == Constants.ACTION_QUICK_REPLY) 
+					{
+						if (!msg.getToAddr().equals(cha.getAccount().getUser())) { // 另外，自己给自己发也不保存
+							msg.setType(ChannelMessage.TYPE_SEND);
+							msgManager.save(msg);
+						}
 					}
 				}
 				catch(Exception ex) {

@@ -9,8 +9,6 @@ package com.original.service.channel.protocols.email.services;
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.mail.Message;
 import javax.mail.internet.MimeUtility;
@@ -152,13 +150,18 @@ public class MailParseUtil {
      * @return
      */
     public static String parseFileType(String fileType) {
-        if (fileType.equalsIgnoreCase("image/jpeg") == true) {
-            return "jpg";
-        } else if (fileType.equalsIgnoreCase("image/png") == true) {
-            return "png";
-        } else if (fileType.equalsIgnoreCase("image/gif")) {
-            return "gif";
-        }
+		if (fileType.equalsIgnoreCase("image/jpeg")) {
+			return "jpg";
+		} else if (fileType.equalsIgnoreCase("image/png")) {
+			return "png";
+		} else if (fileType.equalsIgnoreCase("image/gif")) {
+			return "gif";
+		} else if (fileType.equalsIgnoreCase("image/bmp")) {
+			return "bmp";
+		} else if (fileType.equalsIgnoreCase("image/x-icon")) {
+			return "icon";
+		}
+        
         return "txt";
     }
 

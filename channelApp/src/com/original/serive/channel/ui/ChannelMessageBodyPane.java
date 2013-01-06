@@ -665,6 +665,11 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					newMsg.setToAddr(body.iMsg.getFromAddr()); //交换一下发送和接受人的顺序
 					newMsg.setFromAddr(body.iMsg.getToAddr());
 					
+					//邮件单独处理：
+					if(ChannelMessage.MAIL.equals(newMsg.getClazz())) {
+						newMsg.setSubject("Re：" + body.iMsg.getSubject());
+					}
+					
 					ChannelService cs = 	ChannelAccesser.getChannelService();
 					cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
 					

@@ -623,6 +623,7 @@ public class EmailSender{// extends AbstractProcessingResource {
             isSuccess = send(mailAccount);
         }
         if (isSuccess != null) {
+        	System.err.println(isSuccess);
             log.error(isSuccess);
         }
         return (isSuccess == null ? true : false);
@@ -688,7 +689,6 @@ public class EmailSender{// extends AbstractProcessingResource {
      */
     private String addFileAtts(List<Attachment> atts) {
         try {
-            log.debug("Attach count = " + atts.size());
             if (atts == null || atts.isEmpty()) {
                 return null;
             }
@@ -703,7 +703,8 @@ public class EmailSender{// extends AbstractProcessingResource {
                 mp.addBodyPart(bp);
             }
         } catch (Exception e) {
-            log.error(OriLog.logStack(e));           
+            log.error(OriLog.logStack(e));       
+            e.printStackTrace();
             return "Attach: " + e.getMessage();
         }
         return null;

@@ -4,39 +4,45 @@
  */
 package iqq.service;
 
-import iqq.util.Method;
-import iqq.util.Log;
-import iqq.util.AePlayWave;
-import atg.taglib.json.util.JSONArray;
-import atg.taglib.json.util.JSONException;
-import atg.taglib.json.util.JSONObject;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import iqq.comm.Auth;
 import iqq.comm.Auth.AuthInfo;
 import iqq.model.Category;
 import iqq.model.Member;
-import iqq.ui.MainPanel;
 import iqq.ui.MainFrame;
+import iqq.ui.MainPanel;
+import iqq.util.AePlayWave;
+import iqq.util.Log;
+import iqq.util.Method;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import atg.taglib.json.util.JSONArray;
+import atg.taglib.json.util.JSONException;
+import atg.taglib.json.util.JSONObject;
 
 /**
  *
  * @author chenzhihui
  */
 public class CategoryService {
+	private static CategoryService categoryService = null;
 
     /**
      * @param aRecentList the recentList to set
      */
     private MemberService memberService = MemberService.getInstance();
     private HttpService httpService = null;
-    private static List<Category> categoryList = null;
+    
+    private static Map<String, List<Category>> categoryMap = new HashMap<String, List<Category>>();
+    //onlineList、recentList目前没有对多用户进行处理，只有categoryMap支持多用户，以后再优化！！！
     private static List<Member> onlineList = null;
-    private static CategoryService categoryService = null;
     private static List<Member> recentList = null;
 
     private CategoryService() {
@@ -102,13 +108,15 @@ public class CategoryService {
     }
     public synchronized List<Category> getFriends(AuthInfo ai) throws Exception {
     	if(ai == null) ai = Auth.getSingleAccountInfo();
+    	List<Category> categoryList = categoryMap.get(ai.getMember().getAccount());
+    	if(categoryList != null)
+    		return categoryList;
     	
         //所有好友
         String urlStr = "http://s.web2.qq.com/api/get_user_friends2";
         String contents = "{\"h\":\"hello\",\"vfwebqq\":\"" + ai.getVfwebqq() + "\"}";
         contents = URLEncoder.encode(contents, "UTF-8");
         contents = "r=" + contents;
-
         
         httpService = new HttpService(urlStr, Method.POST);
         httpService.setContents(contents);
@@ -126,8 +134,8 @@ public class CategoryService {
             Category c = null;
             Member m = null;
             Category cDef = getDefaultCategory(friends, info, marknames); //默认分组(即“我的好友”)
-            categoryList = new ArrayList<Category>();
             
+            categoryList = new ArrayList<Category>();
             for (int i = 0; i < categories.size(); i++) {
                 c = new Category();
                 c.setIndex(categories.getJSONObject(i).getInt("index"));
@@ -170,14 +178,12 @@ public class CategoryService {
                         categoryList.add(c);
                     }
                 }
-
             }
             if (cDef != null) {
                 categoryList.add(0, cDef);
             }
-            Log.println("CategoryList: " + categoryList.size());
+            categoryMap.put(ai.getMember().getAccount(), categoryList);
         }
-        //getOnlineFriends();
         return categoryList;
     }
 
@@ -196,6 +202,9 @@ public class CategoryService {
         JSONArray statusArray = null;
         if (retJson.getInt("retcode") == 0) {
             statusArray = retJson.getJSONArray("result");
+            List<Category> categoryList = categoryMap.get(ai.getMember().getAccount());
+            
+            if(categoryList != null)
             for (int i = 0; i < categoryList.size(); i++) {
                 for (int k = 0; k < categoryList.get(i).getMemberList().size(); k++) {
                     Member m = categoryList.get(i).getMemberList().get(k);
@@ -236,6 +245,9 @@ public class CategoryService {
                 array = retJson.getJSONArray("result");
                 for (int i = 0; i < array.length(); i++) {
                     long uin = array.getJSONObject(i).getLong("uin");
+                    List<Category> categoryList = categoryMap.get(ai.getMember().getAccount());
+                    
+                    if(categoryList != null)
                     for (Category c : categoryList) {
                         List<Member> memberList = c.getMemberList();
                         for (Member m : memberList) {
@@ -259,6 +271,9 @@ public class CategoryService {
     }
 
     public synchronized void changeStatus(AuthInfo ai, Member member) throws Exception {
+    	  List<Category> categoryList = categoryMap.get(ai.getMember().getAccount());
+    	  if(categoryList == null) return;
+    	
         for (Category c : categoryList) {
             List<Member> memberList = c.getMemberList();
             for (int i = 0; i < memberList.size(); i++) {
@@ -309,12 +324,16 @@ public class CategoryService {
         mainPanel.changeStatus(member.getCategory());
     }
 
-    public static List<Category> getCategoryList() {
-        return categoryList;
+    public static List<Category> getCategoryList(AuthInfo ai) {
+		if (ai == null || ai.getMember() == null)
+			return null;
+		return categoryMap.get(ai.getMember().getAccount());
     }
 
-    public static void setCategoryList(List<Category> categoryList) {
-        CategoryService.categoryList = categoryList;
+    public static void setCategoryList(AuthInfo ai, List<Category> categoryList) {
+		if (ai == null || ai.getMember() == null)
+			return;
+		categoryMap.put(ai.getMember().getAccount(), categoryList);
     }
 
     public static List<Member> getOnlineList() {

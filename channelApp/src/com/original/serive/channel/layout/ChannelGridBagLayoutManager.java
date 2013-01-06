@@ -99,17 +99,19 @@ public class ChannelGridBagLayoutManager
      */
     public void reset(boolean removeAll) 
     {
-    	constraints.gridx=0;
+    	constraints.gridx=GridBagConstraints.RELATIVE;
     	constraints.gridy=0;
     	constraints.gridwidth=1;
     	constraints.gridheight=1;
     	constraints.weightx=0.0;
     	constraints.weighty=0.0;
-    	constraints.anchor=GridBagConstraints.NORTHWEST;
+    	constraints.anchor=GridBagConstraints.NORTHEAST;
     	constraints.fill= GridBagConstraints.NONE;
     	
-    	if(removeAll && parent != null)
+    	if(removeAll && parent != null) {
     		parent.removeAll();
+    		parent.validate();
+    	}
     }
     
     /**

@@ -55,6 +55,8 @@ public class ChannelMessagePane extends JPanel
 	//消息箭头，左右两种(左为接受，右为发送)
 	private JLabel leftArrow = new JLabel(IconFactory.loadIconByConfig("leftArrowIcon")),
 			rightArrow = new JLabel(IconFactory.loadIconByConfig("rightArrowIcon"));
+	private Dimension arrowSize = new Dimension(ChannelConfig.getIntValue("arrowWidth"),
+			ContactHeader.HEADSIZE.height);
 	
 	String uid = null; //联系人账号(用户名)，和ChannelMessagePane一一对应。
 	
@@ -73,13 +75,10 @@ public class ChannelMessagePane extends JPanel
 	 */
 	private void setReceiveMsgLayout() {
 		layoutMgr.setAlignment(ChannelGridBagLayoutManager.ALIGN_LEFT);
+		leftArrow.setPreferredSize(arrowSize);
 		
 		//下面添加的子组件
 		layoutMgr.addComToModel(header);
-
-		leftArrow.setPreferredSize(new Dimension(
-				ChannelConfig.getIntValue("arrowWidth"),
-				ContactHeader.HEADSIZE.height));
 		layoutMgr.addComToModel(leftArrow);
 
 		layoutMgr.addComToModel(container);
@@ -93,6 +92,7 @@ public class ChannelMessagePane extends JPanel
 	 */
 	private void setPostMsgLayout() {
 		layoutMgr.setAlignment(ChannelGridBagLayoutManager.ALIGN_RIGHT);
+		rightArrow.setPreferredSize(arrowSize);
 		
 		//下面添加的子组件
 		layoutMgr.addCopyRegion(header);		
@@ -101,9 +101,6 @@ public class ChannelMessagePane extends JPanel
 		layoutMgr.setInsets(new Insets(0, -2, 0, 4)); //这里稍微做了一下偏移调整，偏移的同时也要注意<左右>的控件也需要调整！！！
 		layoutMgr.addComToModel(container);
 		
-		rightArrow.setPreferredSize(new Dimension(
-				ChannelConfig.getIntValue("arrowWidth"),
-				ContactHeader.HEADSIZE.height));
 		layoutMgr.setInsets(new Insets(0, -2, 0, 4));
 		layoutMgr.addComToModel(rightArrow);
 		

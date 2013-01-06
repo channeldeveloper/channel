@@ -20,11 +20,12 @@ import com.original.service.channel.protocols.email.oldimpl.BaseObject;
  */
 public class EMailAttachment extends BaseObject {
 
-    private Integer Size = null;
+	private Integer Size = null;
     private String FileName = null;
     private String Type = null;
     private String CId = null;
     private String CDir = null;
+    private String CType = null;
     private byte[] Data = null;
     private String infoId = null;
     
@@ -142,11 +143,26 @@ public class EMailAttachment extends BaseObject {
         infoId = infoid;
     }
     
+    /**
+	 * @return the cType
+	 */
+	public String getCType() {
+		return CType;
+	}
+
+	/**
+	 * @param cType the cType to set
+	 */
+	public void setCType(String cType) {
+		this.CType = cType;
+	}
 
 	public String getCDir() {
 		return CDir;
 	}
+	
 	public void setCDir(String cDir) {
 		CDir = cDir;
 	}
+	
 }

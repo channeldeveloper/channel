@@ -4,7 +4,6 @@
  */
 package iqq.service;
 
-import iqq.util.ErrorMessage;
 import iqq.util.Log;
 import iqq.util.Method;
 
@@ -134,7 +133,7 @@ public class HttpService {
     }
 
     public InputStream getInputStream() {
-        if (errorCount > 10) {
+        if (errorCount > 3) {
             throw new java.lang.IllegalStateException("iQQ 无法连接互联网！");
         }
         InputStream is = null;
@@ -224,11 +223,7 @@ public class HttpService {
     }
 
     public void checkResponseCode(final HttpURLConnection conn) {
-        if (timeoutCount > 10) {
-            Log.println("-----------------timeoutCount:" + timeoutCount);
-            ErrorMessage.show("网络中断，请重登录！");
-//            ThreadUtil.shutdown();
-
+        if (timeoutCount > 3) {
             throw new java.lang.IllegalStateException("QQ Channel service connected fail!");
         }
         timeoutCount++;

@@ -52,7 +52,7 @@ public class MemberService {
     }
 
     public Member get(AuthInfo ai, long uin) {
-        List<Category> categoryList = CategoryService.getCategoryList();
+        List<Category> categoryList = CategoryService.getCategoryList(ai);
         if(categoryList != null)
         for (Category c : categoryList) {
             for (Member m : c.getMemberList()) {
@@ -69,10 +69,10 @@ public class MemberService {
         return getForDownload(ai, uin);
     }
     
-    public long getUinByNickName(String nickname) {
+    public long getUinByNickName(AuthInfo ai, String nickname) {
     	if(nickname != null && !nickname.isEmpty()) {
 
-    		List<Category> categoryList = CategoryService.getCategoryList();
+    		List<Category> categoryList = CategoryService.getCategoryList(ai);
     		if(categoryList != null)
     			for (Category c : categoryList) {
     				for (Member m : c.getMemberList()) {

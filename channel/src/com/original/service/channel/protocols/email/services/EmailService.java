@@ -75,9 +75,6 @@ public class EmailService extends AbstractService {
 			// those that are interested in this event
 			for (int i = listeners.length - 2; i >= 0; i -= 2) {
 				if (listeners[i] == MessageListner.class) {
-					// Lazily create the event:
-					// if (e == null)
-					// e = new ListSelectionEvent(this, firstIndex, lastIndex);
 					((MessageListner) listeners[i + 1]).change(e);
 				}
 			}

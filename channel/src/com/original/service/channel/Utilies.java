@@ -137,14 +137,16 @@ public class Utilies {
     		mailAttaches = new ArrayList<EMailAttachment>(attaches.size());
     		EMailAttachment mailAttach = null;
     		for(Attachment attach : attaches) {
-    			mailAttach = new EMailAttachment();
-    			
-    			mailAttach.setCId(attach.getContentId());
-    			mailAttach.setFileID(attach.getFileId());
-    			mailAttach.setFileName(attach.getFileName());
-    			mailAttach.setSize(attach.getSize());
-    			mailAttach.setType(attach.getType());
-    			mailAttaches.add(mailAttach);
+    			if(attach.getContentId() == null) {//if has cid, then see it as inline not attachment!!!
+    				mailAttach = new EMailAttachment();
+
+    				mailAttach.setCId(attach.getContentId());
+    				mailAttach.setFileID(attach.getFileId());
+    				mailAttach.setFileName(attach.getFileName());
+    				mailAttach.setSize(attach.getSize());
+    				mailAttach.setType(attach.getType());
+    				mailAttaches.add(mailAttach);
+    			}
     		}
     	}
     	return mailAttaches;

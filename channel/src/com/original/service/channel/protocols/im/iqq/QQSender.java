@@ -35,14 +35,14 @@ public class QQSender implements Constants{
 			if(toAddr == null || toAddr.isEmpty())
 				throw new QQException("UnKnown QQ Receiver's nickname, please check your sendMsg!");
 			
-			Long uin = memberService.getUinByNickName(toAddr);
-			if(uin == -1L)
-				throw new QQException("[" + toAddr + "] is not your friend, please add him/her first!");
-			
 			String account = channelAcc.getAccount().getUser() + "@qq.com";
 			AuthInfo ai = Auth.getAccountInfo(account);
 			if(ai == null)
 				throw new QQException(account + " has not logged in, please login first!");
+			
+			Long uin = memberService.getUinByNickName(ai, toAddr);
+			if(uin == -1L)
+				throw new QQException("[" + toAddr + "] is not your friend, please add him/her first!");
 			
 			if(action == ACTION_QUICK_REPLY) {//快速回复
 				msgService.sendMsg(ai, uin, msg.getBody());

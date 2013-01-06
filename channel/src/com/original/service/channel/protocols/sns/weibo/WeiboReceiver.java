@@ -35,7 +35,6 @@ public class WeiboReceiver {
 
 	Logger log = OriLog.getLogger(this.getClass());
 	private WeiboReceiveThread backgroud;
-	private HashMap<String, Boolean> cacheMsg;//cache message id
 	private WeiboService weiboService;
 	
 	private ChannelAccount ca;
@@ -45,7 +44,6 @@ public class WeiboReceiver {
 	public WeiboReceiver(ChannelAccount ca, WeiboService ws) {
 
 		this.ca = ca;
-		cacheMsg = new HashMap<String, Boolean>();
 		backgroud = new WeiboReceiveThread(this);
 		weiboService = ws;
 	}
@@ -100,21 +98,11 @@ public class WeiboReceiver {
 		for (int i = 0; i < size; i++) {
 			try {
 				Status status = statuses.get(i);
-				String newMsgId = status.getMid(); //微博的id
-				
-				// check this msg is existing or not
-				boolean existing = cacheMsg.containsKey(newMsgId);
-				// 已经放入池内，并且已经解析完成
-				if (existing && cacheMsg.get(newMsgId)) {
-					continue;
-				}
 				
 				ChannelMessage[] cmsg = new ChannelMessage[1];
 				cmsg[0] = convertStatus2Message(status);
 				MessageEvent evt = new MessageEvent(null, null,MessageEvent.Type_Added, cmsg, null,null);
 				weiboService.fireMessageEvent(evt);
-				// 解析完毕，内存缓存。
-				cacheMsg.put(newMsgId, Boolean.TRUE);
 
 			} catch (Exception e) {
 				e.printStackTrace();
