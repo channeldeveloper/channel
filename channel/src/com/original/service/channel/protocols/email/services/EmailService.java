@@ -8,6 +8,7 @@ import javax.swing.event.EventListenerList;
 import com.original.service.channel.AbstractService;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
 import com.original.service.channel.Service;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
@@ -135,6 +136,11 @@ public class EmailService extends AbstractService {
 	 */
 	@Override
 	public void put(String action, ChannelMessage msg){		
+		if(action == Constants.ACTION_QUICK_REPLY) { //快速回复不需要附件等信息
+			msg.setAttachments(null);
+			msg.setFlags(null);
+			msg.setExtensions(null);
+		}
 		this.sender.send(msg);
 	}
 	

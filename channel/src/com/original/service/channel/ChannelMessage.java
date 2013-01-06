@@ -6,6 +6,7 @@
  */
 package com.original.service.channel;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -440,7 +441,7 @@ public class ChannelMessage implements Cloneable, Constants{
 			msg = (ChannelMessage)super.clone();
 			msg.setFlags(flags == null ? null : (HashMap)flags.clone());
 			msg.setExtensions(extensions == null ? null : (HashMap)extensions.clone());
-//			msg.setAttachmentIds(attachmentIds == null ? null : attachmentIds.clone());
+			msg.setAttachments(attachments == null ? null : (List) (((ArrayList)attachments).clone()));
 		}
 		catch(CloneNotSupportedException ex)
 		{

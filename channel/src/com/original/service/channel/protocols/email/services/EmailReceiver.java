@@ -108,7 +108,6 @@ public class EmailReceiver {
 			return recceiveMessages();
 		} catch (Exception e) {
 			e.printStackTrace();
-			log.error(OriLog.logStack(e));
 		} finally {
 			try {
 				if (folder != null) {
@@ -116,7 +115,6 @@ public class EmailReceiver {
 					store.close();
 				}
 			} catch (Exception e) {
-				log.error(OriLog.logStack(e));
 			}
 		}		
 		return false;
@@ -162,16 +160,15 @@ public class EmailReceiver {
 			{
 				parse(msgs);
 			}
-			store.close();
 			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
 			return false;
 		}
 	}
 	
 	private void parse(Message[] msgs) {
-		if (msgs.length <= 0) {
+		if (msgs == null || msgs.length <= 0) {
 			return;
 		}
 		EMailParser parser = new EMailParser("cydow");
@@ -196,7 +193,6 @@ public class EmailReceiver {
 
 			} catch (Exception e) {
 				e.printStackTrace();
-				log.error(OriLog.logStack(e));
 			}
 		}
 	}

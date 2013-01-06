@@ -43,6 +43,7 @@ import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
+import com.original.service.channel.Utilies;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.protocols.sns.weibo.WeiboParser;
 import com.original.widget.OTextField;
@@ -668,6 +669,8 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					//邮件单独处理：
 					if(ChannelMessage.MAIL.equals(newMsg.getClazz())) {
 						newMsg.setSubject("Re：" + body.iMsg.getSubject());
+						newMsg.setBody(replyContent + Utilies.getMailSeparatorFlags()
+								+ Utilies.parseMail(body.iMsg));
 					}
 					
 					ChannelService cs = 	ChannelAccesser.getChannelService();

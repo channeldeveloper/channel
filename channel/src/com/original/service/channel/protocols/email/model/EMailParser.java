@@ -6,7 +6,9 @@
  */
 package com.original.service.channel.protocols.email.model;
 
+import java.io.File;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -252,7 +254,10 @@ public class EMailParser {
 
 				// save to native file
 				String tempDir = Utilies.getTempDir(fileID, fileName); // fileID is unique
-				GridFSUtil.getGridFSUtil().writeFile((ObjectId) fileID, tempDir);
+				File tempFile = new File(new URI(tempDir));
+				if(!tempFile.exists() || tempFile.length() != attachment.getSize()) {
+					GridFSUtil.getGridFSUtil().writeFile((ObjectId) fileID, tempDir);
+				}
 				if (attachment.getCId() != null) {
 					attachment.setCDir(tempDir);
 				}

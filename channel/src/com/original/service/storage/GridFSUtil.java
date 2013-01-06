@@ -204,11 +204,12 @@ public final class GridFSUtil {
 	 */
 	public void writeFile(ObjectId dbfileID, String filePath) throws Exception {
 		File file = new File(new URI(filePath));
-		if(file.exists())
-			return;
 		
+		writeFile(dbfileID, file);
+	}
+	public void writeFile(ObjectId dbfileID, File file) throws Exception {		
 		GridFSDBFile out = fs.findOne(new BasicDBObject("_id", dbfileID));// one
-		FileOutputStream fOutStream = new FileOutputStream(file);
+		FileOutputStream fOutStream = new FileOutputStream(file, false);
 		out.writeTo(fOutStream);
 		fOutStream.close();
 	}

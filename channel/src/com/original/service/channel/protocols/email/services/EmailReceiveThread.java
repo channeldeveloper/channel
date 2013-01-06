@@ -37,23 +37,17 @@ public class EmailReceiveThread extends Thread {
 
     @Override
     public void run() {
-
-    	//every 3000 second to receive email.
+    	//every 5 second to receive email.
         while (true) {
             try {
                 synchronized (receiver) {
-                	receiver.wait(1000);
+                	receiver.wait(5000);
                 }
             } catch (InterruptedException ex) {
                 break;
             }
             //if failed try 3 time, then stop until the user reset this setting.
             sucessed = receiver.receive();
-
         }
     }
-    
-    
-
-	
 }
