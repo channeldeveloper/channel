@@ -19,7 +19,7 @@ import com.original.service.channel.protocols.email.oldimpl.BaseObject;
  * @create   2012-2-13 8:17:13
  */
 public class EMailAttachment extends BaseObject {
-
+	
 	private Integer Size = null;
     private String FileName = null;
     private String Type = null;
