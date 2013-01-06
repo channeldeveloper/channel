@@ -16,7 +16,7 @@ import com.original.service.channel.protocols.sns.weibo.WeiboService;
 public class ChannelAccesser
 {
 	static Oauth oauth = new Oauth();
-	static ChannelService cs = new ChannelService();
+	static ChannelService cs =  ChannelService.getInstance();
 	
 	/**
 	 * 获取激活 授权Token的远程地址
