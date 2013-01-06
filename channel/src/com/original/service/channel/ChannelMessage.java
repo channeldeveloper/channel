@@ -48,7 +48,7 @@ public class ChannelMessage implements Cloneable, Constants{
 	// id
 	@Id
 	private ObjectId id;
-	// 信息原始的ID，相对自己的服务器
+	// 信息原始的ID，相对自己的服务器,，唯一定义，（Now MessageID from server , franz pending channelID+messageID)
 	@Indexed(value = IndexDirection.ASC, name = "messageID", unique = true, dropDups = false)
 	private String messageID;
 

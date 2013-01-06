@@ -385,13 +385,28 @@ public class MessageManager {
 
 	// ///////////////全文搜素(Pending)///////////////
 	
+	/**
+	 * 检查是否存库内
+	 * @param messageID
+	 * @return
+	 */
+	public boolean isExist(ObjectId objId)
+	{
+		//检查是否存库内		
+		ChannelMessage chm = getByID(objId);
+		return chm == null;
+	}
 	
-	
-	
-
-	
-	
-	
-	
+	/**
+	 * 检查是否存库内
+	 * @param messageID
+	 * @return
+	 */
+	public boolean isExist(String newMsgId)
+	{
+		//检查是否存库内
+		Iterator<ChannelMessage> ite = getByMessageID(newMsgId);
+		return ite == null || !ite.hasNext();
+	}
 	
 }

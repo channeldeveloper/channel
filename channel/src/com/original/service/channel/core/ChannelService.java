@@ -11,6 +11,7 @@ import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,7 +52,7 @@ import com.original.service.profile.Profile;
  * @author sxy
  * 
  */
-public class ChannelService extends AbstractService {
+public final class ChannelService extends AbstractService {
 
 	private ChannelServer channelServer;
 
@@ -72,11 +73,25 @@ public class ChannelService extends AbstractService {
 	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
 	
 	private Initializer initializer;
+	
+	private static ChannelService singlton;
+	/**
+	 * 
+	 * @return
+	 */
+	public static ChannelService getInstance()
+	{
+		if (singlton == null)
+		{
+			singlton = new ChannelService();
+		}
+		return singlton;
+	}
 
 	/**
 	 * 
 	 */
-	public ChannelService() {
+	private ChannelService() {
 		initMongoDB();
 		init();
 	}
@@ -586,6 +601,9 @@ public class ChannelService extends AbstractService {
 	public void put(String action, ChannelMessage msg) {
 		// TODO Auto-generated method stub
 		if (msg != null) {
+			
+			preSendProcess(action, msg);
+			
 			ChannelAccount cha = msg.getChannelAccount();
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
@@ -611,6 +629,9 @@ public class ChannelService extends AbstractService {
 	@Override
 	public void post(String action, ChannelMessage msg) {
 		if (msg != null) {
+			
+			preSendProcess(action, msg);
+			
 			ChannelAccount cha = msg.getChannelAccount();
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
@@ -620,6 +641,20 @@ public class ChannelService extends AbstractService {
 
 	}
 
+	/**
+	 * Pre deal 
+	 */
+	private void preSendProcess(String action, ChannelMessage msg)
+	{
+		String msgId = msg.getMessageID();
+		//forward, resend, transfer, quickreply
+		if (msgId != null)
+		{
+			UUID idOne = UUID.randomUUID();
+			msg.setMessageID(msgId + idOne);
+		
+		}
+	}
 	// //////////search filter order by MessageManager////////
 
 	// ////////////////Update//////////////

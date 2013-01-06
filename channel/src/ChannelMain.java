@@ -27,7 +27,7 @@ public class ChannelMain {
 		MyListener listner = new MyListener();
 		
 		//1 启动服务
-		ChannelService csc = new ChannelService();
+		ChannelService csc = ChannelService.getInstance();
 		
 		//加入自己的监听
 		csc.addMessageListener(listner);

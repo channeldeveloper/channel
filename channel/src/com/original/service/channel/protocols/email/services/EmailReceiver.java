@@ -9,6 +9,7 @@ package com.original.service.channel.protocols.email.services;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -25,6 +26,8 @@ import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
+import com.original.service.channel.core.ChannelService;
+import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.protocols.email.model.EMail;
 import com.original.service.channel.protocols.email.model.EMailAttachment;
@@ -178,6 +181,12 @@ public class EmailReceiver {
 				boolean existing = cacheMsg.containsKey(newMsgId);
 				// 已经放入池内，并且已经解析完成
 				if (existing && cacheMsg.get(newMsgId)) {
+					continue;
+				}
+				//检查是否存库内
+				ChannelService csc = ChannelService.getInstance();
+				MessageManager msm = csc.getMsgManager();
+				if (msm.isExist(newMsgId)){	
 					continue;
 				}
 				//邮件的消息			
