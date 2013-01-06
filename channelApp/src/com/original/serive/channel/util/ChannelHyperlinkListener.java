@@ -57,7 +57,7 @@ public class ChannelHyperlinkListener implements HyperlinkListener {
 				try {
 					desktop.open(new File(new URI(despURL)));
 				} catch (Exception ex) { // 打开本地文件出错
-					
+					System.err.println(ex.getMessage());
 				}
 			}
 		}

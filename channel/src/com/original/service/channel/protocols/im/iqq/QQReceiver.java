@@ -1,21 +1,13 @@
 package com.original.service.channel.protocols.im.iqq;
 
-import iqq.comm.Auth;
-import iqq.comm.Auth.AuthInfo;
 import iqq.model.Message;
 import iqq.model.MessageDetail;
-import iqq.service.MessageService;
 
 import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import weibo4j.model.WeiboException;
-import atg.taglib.json.util.JSONArray;
-import atg.taglib.json.util.JSONObject;
-
-import com.original.service.channel.Account;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
@@ -33,16 +25,12 @@ public class QQReceiver {
 
 	Logger log = OriLog.getLogger(this.getClass());
 	private QQReceiveThread backgroud;
-	private HashMap<String, Boolean> cacheMsg;//cache message id
 	private QQService qqservice;
 	
 	private ChannelAccount ca;
-	private MessageService msgService = MessageService.getIntance(); //QQ消息服务类
-
 	public QQReceiver(ChannelAccount ca, QQService qs) {
 
 		this.ca = ca;
-		cacheMsg = new HashMap<String, Boolean>();
 		backgroud = new QQReceiveThread(this);
 		qqservice = qs;
 	}
@@ -53,83 +41,23 @@ public class QQReceiver {
 	{
 		backgroud.start();
 	}
-
-	/**
-	 * 
-	 * @return
-	 */
-	public boolean receive() {
-		try {
-			return recceiveMessages();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} 
-		return false;
-	}
 	
-//List 用来缓存 MessageID
 	/**
 	 * 接受QQ消息，这里目前只获取<好友>的消息(群或讨论组忽略)
 	 * @return
 	 */
-	private boolean  recceiveMessages() throws WeiboException{
-		if(ca != null && qqservice != null) {
-			try {
-				Account account = ca.getAccount();
-				AuthInfo ai = Auth.getAccountInfo(account.getUser()+"@qq.com");
-				JSONObject ret = msgService.openMessageChannel(ai);
-				int retcode = ret.getInt("retcode");
-				if (retcode == 0) {
-	                 JSONArray result = ret.getJSONArray("result");
-	                 for (int i = 0; i < result.length(); i++) {
-	                     String poll_type = result.getJSONObject(i).getString("poll_type");
-	                     JSONObject value = result.getJSONObject(i).getJSONObject("value");
-	                     if ("message".equals(poll_type)) {// 好友消息
-	                         try {
-	                        	 parse( msgService.receiveMsgOnly(ai, value));
-	                         } catch (Exception ex) {
-	                        	 ex.printStackTrace();
-	                         }
-	                     } else if ("group_message".equals(poll_type)) {// 群消息，不做处理
-//	                    	 msgService.receiveGroupMsg(ai, value);
-	                     }
-	                 }
-	             }
-				return true;
-			 }
-			 catch(Exception ex)
-			 {
-				 ex.printStackTrace();
-				 log.error(ex.getMessage(), ex);
-			 }
-		}
-		return false;
-	}
-	
-	private void parse(Message qqMsg) {
-		if (qqMsg == null) return;
-				
+	public void receiveMessages(Message newMsg) {
+		if (newMsg == null) return;
+		
 		try {
-			String newMsgId = Long.toString(qqMsg.getId());
-			
-			// check this msg is existing or not
-			boolean existing = cacheMsg.containsKey(newMsgId);
-			// 已经放入池内，并且已经解析完成
-			if (existing && cacheMsg.get(newMsgId)) {
-				return;
-			}
-			
 			ChannelMessage[] cmsg = new ChannelMessage[1];
-			cmsg[0] = convertMessage2Message(qqMsg);
-			MessageEvent evt = new MessageEvent(null, null,MessageEvent.Type_Added, cmsg, null,null);
+			cmsg[0] = convertMessage2Message(newMsg);
+			MessageEvent evt = new MessageEvent(null, null, MessageEvent.Type_Added, cmsg, null, null);
 			qqservice.fireMessageEvent(evt);
-			// 解析完毕，内存缓存。
-			cacheMsg.put(newMsgId, Boolean.TRUE);
 
 		} catch (Exception e) {
 			log.error(OriLog.logStack(e));
 		}
-
 	}
 	
 	private ChannelMessage convertMessage2Message(Message qqMsg)

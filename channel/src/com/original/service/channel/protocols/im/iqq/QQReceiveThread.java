@@ -1,8 +1,5 @@
 package com.original.service.channel.protocols.im.iqq;
 
-import org.apache.log4j.Logger;
-
-import com.original.util.log.OriLog;
 
 /**
  * (Class Annotation.)
@@ -14,9 +11,7 @@ import com.original.util.log.OriLog;
  */
 public class QQReceiveThread extends Thread {
 
-	private Logger log = OriLog.getLogger(QQReceiveThread.class);
     QQReceiver receiver;
-    private boolean sucessed;
 
 	/**
 	 * 
@@ -31,17 +26,6 @@ public class QQReceiveThread extends Thread {
 
     @Override
     public void run() {
-
-    	//every 10 *1000 second to receive email.
-        while (true) {
-            try {
-                synchronized (receiver) {
-                	receiver.receive();
-                	receiver.wait(2 * 1000);
-                }
-            } catch (InterruptedException ex) {
-                break;
-            }
-        }
+    	
     }	
 }

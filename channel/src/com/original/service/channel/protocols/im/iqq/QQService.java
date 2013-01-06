@@ -13,7 +13,6 @@ import iqq.service.CategoryService;
 import iqq.service.LoginService;
 import iqq.service.MemberService;
 import iqq.service.MessageService;
-import iqq.util.ThreadUtil;
 
 import java.util.EventListener;
 import java.util.HashMap;
@@ -22,6 +21,9 @@ import java.util.List;
 import javax.swing.event.EventListenerList;
 
 import org.apache.log4j.Logger;
+
+import atg.taglib.json.util.JSONArray;
+import atg.taglib.json.util.JSONObject;
 
 import com.original.service.channel.AbstractService;
 import com.original.service.channel.Account;
@@ -46,12 +48,14 @@ private static Logger log = OriLog.getLogger(QQService.class);
 private static LoginService loginService = LoginService.getInstance();//QQ登陆服务
 private static MemberService memberService = MemberService.getInstance();//QQ成员服务
 private static CategoryService categoryService = CategoryService.getInstance();//QQ好友服务
+private static MessageService msgService = MessageService.getIntance(); //QQ消息服务类
 	
 	private QQSender sender;
 	private QQReceiver receiver;
 	private ChannelAccount ca;
 	private AuthInfo ai = null;//用户登录成功后，会返回一个授权用户信息AuthInfo
-	private int status;
+	
+	private boolean isRun = true;
 	
 	public QQService(String uid, ChannelAccount ca)throws ChannelException
 	{
@@ -59,7 +63,6 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 		this.ca = ca;
 		sender = new QQSender(uid, ca);
 		receiver = new QQReceiver(ca, this);
-		status = CREATED;
 		init() ;
 	}
 	
@@ -79,14 +82,8 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 				ai = Auth.getAccountInfo(loginMap.get("account"));
 				//获取好友信息，这一步不能少！！！
 				 categoryService.getFriends(ai);
-				 
-				 //这里目前还不支持多QQ用户发送和收取信息：
-				 MessageService.setIsRun(true);
-				 MessageService.setLoginAI(ai);
-			     ThreadUtil.submit(MessageService.getIntance());
 			}
 			catch(Exception ex) {
-				status = FAILED;
 				throw new ChannelException(ca, CHANNEL.QQ, ex.getMessage() + "\n是否重试？");
 			}
 		}
@@ -131,8 +128,47 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 	@Override
 	public void start() {
 		// TODO Auto-generated method stub
-		receiver.start();
-
+		Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				while (isRun) {
+					try {
+						JSONObject retJ = msgService.openMessageChannel(ai);
+						int retcode = retJ.getInt("retcode");
+						if (retcode == 0) {
+							JSONArray result = retJ.getJSONArray("result");
+							for (int i = 0; i < result.length(); i++) {
+								String poll_type = result.getJSONObject(i).getString("poll_type");
+								JSONObject value = result.getJSONObject(i).getJSONObject("value");
+								if ("message".equals(poll_type)) {// 好友消息
+									try {
+										receiver.receiveMessages(msgService.receiveMsgOnly(ai, value));
+									} catch (Exception ex) {
+									}
+								} else if ("buddies_status_change".equals(poll_type)) {// 好友上下线
+								} else if ("group_message".equals(poll_type)) {// 群消息
+								} else if ("kick_message".equals(poll_type)) {
+									isRun = false; // 线程中断
+								}
+							}
+						}
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					} finally { // 不管是否有错误，即是否成功收到消息，都sleep 2s
+						try {
+							Thread.sleep(2000);
+						} catch (InterruptedException ex) {
+							isRun = false;
+						}
+					}
+				}
+			}
+		};
+		
+		Thread thread = new Thread(runnable);
+		thread.setDaemon(true);// run in background
+		thread.start();
 	}
 
 	/////////////////////Event///////////////////////

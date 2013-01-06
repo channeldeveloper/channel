@@ -73,13 +73,6 @@ public class MessageService extends Thread {
     	return retJ;
     }
 
-    public static AuthInfo getLoginAI() {
-		return loginAI;
-	}
-	public static void setLoginAI(AuthInfo ai) {
-		loginAI = ai;
-	}
-
 	@Override
     public void run() {
         while (isRun) {
@@ -121,7 +114,7 @@ public class MessageService extends Thread {
             } catch (Exception ex) {
                 // TODO: handle exception
                 this.errorCount++;
-                System.err.println(ex);
+                ex.printStackTrace();
             }
         }
     }
@@ -172,9 +165,9 @@ public class MessageService extends Thread {
          completeMsg = QQImageUtil.parseHTML(completeMsg);
     	}
     	catch (JSONException ex) {
-            Logger.getLogger(MessageService.class.getName()).log(Level.SEVERE, null, ex);
+    		ex.printStackTrace();
         } catch (Exception ex) {
-            Logger.getLogger(MessageService.class.getName()).log(Level.SEVERE, null, ex);
+        	ex.printStackTrace();
         }
     	return md;
     }
@@ -194,9 +187,9 @@ public class MessageService extends Thread {
              msg.setId(System.currentTimeMillis());
              return msg;
          } catch (JSONException ex) {
-             Logger.getLogger(MessageService.class.getName()).log(Level.SEVERE, null, ex);
+        	 ex.printStackTrace();
          } catch (Exception ex) {
-             Logger.getLogger(MessageService.class.getName()).log(Level.SEVERE, null, ex);
+        	 ex.printStackTrace();
          }
          return null;
     }

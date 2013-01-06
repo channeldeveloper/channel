@@ -3,6 +3,7 @@ package com.original.serive.channel.border;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 
 /**
  * 虚线框，同样分上下左右四个方向。
@@ -51,8 +52,10 @@ public class DottedLineBorder extends SingleLineBorder
 	 */
 	protected void drawLine(Graphics2D g2d, int x1, int y1, int x2, int y2)
 	{
+		Stroke stroke = g2d.getStroke();
 		g2d.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, dashparams, 0));
 		super.drawLine(g2d, x1, y1, x2, y2);
+		g2d.setStroke(stroke);
 	}
 
 }

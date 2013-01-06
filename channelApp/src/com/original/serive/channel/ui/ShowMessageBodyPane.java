@@ -16,7 +16,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.StyleSheet;
 
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;

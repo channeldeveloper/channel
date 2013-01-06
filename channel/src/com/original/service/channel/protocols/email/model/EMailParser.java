@@ -181,7 +181,7 @@ public class EMailParser {
             for (int k = 1; count > 1 && k < count; k++) {
                 Part mpart = mp.getBodyPart(k);
                 String disposition = mpart.getDisposition();
-                log.debug("disposition = " + disposition);
+//                log.debug("disposition = " + disposition);
                 if (disposition != null && (disposition.equals(Part.ATTACHMENT))) {
                    EMailAttachment attachment = new EMailAttachment();
                     if (mpart.getHeader("Content-ID") != null) {
