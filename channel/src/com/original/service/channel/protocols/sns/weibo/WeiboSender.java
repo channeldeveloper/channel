@@ -6,8 +6,6 @@
  */
 package com.original.service.channel.protocols.sns.weibo;
 
-import org.apache.log4j.Logger;
-
 import weibo4j.Comments;
 import weibo4j.Timeline;
 import weibo4j.http.ImageItem;
@@ -16,7 +14,6 @@ import weibo4j.model.WeiboException;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
-import com.original.util.log.OriLog;
 
 /**
  *
@@ -24,7 +21,6 @@ import com.original.util.log.OriLog;
  */
 public class WeiboSender implements Constants{
 
-	private   Logger log = OriLog.getLogger(this.getClass());
 	private ChannelAccount channelAcc = null;
 
 	public WeiboSender(String uid, ChannelAccount ca)
@@ -48,16 +44,14 @@ public class WeiboSender implements Constants{
 			if(action == ACTION_QUICK_REPLY) { //快速回复
 				Comments comments = new Comments();
 				comments.setToken(accessToken);
-//				comments.createComment(WeiboParser.parseUTF8(msg.getBody()), 
-//						msg.getMessageID()); //注意这里的MessageID就是原微博ID，如假包换
-				comments.createComment(msg.getBody(), 
-						msg.getMessageID()); //注意这里的MessageID就是原微博ID，如假包换
+				comments.createComment(msg.getBody(), 	msg.getMessageID()); //注意这里的MessageID就是原微博ID
 			}
 			else if(action == ACTION_REPLY) { //回复，其实就是发表一份微博，只是在最前面加上“@某人：”
 				Timeline timeLine = new Timeline();
 				timeLine.setToken(accessToken);
 				
-				ImageItem imgItem = WeiboParser.parseUTF8(msg);
+				ImageItem imgItem = WeiboParser.parseUTF8(msg, 
+						!msg.getToAddr().equals(channelAcc.getAccount().getUser())); //自己给自己发，不需要@自己
 				timeLine.UploadStatus(imgItem.getText(), imgItem);
 			}
 		}

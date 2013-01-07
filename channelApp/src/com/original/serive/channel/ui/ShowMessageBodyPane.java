@@ -40,6 +40,8 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	private JTextPane content = new JTextPane();//文本面板
 	private JScrollBar scrollBar = new OScrollBar(JScrollBar.VERTICAL, Color.gray); //滚动条，用于文本面板中
 	
+	private ChannelMessage newMsg = null;
+	
 	public ShowMessageBodyPane() 
 	{
 		layoutMgr = new ChannelGridBagLayoutManager(this);//使用网格包布局
@@ -111,9 +113,17 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 				
 				parseWeibo(msg);
 			}
+			
+			this.newMsg = msg;
 		}
 	}
 	
+	@Override
+	public ChannelMessage getChannelMessage() {
+		// TODO 自动生成的方法存根
+		return this.newMsg;
+	}
+
 	/**
 	 * 设置默认的控制按钮组(从左到右：回复-保存-删除)
 	 */
@@ -153,6 +163,10 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
+		if(DELETE == e.getActionCommand()) {
+			int option = ChannelUtil.showConfirmDialog(null, "确认删除", "是否删除该消息？");
+			System.out.println(option);
+		}
 		
 	}
 	

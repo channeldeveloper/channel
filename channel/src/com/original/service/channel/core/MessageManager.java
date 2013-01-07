@@ -394,7 +394,7 @@ public class MessageManager {
 	{
 		//检查是否存库内		
 		ChannelMessage chm = getByID(objId);
-		return chm == null;
+		return chm != null;
 	}
 	
 	/**

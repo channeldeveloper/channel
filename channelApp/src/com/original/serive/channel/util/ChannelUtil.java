@@ -54,6 +54,7 @@ import com.original.serive.channel.ui.data.MenuItem;
 import com.original.serive.channel.ui.data.TitleItem;
 import com.original.serive.channel.ui.widget.FileChooserListener;
 import com.original.serive.channel.ui.widget.FilePreviewer;
+import com.original.serive.channel.ui.widget.MessageBox;
 
 /**
  * 一些通用算法，目前主要用于客户端界面应用，服务端类请勿使用。
@@ -216,6 +217,8 @@ public class ChannelUtil
 			button.setActionCommand(item.getActionCommand());
 			if(item.getSelectedIcon() != null)
 				button.setSelectedIcon(item.getSelectedIcon());
+			if(item.getDisabledIcon() != null)
+				button.setDisabledIcon(item.getDisabledIcon());
 			if(item.getSize() != null)
 				button.setPreferredSize(item.getSize());
 			
@@ -389,6 +392,49 @@ NativeInterface.open();
 		}
 		d.setLocationRelativeTo(parent);
 		d.setVisible(true);
+	}
+	
+	public static void showMessageDialog(Component parent, String title,
+			Object content) {
+		MessageBox box = new MessageBox(content);
+		
+		JOptionPane   pane = new JOptionPane(box, JOptionPane.INFORMATION_MESSAGE,
+                JOptionPane.DEFAULT_OPTION, null,
+                null, null);
+		
+		showCustomedDialog(parent, title, true, pane);
+	}
+	
+	public static int showConfirmDialog(Component parent, String title,
+			Object content) {
+		
+MessageBox box = new MessageBox(content);
+		
+		JOptionPane   pane = new JOptionPane(box, JOptionPane.QUESTION_MESSAGE,
+                JOptionPane.YES_NO_OPTION, null,
+                null, null);
+		
+		showCustomedDialog(parent, title, true, pane);
+		return getOptionValue(pane);
+		
+	}
+	
+	private static int getOptionValue(JOptionPane op) {
+		Object selectedValue = op.getValue();
+		Object[] options = op.getOptions();
+
+		if (selectedValue == null)
+			return JOptionPane.CLOSED_OPTION;
+		if (options == null) {
+			if (selectedValue instanceof Integer)
+				return ((Integer) selectedValue).intValue();
+			return JOptionPane.CLOSED_OPTION;
+		}
+		for (int counter = 0, maxCounter = options.length; counter < maxCounter; counter++) {
+			if (options[counter].equals(selectedValue))
+				return counter;
+		}
+		return JOptionPane.CLOSED_OPTION;
 	}
 	
 	/**

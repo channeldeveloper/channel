@@ -87,7 +87,7 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 		if(body != null)
 		{
 			ChannelMessageBodyPane.Body child, origin = null;
-			if(body.messageBodyList.isEmpty() || body.getComponentCount() == 0) {
+			if(body.getChannelMessage() == null || body.getComponentCount() == 0) {
 				desktop.showDefaultComp();
 			}
 			else {

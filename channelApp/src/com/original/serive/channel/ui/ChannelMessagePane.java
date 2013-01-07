@@ -12,8 +12,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Area;
 import java.awt.geom.RoundRectangle2D;
-import java.net.URL;
 
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -50,7 +50,7 @@ public class ChannelMessagePane extends JPanel
 	
 	//联系人头像
 	private ContactHeader header = new ContactHeader(
-			IconFactory.getIconURL("avatar.png"));
+			IconFactory.loadIconByConfig("contactHeadIcon"));
 	
 	//消息箭头，左右两种(左为接受，右为发送)
 	private JLabel leftArrow = new JLabel(IconFactory.loadIconByConfig("leftArrowIcon")),
@@ -310,20 +310,27 @@ public class ChannelMessagePane extends JPanel
 		public static  Dimension SIZE =  new Dimension(78, 100),
 				HEADSIZE = new Dimension(72, 72);
 		
-		public ContactHeader(URL headImageURL)
+		public ContactHeader(Icon headImage)
 		{
-			headImageIcon = new LocationIcon(headImageURL);
+			headImageIcon = new LocationIcon(headImage);
 			this.contactName = contactName == null ? "" : contactName;
 			setContactHeader();
 		}
 		
-		public ContactHeader(byte[] headImageBytes)
-		{
-			headImageIcon = new LocationIcon(headImageBytes);
-			this.contactName = contactName == null ? "" : contactName;
-			
-			setContactHeader();
-		}
+//		public ContactHeader(URL headImageURL)
+//		{
+//			headImageIcon = new LocationIcon(headImageURL);
+//			this.contactName = contactName == null ? "" : contactName;
+//			setContactHeader();
+//		}
+//		
+//		public ContactHeader(byte[] headImageBytes)
+//		{
+//			headImageIcon = new LocationIcon(headImageBytes);
+//			this.contactName = contactName == null ? "" : contactName;
+//			
+//			setContactHeader();
+//		}
 		
 		/**
 		 * 设置联系人用户名

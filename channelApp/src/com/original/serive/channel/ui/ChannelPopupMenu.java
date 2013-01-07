@@ -50,6 +50,7 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 					new AbstractButtonItem(null, CHANNEL_FOR_MAIL, 
 							IconFactory.loadIconByConfig("mailChannelIcon"),new Dimension(40, 40)));
 	private ContactHeader contactHeader = null;
+	private MenuPane mp = new MenuPane();
 	
 	public ChannelPopupMenu(ContactHeader header) {
 		setBorder(new EmptyBorder(3, 3, 2, 2));
@@ -61,8 +62,7 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 	/**
 	 * 构建浮窗的菜单项，其实每个菜单项就是一个按钮
 	 */
-	private void constructPopupMenu() {				
-		MenuPane mp = new MenuPane();
+	private void constructPopupMenu() {	
 		channel4QQ.setBorder(new SingleLineBorder(SingleLineBorder.RIGHT,Color.gray));
 		mp.add(channel4QQ, new Rectangle(0, 0, 40, 40));
 //		addJSeparator();
@@ -72,9 +72,49 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 		mp.add(channel4Mail, new Rectangle(80, 0, 40, 40));
 		
 		add(mp);
-		
 	}
 	
+	@Override
+	public void show(Component invoker, int x, int y) {
+		//判断可用的快捷通道，不可用的通道变灰(禁用)处理：
+		//暂时的处理方法，判断消息类型是哪一种：
+		ChannelMessage msg = getMessage();
+		if(msg != null) {
+			if (ChannelMessage.MAIL.equals(msg.getClazz())) {
+				setEnabled(CHANNEL_FOR_MAIL);
+			} else if (ChannelMessage.WEIBO.equals(msg.getClazz())) {
+				setEnabled(CHANNEL_FOR_WEIBO);
+			} else if (ChannelMessage.QQ.equals(msg.getClazz())) {
+				setEnabled(CHANNEL_FOR_QQ);
+			}
+		}
+		
+		super.show(invoker, x, y);
+	}
+	
+	//暂时的处理方法：
+	public void setEnabled(String actionCommand)
+	{
+		for (int i = 0; i < mp.getComponentCount(); i++) {
+			if (actionCommand == CHANNEL_FOR_MAIL
+					&& mp.getComponent(i) == channel4Mail) {
+				channel4Mail.setEnabled(true);
+				continue;
+				
+			} else if (actionCommand == CHANNEL_FOR_WEIBO
+					&& mp.getComponent(i) == channel4Weibo) {
+				channel4Weibo.setEnabled(true);
+				continue;
+				
+			} else if (actionCommand == CHANNEL_FOR_QQ
+					&& mp.getComponent(i) == channel4QQ) {
+				channel4QQ.setEnabled(true);
+				continue;
+			}
+			mp.getComponent(i).setEnabled(false);
+		}
+	}
+
 	/**
 	 * 获取当前弹窗对应的消息主体面板
 	 * @return
@@ -85,6 +125,15 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 			return parent.body;
 		}
 		return null;
+	}
+	
+	/**
+	 * 获取当前弹窗对应的消息对象。注意，弹窗对应的消息主体面板不同，获得的消息对象也不同。
+	 * @return
+	 */
+	private ChannelMessage getMessage() {
+		ChannelMessageBodyPane body = getMessageBody();
+		return body.getChannelMessage();
 	}
 	
 	protected void paintComponent(Graphics g)
@@ -127,15 +176,13 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 		//当添加的组件为AbstractButton时，可能会有点击触发事件
 		public void actionPerformed(ActionEvent e)
 		{
-			//隐藏弹窗
 			ChannelPopupMenu popMenu = (ChannelPopupMenu)this.getParent();
-			focusBounds = null;
+			//隐藏弹窗和取消选中的快捷通道
 			popMenu.setVisible(false);
+			focusBounds = null;
 			
-			ChannelMessageBodyPane body = popMenu.getMessageBody();
-			if(body != null && !body.messageBodyList.isEmpty()) {
-				ChannelMessage newMsg = body.messageBodyList.firstElement();
-				
+			ChannelMessage newMsg = popMenu.getMessage();
+			if(newMsg != null) {
 				ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(false));
 				cmp.newMessage(newMsg); 
 				ChannelDesktopPane desktop = ChannelGUI.getDesktop();

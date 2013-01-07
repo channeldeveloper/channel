@@ -56,7 +56,7 @@ import com.original.widget.OTextField;
  */
 public class ChannelMessageBodyPane extends JPanel implements EventConstants
 {
-	Vector<ChannelMessage> messageBodyList = new Vector<ChannelMessage>();
+	private Vector<ChannelMessage> messageBodyList = new Vector<ChannelMessage>();
 	
 	private MessageContainer container = null; //当前面板的载体，即父面板
 	private PropertyChangeSupport changeSupport =
@@ -214,6 +214,15 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 
 		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 		desktop.addOtherShowComp(PREFIX_SHOWALL + newMsg.getContactName(), nw);
+	}
+	
+	/**
+	 * 获取当前消息主体面板中的一条消息，默认第一条。
+	 * @return
+	 */
+	public ChannelMessage getChannelMessage() {
+		return messageBodyList.isEmpty() ? null : messageBodyList
+				.firstElement();
 	}
 	
 	/* ---------------------------------- 下面是面板的构成，使用人员无需关心 -------------------------------------------*/

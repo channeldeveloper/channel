@@ -9,6 +9,7 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Enumeration;
 import java.util.Hashtable;
 
 import javax.swing.AbstractButton;
@@ -39,13 +40,13 @@ import com.original.service.channel.Constants.CHANNEL;
 public class NewMessageTopBar extends ChannelMessageTopBar implements ActionListener, EventConstants
 {	
 	AbstractButtonItem newMail = new AbstractButtonItem(null, POST_MAIL, 
-			IconFactory.loadIconByConfig("sendMailIcon"),  IconFactory.loadIconByConfig("sendMailSelectedIcon"), 
+			IconFactory.loadIconByConfig("sendMailIcon"),  IconFactory.loadIconByConfig("sendMailSelectedIcon"), IconFactory.loadIconByConfig("sendMailDisabledIcon"), 
 			new Dimension(40, 40)), 
 			newQQ = new AbstractButtonItem(null, POST_QQ, 
-					IconFactory.loadIconByConfig("sendQQIcon"),	IconFactory.loadIconByConfig("sendQQSelectedIcon"),
+					IconFactory.loadIconByConfig("sendQQIcon"),	IconFactory.loadIconByConfig("sendQQSelectedIcon"), IconFactory.loadIconByConfig("sendQQDisabledIcon"), 
 					new Dimension(40, 40)),
 			newWeibo = new AbstractButtonItem(null, POST_WEIBO, 
-					IconFactory.loadIconByConfig("sendWeiboIcon"), 	IconFactory.loadIconByConfig("sendWeiboSelectedIcon"),
+					IconFactory.loadIconByConfig("sendWeiboIcon"), 	IconFactory.loadIconByConfig("sendWeiboSelectedIcon"), IconFactory.loadIconByConfig("sendWeiboDisabledIcon"), 
 					new Dimension(40, 40));
 			
 	JButton btnCC = ChannelUtil.createAbstractButton(
@@ -54,12 +55,12 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 			new AbstractButtonItem(null, SELECT_LINKER, IconFactory.loadIconByConfig("linkerIcon")));
 	
 	private boolean editable = false; //是否可编辑。如果为true，则联系人地址可以编辑(文本框)；否则只显示(标签)
-	//由editable来决定是用lbMsgTo还是txtMsgTo
+	//由editable来决定是用lbMsgTo还是txtMsgTo(中)
 	private JLabel lbMsgTo = new JLabel();
 	private JTextField txtMsgTo = new JTextField();
 	
-	//按钮控制面板，如选择联系人、添加分享/抄送等
-	private JPanel control = new  JPanel();
+	private MessageButtonGroup mbg = new MessageButtonGroup();//按钮控制组(左)
+	private JPanel control = new  JPanel(); //按钮控制面板，如选择联系人、添加分享/抄送等(右)
 	
 	private ChannelGridBagLayoutManager layoutMgr = 
 			new ChannelGridBagLayoutManager(this);
@@ -86,7 +87,6 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		setPreferredSize(new Dimension(SIZE.width, 55));
 		
 		JPanel left = new JPanel(new ChannelGridLayout(0, 0, new Insets(0,0, 0, 0)));
-		MessageButtonGroup mbg = new MessageButtonGroup();//按钮控制组
 		left.add(mbg.add(newMail));
 		left.add(mbg.add(newQQ));
 		left.add(mbg.add(newWeibo));
@@ -193,14 +193,41 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 			body.setMessage(newMsg);
 			
 			if(ChannelMessage.MAIL.equals(newMsg.getClazz())) {
+				setEnabled(newMail.getActionCommand());
 				newMail.getSource().doClick();
 			}
 			else if(ChannelMessage.QQ.equals(newMsg.getClazz())) {
+				setEnabled(newQQ.getActionCommand());
 				newQQ.getSource().doClick();
 			}
 			else if(ChannelMessage.WEIBO.equals(newMsg.getClazz())) {
+				setEnabled(newWeibo.getActionCommand());
 				newWeibo.getSource().doClick();
 			}
+		}
+	}
+	
+	//暂时的处理方法：
+	private void setEnabled(String actionCommand) {
+		Enumeration<AbstractButton> buttons = mbg.getElements();
+		while (buttons.hasMoreElements()) {
+			AbstractButton button = buttons.nextElement();
+
+			if (actionCommand == POST_MAIL && button == newMail.getSource()) {
+				newMail.setEnabled(true);
+				continue;
+
+			} else if (actionCommand == POST_WEIBO
+					&& button == newWeibo.getSource()) {
+				newWeibo.setEnabled(true);
+				continue;
+
+			} else if (actionCommand == POST_QQ && button == newQQ.getSource()) {
+				newQQ.setEnabled(true);
+				continue;
+			}
+
+			button.setEnabled(false);
 		}
 	}
 	

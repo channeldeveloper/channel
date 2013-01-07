@@ -136,7 +136,7 @@ public class EmailService extends AbstractService {
 	 */
 	@Override
 	public void put(String action, ChannelMessage msg){		
-		if(action == Constants.ACTION_QUICK_REPLY) { //快速回复不需要附件等信息
+		if (action == Constants.ACTION_QUICK_REPLY) { // 快速回复不需要附件等信息
 			msg.setAttachments(null);
 			msg.setFlags(null);
 			msg.setExtensions(null);

@@ -6,10 +6,6 @@
  */
 package com.original.service.channel.protocols.email.services;
 
-import org.apache.log4j.Logger;
-
-import com.original.util.log.OriLog;
-
 /**
  * (Class Annotation.)
  *
@@ -19,17 +15,14 @@ import com.original.util.log.OriLog;
  * @create   2012-3-3 15:56:48
  */
 public class EmailReceiveThread extends Thread {
-
-	private Logger log = OriLog.getLogger(EmailReceiveThread.class);
     EmailReceiver receiver;
-    private boolean sucessed;
 
 	/**
 	 * 
 	 * @param _frame
 	 */
 	public EmailReceiveThread(EmailReceiver receiver) {
-		setName("ReceiveEmailThread");
+		setName("EmailReceiveThread");
 		setDaemon(true);
 		setPriority(Thread.MIN_PRIORITY);
 		this.receiver = receiver;
@@ -37,17 +30,16 @@ public class EmailReceiveThread extends Thread {
 
     @Override
     public void run() {
-    	//every 5 second to receive email.
+    	//every 5 min to receive email. for processing email needs some times.
         while (true) {
             try {
                 synchronized (receiver) {
-                	receiver.wait(5000);
+                	 receiver.receive();
+                	receiver.wait(5 * 60 * 1000);
                 }
             } catch (InterruptedException ex) {
                 break;
             }
-            //if failed try 3 time, then stop until the user reset this setting.
-            sucessed = receiver.receive();
         }
     }
 }

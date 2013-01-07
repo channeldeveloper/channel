@@ -53,7 +53,8 @@ import com.original.service.profile.Profile;
  * 
  */
 public final class ChannelService extends AbstractService {
-
+	java.util.logging.Logger logger;
+	
 	private ChannelServer channelServer;
 
 	private HashMap<ChannelAccount, Service> serviceMap;
@@ -68,24 +69,22 @@ public final class ChannelService extends AbstractService {
 	private Mongo mongo;
 	private Datastore ds;
 
-	java.util.logging.Logger logger;
-
+	private Initializer initializer;
 	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
 	
-	private Initializer initializer;
+	private static ChannelService singleton;
 	
-	private static ChannelService singlton;
 	/**
 	 * 
 	 * @return
 	 */
 	public static ChannelService getInstance()
 	{
-		if (singlton == null)
+		if (singleton == null)
 		{
-			singlton = new ChannelService();
+			singleton = new ChannelService();
 		}
-		return singlton;
+		return singleton;
 	}
 
 	/**
@@ -296,9 +295,7 @@ public final class ChannelService extends AbstractService {
 		} catch (Exception exp) {
 			logger.log(Level.SEVERE,
 					"To connect MongoDB Service fail!" + exp.toString());
-			logger.log(Level.SEVERE,
-					"Channel Service Fails to start When MongoDB connected issues!"
-							+ exp.toString());
+			System.exit(1);//exit
 		}
 
 	}
@@ -312,16 +309,12 @@ public final class ChannelService extends AbstractService {
 		
 		//db and collection
 		initializer = new Initializer(mongo);
-		try
-		{
+		try {
 			initializer.init(false);
+			
+		} catch (Exception exp) {
+			logger.log(Level.SEVERE, "To init channel db fail!" + exp.toString());
 		}
-		catch(Exception exp)
-		{
-			logger.log(Level.SEVERE,
-					"To init channel db fail!" + exp.toString());
-		}
-		
 		
 		msgManager = new MessageManager(morphia, mongo, ds);
 		channelServer = new ChannelServer(morphia, mongo, ds);
@@ -356,12 +349,8 @@ public final class ChannelService extends AbstractService {
 	public synchronized static Service createService(ChannelAccount ca)
 			throws Exception {
 		if (ca.getChannel().getName().startsWith("email_")) {
-			// 目前先测试邮箱@gmail.com
-			// if (ca.getAccount().getUser().indexOf("@gmail.com") != -1 )//test
-			// one account
-			{
-				return new EmailService("Cydow", ca);
-			}
+			return new EmailService("Cydow", ca);
+			
 		} else if (ca.getChannel().getName().startsWith("im_qq")) {
 			return new QQService("Cydow", ca);
 
@@ -608,15 +597,32 @@ public final class ChannelService extends AbstractService {
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				try {
-					sc.put(action, msg); //下发消息
+					sc.put(action, msg); //下发消息，如果出错，则不保存数据库！
 					
-					//如果下发成功，则需要保存此消息。注意，目前只有快速回复保存
-					if (action == Constants.ACTION_QUICK_REPLY) 
+					//1、自己给自己发(特殊情况)，不保存数据库：
+					if(msg.getToAddr().equals(cha.getAccount().getUser()))
+						return;
+					
+					//2、快速回复，由于发送后，收取不到该消息，故统一需要保存：
+					if(action == Constants.ACTION_QUICK_REPLY)
 					{
-						if (!msg.getToAddr().equals(cha.getAccount().getUser())) { // 另外，自己给自己发也不保存
-							msg.setType(ChannelMessage.TYPE_SEND);
-							msgManager.save(msg);
+						msg.setType(ChannelMessage.TYPE_SEND);//强制转换类型
+						msgManager.save(msg);
+					}
+					
+					//3、完整回复，目前设定微博不需要保存，其他都保存：
+					else if (action == Constants.ACTION_REPLY) 
+					{
+						if (ChannelMessage.WEIBO.equals(msg.getClazz())) {
+							return;
+						} else if (ChannelMessage.MAIL.equals(msg.getClazz())) {
+							//return;
+						} else if (ChannelMessage.QQ.equals(msg.getClazz())) {
+							//return;
 						}
+						
+						msg.setType(ChannelMessage.TYPE_SEND);//强制转换类型
+						msgManager.save(msg);
 					}
 				}
 				catch(Exception ex) {
@@ -651,8 +657,7 @@ public final class ChannelService extends AbstractService {
 		if (msgId != null)
 		{
 			UUID idOne = UUID.randomUUID();
-			msg.setMessageID(msgId + idOne);
-		
+			msg.setMessageID(msgId +'$' + idOne);//add separator '$' for some use.
 		}
 	}
 	// //////////search filter order by MessageManager////////

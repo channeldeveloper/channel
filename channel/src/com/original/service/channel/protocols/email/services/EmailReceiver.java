@@ -9,7 +9,6 @@ package com.original.service.channel.protocols.email.services;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -71,7 +70,7 @@ public class EmailReceiver {
 	 */
 	public void start()
 	{
-		backgroud.start();
+//		backgroud.start();
 	}
 
 	/**
@@ -91,8 +90,6 @@ public class EmailReceiver {
 		// this.sevice = sevice;
 		this.account = _account;
 	}
-
-
 
 	public boolean hasAccount() {
 		if (account == null) {
@@ -174,24 +171,26 @@ public class EmailReceiver {
 		if (msgs == null || msgs.length <= 0) {
 			return;
 		}
+		ChannelService csc = ChannelService.getInstance();
+		MessageManager msm = csc.getMsgManager();
+		
 		EMailParser parser = new EMailParser("cydow");
 		for (int i = 0; i < msgs.length; i++) {
 			try {
 				String newMsgId = ((MimeMessage) msgs[i]).getMessageID();
 				boolean existing = cacheMsg.containsKey(newMsgId);
-				// 已经放入池内，并且已经解析完成
+				// 已经放入池内，并且已经解析完成。
+				//这一步减少数据库的查询工作
 				if (existing && cacheMsg.get(newMsgId)) {
 					continue;
 				}
 				//检查是否存库内
-				ChannelService csc = ChannelService.getInstance();
-				MessageManager msm = csc.getMsgManager();
 				if (msm.isExist(newMsgId)){	
 					continue;
 				}
 				//邮件的消息			
 				EMail email = parser.parseMessage((MimeMessage) msgs[i],
-						account.getUserName(), "inbox", (String) null);			
+						account.getUserName(), "inbox", (String) null);
 				ChannelMessage[] cmsg = new ChannelMessage[1];
 				//邮件的消息转换为渠道的消息
 				cmsg[0] = mailMessage2Message(email);

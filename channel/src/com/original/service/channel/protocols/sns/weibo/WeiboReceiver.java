@@ -22,6 +22,7 @@ import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.core.ChannelService;
+import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.event.MessageEvent;
 import com.original.util.log.OriLog;
 
@@ -36,15 +37,16 @@ public class WeiboReceiver {
 	Logger log = OriLog.getLogger(this.getClass());
 	private WeiboReceiveThread backgroud;
 	private WeiboService weiboService;
+	private HashMap<String, Boolean> cacheMsg;//cache message id
 	
 	private ChannelAccount ca;
 	private Timeline timeLine = new Timeline();//用于获取微博
-	
 
 	public WeiboReceiver(ChannelAccount ca, WeiboService ws) {
 
 		this.ca = ca;
 		backgroud = new WeiboReceiveThread(this);
+		cacheMsg = new HashMap<String, Boolean>();
 		weiboService = ws;
 	}
 	/**
@@ -93,23 +95,37 @@ public class WeiboReceiver {
 		if (statuses == null || statuses.isEmpty()) {
 			return;
 		}
+		
+		ChannelService csc = ChannelService.getInstance();
+		MessageManager msm = csc.getMsgManager();
+		
 		int size = statuses.size();
-				
 		for (int i = 0; i < size; i++) {
 			try {
 				Status status = statuses.get(i);
+				boolean existing = cacheMsg.containsKey(status.getMid());
+				// 已经放入池内，并且已经解析完成。
+				//这一步减少数据库的查询工作
+				if (existing && cacheMsg.get(status.getMid())) {
+					continue;
+				}
+				//检查是否存库内
+				if (msm.isExist(status.getMid())){	
+					continue;
+				}
 				
 				ChannelMessage[] cmsg = new ChannelMessage[1];
 				cmsg[0] = convertStatus2Message(status);
 				MessageEvent evt = new MessageEvent(null, null,MessageEvent.Type_Added, cmsg, null,null);
 				weiboService.fireMessageEvent(evt);
-
+				
+				// 解析完毕，内存缓存。
+				cacheMsg.put(status.getMid(), Boolean.TRUE);
 			} catch (Exception e) {
 				e.printStackTrace();
 				log.error(OriLog.logStack(e));
 			}
 		}
-
 	}
 	
 	private ChannelMessage convertStatus2Message(Status status)

@@ -464,6 +464,7 @@ public class ChannelToolBar extends JPanel implements ActionListener
 		}
 		public ChannelUserHeadLabel(Icon icon) {
 			super(icon);
+			setCursor(ChannelConstants.HAND_CURSOR);
 			addMouseListener(new MouseAdapter()
 			{
 				public void mouseClicked(MouseEvent e)

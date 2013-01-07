@@ -20,8 +20,6 @@ import java.util.List;
 
 import javax.swing.event.EventListenerList;
 
-import org.apache.log4j.Logger;
-
 import atg.taglib.json.util.JSONArray;
 import atg.taglib.json.util.JSONObject;
 
@@ -35,15 +33,12 @@ import com.original.service.channel.core.ChannelException;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
 import com.original.service.people.People;
-import com.original.util.log.OriLog;
 
 /**
  *  iQQ 服务类
  * @author WMS
  */
 public class QQService extends AbstractService {
-
-private static Logger log = OriLog.getLogger(QQService.class);
 
 private static LoginService loginService = LoginService.getInstance();//QQ登陆服务
 private static MemberService memberService = MemberService.getInstance();//QQ成员服务
@@ -55,7 +50,7 @@ private static MessageService msgService = MessageService.getIntance(); //QQ消�
 	private ChannelAccount ca;
 	private AuthInfo ai = null;//用户登录成功后，会返回一个授权用户信息AuthInfo
 	
-	private boolean isRun = true;
+	private volatile boolean isRun = true;
 	
 	public QQService(String uid, ChannelAccount ca)throws ChannelException
 	{
@@ -155,9 +150,9 @@ private static MessageService msgService = MessageService.getIntance(); //QQ消�
 						}
 					} catch (Exception ex) {
 						ex.printStackTrace();
-					} finally { // 不管是否有错误，即是否成功收到消息，都sleep 2~3s
+					} finally { // 不管是否有错误，即是否成功收到消息，都sleep 2~5s
 						try {
-							Thread.sleep(((int)(Math.random() + 2.5d))*1000);
+							Thread.sleep(((int)(Math.random()*3) + 2)*1000);
 						} catch (InterruptedException ex) {
 							isRun = false;
 						}

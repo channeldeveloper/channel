@@ -356,11 +356,12 @@ public class WeiboParser implements Constants
 	
 	/**
 	 * 处理微博内容(统一编码)，用于回复(回复内容比较丰富，如可以有图片等)
-	 * @param content
+	 * @param msg 消息对象
+	 * @param addAt 是否添加@符号，自己给自己发微博为false；其他情况为true。
 	 * @return
 	 * @throws WeiboException
 	 */
-	public static ImageItem parseUTF8(ChannelMessage msg) throws WeiboException
+	public static ImageItem parseUTF8(ChannelMessage msg, boolean addAt) throws WeiboException
 	{
 		ImageItem imgItem = null;
 		String content = null;
@@ -376,7 +377,11 @@ public class WeiboParser implements Constants
 				imgItem.setContent(parseBytes(imgURLs[1]));//提取图片
 			}
 			
-			imgItem.setText(parseUTF8("@" + msg.getToAddr() + "：" + content));
+			if (addAt) {
+				imgItem.setText(parseUTF8("@" + msg.getToAddr() + "：" + content));
+			} else {
+				imgItem.setText(parseUTF8(content));
+			}
 		}
 		return imgItem;
 	}

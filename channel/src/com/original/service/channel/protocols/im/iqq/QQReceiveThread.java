@@ -10,7 +10,6 @@ package com.original.service.channel.protocols.im.iqq;
  * @create   2012-3-3 15:56:48
  */
 public class QQReceiveThread extends Thread {
-
     QQReceiver receiver;
 
 	/**
@@ -18,7 +17,7 @@ public class QQReceiveThread extends Thread {
 	 * @param _frame
 	 */
 	public QQReceiveThread(QQReceiver receiver) {
-		setName("ReceiveEmailThread");
+		setName("ReceiveQQThread");
 		setDaemon(true);
 		setPriority(Thread.MIN_PRIORITY);
 		this.receiver = receiver;

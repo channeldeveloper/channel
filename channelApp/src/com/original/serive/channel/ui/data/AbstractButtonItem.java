@@ -21,6 +21,10 @@ public class AbstractButtonItem implements Serializable
 	
 	/** 选中图标或点击后图标 */
 	private transient Icon selectedIcon;
+
+	/** 禁用后的图标 */
+	private transient Icon disabledIcon;
+	
 	/** 按钮大小，可以自定义 */
 	private transient Dimension size;
 	
@@ -33,17 +37,24 @@ public class AbstractButtonItem implements Serializable
 	
 	public AbstractButtonItem(String text, String actionCommand, Icon icon, Dimension size)
 	{
-		this(text,actionCommand,icon,icon,size);
+		this(text,actionCommand,icon,null,size);
 	}
 	
 	public AbstractButtonItem(String text, String actionCommand, Icon icon,
 			Icon selectedIcon, Dimension size)
+	{
+		this(text,actionCommand,icon,selectedIcon,null,size);
+	}
+	
+	public AbstractButtonItem(String text, String actionCommand, Icon icon,
+			Icon selectedIcon, Icon disabledIcon, Dimension size)
 	{
 		super();
 		this.text = text;
 		this.actionCommand = actionCommand;
 		this.icon = icon;
 		this.selectedIcon = selectedIcon;
+		this.disabledIcon = disabledIcon;
 		this.size = size;
 	}
 	
@@ -83,6 +94,15 @@ public class AbstractButtonItem implements Serializable
 		this.selectedIcon = selectedIcon;
 	}
 
+	public Icon getDisabledIcon() 
+	{
+		return disabledIcon;
+	}
+	public void setDisabledIcon(Icon disabledIcon) 
+	{
+		this.disabledIcon = disabledIcon;
+	}
+
 	public Dimension getSize()
 	{
 		return size;
@@ -101,5 +121,11 @@ public class AbstractButtonItem implements Serializable
 	}
 	public void setSource(AbstractButton source) {
 		this.source = source;
+	}
+	
+	public void setEnabled(boolean enabled) {
+		if (source != null) {
+			source.setEnabled(enabled);
+		}
 	}
 }

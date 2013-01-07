@@ -207,6 +207,12 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		}
 	}
 	
+	@Override
+	public ChannelMessage getChannelMessage() {
+		// TODO 自动生成的方法存根
+		return this.newMsg;
+	}
+
 	/**
 	 * 编辑消息，即收集当前编辑面板的所有消息：包括主体、内容、字体样式等等。
 	 * @return
@@ -368,11 +374,14 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		//一些功能按钮
 		private JPanel control = new JPanel(new ChannelGridLayout(5, 0, new Insets(0, 5, 0, 0)));
 		private JButton btnFont =(JButton) ChannelUtil.createAbstractButton(
-				new AbstractButtonItem(null, SET_FONT, IconFactory.loadIconByConfig("fontIcon"))), //字体
+				new AbstractButtonItem(null, SET_FONT, IconFactory.loadIconByConfig("fontIcon"), null, 
+						IconFactory.loadIconByConfig("fontDisabledIcon"), null)), //字体
 				btnImage = (JButton) ChannelUtil.createAbstractButton(
-						new AbstractButtonItem(null, ADD_IMAGE, IconFactory.loadIconByConfig("imageIcon"))), //图片
+						new AbstractButtonItem(null, ADD_IMAGE, IconFactory.loadIconByConfig("imageIcon"), null, 
+								IconFactory.loadIconByConfig("imageDisabledIcon"), null)), //图片
 				btnFile = (JButton) ChannelUtil.createAbstractButton(
-						new AbstractButtonItem(null, ADD_FILE, IconFactory.loadIconByConfig("fileIcon")));//附件
+						new AbstractButtonItem(null, ADD_FILE, IconFactory.loadIconByConfig("fileIcon"), null, 
+								IconFactory.loadIconByConfig("fileDisabledIcon"), null));//附件
 		
 		//文本面板
 		private JTextPane content = new JTextPane();
@@ -466,12 +475,14 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 						&& (((AbstractButton) child).getActionCommand() == actionCommand))
 				{
 					if(!isUsable) {
-						child.setCursor(ChannelConstants.DEFAULT_CURSOR);
+//						child.setCursor(ChannelConstants.DEFAULT_CURSOR);
 						((AbstractButton) child).removeActionListener(this);
+						child.setEnabled(false);
 					}
 					else {
-						child.setCursor(ChannelConstants.HAND_CURSOR);
+//						child.setCursor(ChannelConstants.HAND_CURSOR);
 						((AbstractButton) child).addActionListener(this);
+						child.setEnabled(true);
 					}
 					break;
 				}

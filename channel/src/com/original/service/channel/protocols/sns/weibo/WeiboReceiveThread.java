@@ -6,10 +6,6 @@
  */
 package com.original.service.channel.protocols.sns.weibo;
 
-import org.apache.log4j.Logger;
-
-import com.original.util.log.OriLog;
-
 /**
  * (Class Annotation.)
  *
@@ -19,17 +15,14 @@ import com.original.util.log.OriLog;
  * @create   2012-3-3 15:56:48
  */
 public class WeiboReceiveThread extends Thread {
-
-	private Logger log = OriLog.getLogger(WeiboReceiveThread.class);
     WeiboReceiver receiver;
-    private boolean sucessed;
 
 	/**
 	 * 
 	 * @param _frame
 	 */
 	public WeiboReceiveThread(WeiboReceiver receiver) {
-		setName("ReceiveEmailThread");
+		setName("ReceiveWeiboThread");
 		setDaemon(true);
 		setPriority(Thread.MIN_PRIORITY);
 		this.receiver = receiver;
@@ -38,12 +31,12 @@ public class WeiboReceiveThread extends Thread {
     @Override
     public void run() {
 
-    	//every 10 * 60 *1000 second to receive email.
+    	//every 5min to receive weibo.
         while (true) {
             try {
                 synchronized (receiver) {
                 	receiver.receive();
-                	receiver.wait(10 * 60 * 1000);
+                	receiver.wait(5 * 60 * 1000);
                 }
             } catch (InterruptedException ex) {
                 break;
