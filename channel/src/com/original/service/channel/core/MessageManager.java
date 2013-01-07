@@ -406,7 +406,7 @@ public class MessageManager {
 	{
 		//检查是否存库内
 		Iterator<ChannelMessage> ite = getByMessageID(newMsgId);
-		return ite == null || !ite.hasNext();
+		return ite != null && ite.hasNext();
 	}
 	
 }
