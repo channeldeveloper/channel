@@ -62,7 +62,7 @@ public class ChannelMessage implements Cloneable, Constants{
 	@Indexed(value = IndexDirection.ASC, name = "gettimestamp", unique = false, dropDups = false)
 	private Date recievedDate;
 
-	// current draft, sent, unread, read , pending , done, saved, trash.
+	// received, send , draft 
 	private String status;
 	// size
 	private int size;
@@ -74,10 +74,11 @@ public class ChannelMessage implements Cloneable, Constants{
 	@Indexed(value = IndexDirection.ASC, name = "towho", unique = false, dropDups = false)
 	private String toAddr;
 	// 头部扩展信息
-	private HashMap<String, String> extensions;
+	private HashMap<String, String> extensions;// other controls such as cc bcc
 
 	// control flags
-	private HashMap<String, Integer> flags;// other controls such as cc bcc
+	//	current draft, sent, unread, read , pending , done, saved, trash.
+	private HashMap<String, Integer> flags;
 
 	// 内容信息
 	// MessageBody
@@ -90,8 +91,15 @@ public class ChannelMessage implements Cloneable, Constants{
 	
 	//pending 
 	//分类(type)
-	private String clazz; //?!
+	private String clazz; 
 
+	//	current draft, sent, unread, read , pending , done, saved, trash.
+	public static final String Flag_Read = "Read";//0  没有，1已经读
+	public static final String Flag_Done = "Done";//0  待做，1已做
+	public static final String Flag_Trash = "Trash";//0 未删，1已删
+	public static final String Flag_Saved = "Saved";//0 未存，1已存
+	public static final String Flag_Feedback = "Feedback";//0 不需要 1需要
+	
 	/**
 	 * default constructor.
 	 */

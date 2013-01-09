@@ -203,9 +203,16 @@ public final class GridFSUtil {
 	 * @throws Exception
 	 */
 	public void writeFile(ObjectId dbfileID, String filePath) throws Exception {
-		File file = new File(new URI(filePath));
-		
-		writeFile(dbfileID, file);
+		if (filePath != null && filePath.startsWith("file:"))
+		{
+			File file = new File(new URI(filePath));			
+			writeFile(dbfileID, file);
+		}
+		else
+		{
+			File file = new File(filePath);			
+			writeFile(dbfileID, file);
+		}
 	}
 	public void writeFile(ObjectId dbfileID, File file) throws Exception {		
 		GridFSDBFile out = fs.findOne(new BasicDBObject("_id", dbfileID));// one

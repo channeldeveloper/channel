@@ -3,7 +3,10 @@
  */
 package com.original.service.channel;
 
+import java.util.HashMap;
 import java.util.List;
+
+import org.bson.types.ObjectId;
 
 import com.original.service.channel.event.MessageListner;
 import com.original.service.people.People;
@@ -24,9 +27,9 @@ public interface Service {
 	public int getStatus();
 
 	//crud
-	public abstract List<ChannelMessage> delete(String action, String query);
+//	public abstract List<ChannelMessage> delete(String action, String query);
 	
-	public abstract List<ChannelMessage> get(String action, String query);
+//	public abstract List<ChannelMessage> get(String action, String query);
 
 	public abstract void put(String action, List<ChannelMessage> msg);
 	
@@ -36,6 +39,47 @@ public interface Service {
 	
 	public abstract void post(String action, ChannelMessage msg);
 
+
+	/**
+	 *   删除消息通过消息的ID，删除后回发事件给监听器，类型为MessageEvent.Type_Deleted。
+	 * @param id
+	 */
+	public void deleteMessage(ObjectId id);
+	
+	/**
+	 *  按照消息的的ID删除。（消息ID是唯一).
+	 * @param msg
+	 */
+	public void deleteMessage(String msgId);
+	
+	
+	/**
+	 * 把消息放入到垃圾桶内。如果消息一经在垃圾桶，将删除。
+	 * @param msg
+	 */
+	public abstract void trashMessage(ChannelMessage msg);	
+
+	/**
+	 * 更新消息的状态(发送、接受 2种）
+	 * @param msg
+	 * @param newValue
+	 */
+	public abstract void updateMessageStatus(ChannelMessage msg, String newValue);
+	
+	/**
+	 * 更新消息控制（。
+	 * @param msg
+	 * @param key
+	 * @param newValue
+	 */
+	public abstract void updateMessageFlag(ChannelMessage msg, String key, Object newValue);
+	
+	/**
+	 * 更新消息。
+	 * @param msg
+	 * @param newAtts
+	 */
+	public abstract void updateMessage(ChannelMessage msg, HashMap<String, Object> newAtts);
 
 
 	//lifecycle

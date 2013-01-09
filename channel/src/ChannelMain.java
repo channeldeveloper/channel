@@ -100,28 +100,47 @@ public class ChannelMain {
 		
 //		
 //		//4. 按照过滤器来过滤by filter(Pending).
-		MessageFilter filter = new MessageFilter("fromAddr", "franzsoong<franzsoong@gmail.com>", "recievedDate");
-		result = msgMg.getMessage(filter);
-		while(result.hasNext())
+		try
 		{
-			System.out.println("getByChannelType:"+ result.next());			
+			MessageFilter filter = new MessageFilter("fromAddr", "franzsoong<franzsoong@gmail.com>", "recievedDate");
+			result = msgMg.getMessage(filter);
+			while(result.hasNext())
+			{
+				System.out.println("getByChannelType:"+ result.next());			
+			}
 		}
-		
+		catch(Exception exp)
+		{
+			exp.printStackTrace();
+		}
 		////////删除////////
 		//1. 删除消息按照 消息ID（消息ID这里有个bug，发送的消息ID都是
 
-		System.out.println("Curent Message Count:" +msgMg.getMessages().size());
-		String msgId = msgMg.getByChannelType(ChannelMessage.MAIL).next().getMessageID();
-		csc.deleteMessages(msgId);
-		System.out.println("Curent Message Count afer delete by message id:" + msgId + " : " +msgMg.getMessages().size());
+		try
+		{
+			System.out.println("Curent Message Count:" +msgMg.getMessages().size());
+			String msgId = msgMg.getByChannelType(ChannelMessage.MAIL).next().getMessageID();
+			csc.deleteMessage(msgId);
+			System.out.println("Curent Message Count afer delete by message id:" + msgId + " : " +msgMg.getMessages().size());
+		}
+		catch(Exception exp)
+		{
+			exp.printStackTrace();
+		}
 		
 		//2 按照类型过滤 消息 数据库ID 获取消息
-		ObjectId id = msgMg.getByChannelType(ChannelMessage.MAIL).next().getId();
-		csc.deleteMessage(id);
+		try
+		{
+			ObjectId id = msgMg.getByChannelType(ChannelMessage.MAIL).next().getId();
+			csc.deleteMessage(id);
+			
+			System.out.println("Curent Message Count afer delete by mail:" +msgMg.getMessages().size());
 		
-		System.out.println("Curent Message Count afer delete by mail:" +msgMg.getMessages().size());
-		
-
+		}
+		catch(Exception exp)
+		{
+			exp.printStackTrace();
+		}
 		//attachments
 		List<ChannelMessage> msgs = msgMg.getMessages();
 		
@@ -162,6 +181,34 @@ public class ChannelMain {
 				
 			}
 
+		}
+		
+		// 更新status
+
+		ChannelMessage msg = msgMg.getMessages().get(0);
+		csc.updateMessageStatus(msg, "draft");
+
+		String mid = "<tencent_6E6A430D4A7A97AC404CDA7D@qq.com>";
+		Iterator<ChannelMessage> chm = msgMg.getByMessageID(mid);
+
+		while (chm.hasNext()) {
+			ChannelMessage m = chm.next();
+			// 更新状态
+			csc.updateMessageFlag(m, "isTrash", 1);
+		}
+
+		mid = "<tencent_2CA85865748F473536CE7435@qq.com>";
+		chm = msgMg.getByMessageID(mid);
+
+		while (chm.hasNext()) {
+			ChannelMessage m = chm.next();
+			ObjectId id = m.getId();
+			// 放入垃圾桶
+			csc.trashMessage(m);
+			// 删除
+			System.out.println(m);
+			csc.deleteMessage(id);
+			System.out.println(csc.getMsgManager().getMessage(id));
 		}
 
 

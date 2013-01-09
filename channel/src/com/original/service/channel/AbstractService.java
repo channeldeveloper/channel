@@ -1,6 +1,9 @@
 package com.original.service.channel;
 
+import java.util.HashMap;
 import java.util.List;
+
+import org.bson.types.ObjectId;
 
 import com.original.service.channel.event.MessageListner;
 import com.original.service.people.People;
@@ -18,17 +21,17 @@ public abstract class AbstractService implements Service{
 		return 0;
 	}
 
-	@Override
-	public List<ChannelMessage> delete(String action, String query) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public List<ChannelMessage> delete(String action, String query) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
-	@Override
-	public List<ChannelMessage> get(String action, String query) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public List<ChannelMessage> get(String action, String query) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 	@Override
 	public void put(String action, List<ChannelMessage> msg) {
@@ -94,6 +97,44 @@ public abstract class AbstractService implements Service{
 	public List<People> getContacts() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void deleteMessage(ObjectId id) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void deleteMessage(String msgId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void trashMessage(ChannelMessage msg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void updateMessageStatus(ChannelMessage msg, String newValue) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void updateMessageFlag(ChannelMessage msg, String key,
+			Object newValue) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void updateMessage(ChannelMessage msg,
+			HashMap<String, Object> newAtts) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

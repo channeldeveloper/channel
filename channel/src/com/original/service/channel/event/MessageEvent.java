@@ -20,7 +20,7 @@ public  class MessageEvent {
 	
 	
 	public static int Type_Added = 0;
-	public static int Type_Removed = 1;
+	public static int Type_Deleted = 1;
 	public static int Type_Updated = 2;
 	
 	private Service service;	

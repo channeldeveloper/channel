@@ -173,17 +173,17 @@ public class WeiboService extends AbstractService {
 		return null;
 	}
 
-	@Override
-	public List<ChannelMessage> delete(String action, String query) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<ChannelMessage> get(String action, String query) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public List<ChannelMessage> delete(String action, String query) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
+//
+//	@Override
+//	public List<ChannelMessage> get(String action, String query) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 	@Override
 	public void put(String action, List<ChannelMessage> msg) {

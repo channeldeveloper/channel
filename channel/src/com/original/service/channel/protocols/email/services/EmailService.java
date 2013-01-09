@@ -52,11 +52,11 @@ public class EmailService extends AbstractService {
 	public void init() {
 	}
 
-	@Override
-	public List<ChannelMessage> delete(String action, String query) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public List<ChannelMessage> delete(String action, String query) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 /////////////////////Event///////////////////////
 	/**
 	 * Notifies all listeners that have registered interest for notification on

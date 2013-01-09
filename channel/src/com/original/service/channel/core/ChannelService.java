@@ -22,6 +22,8 @@ import org.bson.types.ObjectId;
 
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
+import com.google.code.morphia.query.Query;
+import com.google.code.morphia.query.UpdateOperations;
 import com.mongodb.Mongo;
 import com.original.service.channel.AbstractService;
 import com.original.service.channel.Attachment;
@@ -406,11 +408,11 @@ public final class ChannelService extends AbstractService {
 		return failedServiceAccounts.isEmpty();
 	}
 	
-	@Override
-	public List<ChannelMessage> get(String action, String query) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public List<ChannelMessage> get(String action, String query) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 	@Override
 	public void put(String action, List<ChannelMessage> msg) {
@@ -664,11 +666,11 @@ public final class ChannelService extends AbstractService {
 
 	// ////////////////Update//////////////
 
-	@Override
-	public List<ChannelMessage> delete(String action, String query) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public List<ChannelMessage> delete(String action, String query) {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 	/**
 	 * 按照消息数据的ID删除。
@@ -684,7 +686,7 @@ public final class ChannelService extends AbstractService {
 		ChannelMessage[] cmsg = new ChannelMessage[1];
 		cmsg[0] = msg;
 		MessageEvent evt = new MessageEvent(null, null,
-				MessageEvent.Type_Removed, null, cmsg, null);
+				MessageEvent.Type_Deleted, null, cmsg, null);
 		fireMessageEvent(evt);
 
 	}
@@ -693,7 +695,7 @@ public final class ChannelService extends AbstractService {
 	 *  按照消息的的ID删除。（消息ID是否唯一，有待讨论).
 	 * @param msg
 	 */
-	public void deleteMessages(String msgId) {
+	public void deleteMessage(String msgId) {
 		// get
 		Iterator<ChannelMessage> ite = msgManager.getByMessageID(msgId);
 
@@ -709,7 +711,7 @@ public final class ChannelService extends AbstractService {
 		ChannelMessage[] msgs = new ChannelMessage[bk.size()];
 		bk.toArray(msgs);
 		MessageEvent evt = new MessageEvent(null, null,
-				MessageEvent.Type_Removed, null, msgs, null);
+				MessageEvent.Type_Deleted, null, msgs, null);
 		fireMessageEvent(evt);
 	}
 	
@@ -734,7 +736,7 @@ public final class ChannelService extends AbstractService {
 		ChannelMessage[] msgs = new ChannelMessage[bk.size()];
 		bk.toArray(msgs);
 		MessageEvent evt = new MessageEvent(null, null,
-				MessageEvent.Type_Removed, null, msgs, null);
+				MessageEvent.Type_Deleted, null, msgs, null);
 		fireMessageEvent(evt);
 	}
 
@@ -749,5 +751,120 @@ public final class ChannelService extends AbstractService {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	// ///////////////////
+	/**
+	 * 把消息放入到垃圾桶内。如果消息一经在垃圾桶，将删除。
+	 * 
+	 * @param msg
+	 */
+	public void trashMessage(ChannelMessage msg) {
+		// TODO Auto-generated method stub
+		if (msg == null) {
+			return;
+		}
+		// 已经在垃圾箱内部
+		if ((msg.getFlags().get(ChannelMessage.Flag_Trash) != null)
+				&& (msg.getFlags().get(ChannelMessage.Flag_Trash).equals(1))) {
+			this.deleteMessage(msg.getId());
+		} else {
+			this.updateMessageFlag(msg, ChannelMessage.Flag_Trash, 1);
+		}
+	}
 
+	/**
+	 * 更新消息的状态(发送、接受 2种）
+	 * 
+	 * @param msg
+	 * @param newValue
+	 */
+	public void updateMessageStatus(ChannelMessage msg, String newValue) {
+
+		// TODO Auto-generated method stub
+		if (newValue == null || msg == null) {
+			return;
+		}
+		ObjectId id = msg.getId();
+		if (id == null) {
+			return;
+		}
+		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class)
+				.field("id").equal(id);
+
+		UpdateOperations<ChannelMessage> ops = ds.createUpdateOperations(
+				ChannelMessage.class).set("status", newValue);
+		ds.update(chmsgQuery, ops, true);
+
+		// fire event
+		MessageEvent evt = new MessageEvent(this, null,
+				MessageEvent.Type_Updated, null, null,
+				new ChannelMessage[] { msg });
+		this.fireMessageEvent(evt);
+	}
+
+	/**
+	 * 更新消息控制（。
+	 * 
+	 * @param msg
+	 * @param key
+	 * @param newValue
+	 */
+	public void updateMessageFlag(ChannelMessage msg, String key,
+			Object newValue) {
+
+		// TODO Auto-generated method stub
+		if (newValue == null || msg == null) {
+			return;
+		}
+		ObjectId id = msg.getId();
+		if (id == null) {
+			return;
+		}
+		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class)
+				.field("id").equal(id);
+
+		UpdateOperations<ChannelMessage> ops = ds.createUpdateOperations(
+				ChannelMessage.class).set("flags." + key, newValue);
+		ds.update(chmsgQuery, ops, true);
+
+		// fire event
+		MessageEvent evt = new MessageEvent(this, null,
+				MessageEvent.Type_Updated, null, null,
+				new ChannelMessage[] { msg });
+		this.fireMessageEvent(evt);
+	}
+
+	/**
+	 * 更新消息。
+	 * 
+	 * @param msg
+	 * @param newAtts
+	 */
+	public void updateMessage(ChannelMessage msg,
+			HashMap<String, Object> newAtts) {
+		// TODO Auto-generated method stub
+		if (newAtts == null || newAtts.size() == 0 || msg == null) {
+			return;
+		}
+		ObjectId id = msg.getId();
+		if (id == null) {
+			return;
+		}
+		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class)
+				.field("id").equal(id);
+
+		for (String key : newAtts.keySet()) {
+			UpdateOperations<ChannelMessage> ops = ds.createUpdateOperations(
+					ChannelMessage.class).set(key, newAtts.get(key));
+			ds.update(chmsgQuery, ops);
+		}
+		// fire event
+		MessageEvent evt = new MessageEvent(this, null,
+				MessageEvent.Type_Updated, null, null,
+				new ChannelMessage[] { msg });
+		this.fireMessageEvent(evt);
+
+	}
+	
+	// /////////////////////////////
 }
