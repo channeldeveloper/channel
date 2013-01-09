@@ -31,7 +31,7 @@ import com.original.service.channel.core.MessageManager;
  * @author wms
  *
  */
-public class ChannelGUI extends JFrame
+public class ChannelGUI extends JFrame implements ChannelConstants
 {	
 	//对一些主要控件做一下本地缓存，以后使用时直接从缓存中获取对象。
 	private static Map<String, JComponent> channelNativeStore = 
@@ -41,11 +41,11 @@ public class ChannelGUI extends JFrame
 	
 	public ChannelGUI()
 	{
-		setSize(ChannelConfig.getIntValue("width"), 
-				ChannelConfig.getIntValue("height")-
-				ChannelConfig.getIntValue("statusbarHeight"));
+		setSize(CHANNELWIDTH, CHANNELHEIGHT - STATUSBARHEIGHT);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
-		setLocationRelativeTo(null);
+		setLocationByPlatform(true);
+		setLocation(MARGIN_LEFT, MARGIN_TOP - TOOLBARHEIGHT);
+		
 		setUndecorated(true);
 		setDefaultLookAndFeelDecorated(true);
 		getRootPane().setWindowDecorationStyle(JRootPane.NONE); //这里用于不显示标题栏，比较特殊(原因SeaGlassLookAndFeel自带标题栏)

@@ -43,12 +43,13 @@ public class ChannelMessageStatusBar extends JPanel implements PropertyChangeLis
 	private JLabel showAllLabel = new JLabel("全部记录", 
 			IconFactory.loadIconByConfig("expandAllIcon"), JLabel.RIGHT);
 	
-	private boolean hasNotify = false;
+	protected boolean hasNotify = false;
 	
 	public void addNotify()
 	{
-		super.addNotify();
 		if(!hasNotify) {
+			super.addNotify();
+			
 			initStatusBar();
 			constructStatusBar();
 			hasNotify = true;

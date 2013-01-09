@@ -1,12 +1,17 @@
 package com.original.service.channel.protocols.im.iqq;
 
+import iqq.comm.Auth.AuthInfo;
 import iqq.model.Message;
 import iqq.model.MessageDetail;
+import iqq.service.MessageService;
 
 import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
+
+import atg.taglib.json.util.JSONArray;
+import atg.taglib.json.util.JSONObject;
 
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
@@ -24,10 +29,14 @@ import com.original.util.log.OriLog;
 public class QQReceiver {
 
 	Logger log = OriLog.getLogger(this.getClass());
+	static MessageService msgService = MessageService.getIntance(); //QQ消息服务类
+	
 	private QQReceiveThread backgroud;
 	private QQService qqservice;
 	
 	private ChannelAccount ca;
+	private AuthInfo ai;
+	
 	public QQReceiver(ChannelAccount ca, QQService qs) {
 
 		this.ca = ca;
@@ -39,7 +48,37 @@ public class QQReceiver {
 	 */
 	public void start()
 	{
-//		backgroud.start();
+		backgroud.start();
+	}
+	
+	public void receive() {
+		if (ai == null) {
+			ai = qqservice.getLoginAI(); // 获取当前登录用户的授权信息
+		}
+		
+		try {
+			JSONObject retJ = msgService.openMessageChannel(ai);
+			int retcode = retJ.getInt("retcode");
+			if (retcode == 0) {
+				JSONArray result = retJ.getJSONArray("result");
+				for (int i = 0; i < result.length(); i++) {
+					String poll_type = result.getJSONObject(i).getString("poll_type");
+					JSONObject value = result.getJSONObject(i).getJSONObject("value");
+					if ("message".equals(poll_type)) {// 好友消息
+						try {
+							receiveMessages(msgService.receiveMsgOnly(ai, value));
+						} catch (Exception ex) {
+						}
+					} else if ("buddies_status_change".equals(poll_type)) {// 好友上下线
+					} else if ("group_message".equals(poll_type)) {// 群消息
+					} else if ("kick_message".equals(poll_type)) {//被踢
+						backgroud.setRun(false); //终止线程
+					}
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 	}
 	
 	/**

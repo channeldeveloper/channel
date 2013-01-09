@@ -24,6 +24,7 @@ import javax.swing.JScrollPane;
 
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.util.ChannelConfig;
+import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.event.MessageEvent;
@@ -226,24 +227,14 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 		}
 		
 		JPanel otherPane = new JPanel(DEFAULT_DOWN_LAYOUT); 
-		//为载体添加滚动条
-		JScrollPane jsp =  new JScrollPane(otherPane,
-				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		
-		jsp.setVerticalScrollBar(new OScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)));
-		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 5));
-		
-		jsp.setViewportBorder(null);
-		jsp.setOpaque(false);
-		jsp.getViewport().setOpaque(false);
-		
 		otherPane.add(comp);
 		otherPane.setOpaque(false);
-		
+		//为载体添加滚动条
+		JScrollPane jsp =  ChannelUtil.createScrollPane(otherPane, new Color(225,240,240));
+		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 5));
 		jsp.setName(name);
-		add(name, jsp);
 		
+		add(name, jsp);
 		showComp(name);
 	}
 	

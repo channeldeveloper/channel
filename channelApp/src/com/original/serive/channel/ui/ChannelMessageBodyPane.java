@@ -45,7 +45,6 @@ import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.Utilies;
 import com.original.service.channel.core.ChannelService;
-import com.original.service.channel.protocols.sns.weibo.WeiboParser;
 import com.original.widget.OTextField;
 
 /**
@@ -245,7 +244,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			this.toFirst = toFirst;
 			
 			setPreferredSize(new Dimension(ChannelConfig.getIntValue("msgBodyWidth"),  
-							top.SIZE.height + center.SIZE.height + (!bottom.isVisible()?0:bottom.SIZE.height)));
+					Top.SIZE.height + Center.SIZE.height + (!bottom.isVisible()?0:Bottom.SIZE.height)));
 			setLayout(new BorderLayout(5,5));
 			
 			//添加子控件
@@ -291,9 +290,9 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		public void autoAdjustHeight()
 		{
 			Dimension dim = this.getPreferredSize();
-			dim.height = top.SIZE.height + 
-					center.SIZE.height + 
-					(bottom.isVisible() ? bottom.SIZE.height + 5*3: 5*2); //5px为垂直间距
+			dim.height = Top.SIZE.height + 
+					center.getPreferredScrollableViewportSize().height + 
+					(bottom.isVisible() ? Bottom.SIZE.height + 5*3: 5*2); //5px为垂直间距
 			setPreferredSize(dim);
 		}
 		
@@ -307,29 +306,16 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				top.setVisible(SHOW_COMPLETE, true);
 				center.showComplete(iMsg);
 				bottom.showMessageReplyArea();
-				autoAdjustHeight();
-				putClientProperty(QUICK_REPLY, Boolean.TRUE);
 				
-//				if(container != null && origin == null) {//origin == null 表示是主面板
-//					ChannelMessagePane cmp = (ChannelMessagePane)container.getParent();
-//					ChannelDesktopPane desktop = (ChannelDesktopPane)
-//							ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-//					desktop.setHighlightComp(cmp);
-//				}
+				autoAdjustHeight();
 			}
 			else {
 				top.setVisible(QUICK_REPLY, true);
 				top.setVisible(SHOW_COMPLETE, false);
 				center.showMessagePart(iMsg);
 				bottom.hideReplyContent();
-				autoAdjustHeight();
-				putClientProperty(QUICK_REPLY, Boolean.FALSE);
 				
-//				if(origin == null) {//origin == null 表示是主面板
-//					ChannelDesktopPane desktop = (ChannelDesktopPane)
-//							ChannelGUI.channelNativeStore.get("ChannelDesktopPane");
-//					desktop.setHighlightComp(null);
-//				}
+				autoAdjustHeight();
 			}
 		}
 		
@@ -385,8 +371,9 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	}
 	
 	//头部面板
-	class Top extends JPanel implements ActionListener, EventConstants
+	static class Top extends JPanel implements ActionListener, EventConstants
 	{
+		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-20, 45); 
 		private SimpleDateFormat messageFormat = new SimpleDateFormat("MM月dd日 HH:mm");//消息时间格式
 		private JLabel messageHeader = new JLabel();
 		
@@ -395,8 +382,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				btnSave = createCtrlButton("保存", SAVE),
 				btnDel = createCtrlButton("删除", DELETE),
 				btnShowAll = createCtrlButton("完整信息", SHOW_COMPLETE);
-		
-		Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-20, 45); 
 		
 		public Top() { setOpaque(false);btnShowAll.setVisible(false);}
 		
@@ -521,12 +506,12 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	}
 	
 	//中间面板
-	class Center extends JEditorPane implements  EventConstants
+	static class Center extends JEditorPane implements  EventConstants
 	{
+		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-60,  25);
 		EditorKit editorKit = createDefaultEditorKit();
 		HTMLEditorKit	htmlEditorKit = new HTMLEditorKit();		
-		//默认大小
-		Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-60,  25);		
+		
 		public Center()
 		{
 			//设置默认样式，等面板显示完整内容，再设置new HTMLEditorKit()
@@ -574,17 +559,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					setEditorKit(htmlEditorKit);
 				}
 				
-				//对不同消息类型进行单独处理
-				if(ChannelMessage.WEIBO.equals(msg.getClazz())) {
-					super.setText(WeiboParser.parseIgnoreImage(msg)); //先设置文本再获取高度
-					SIZE.height = super.getPreferredScrollableViewportSize().height  +
-							WeiboParser.getImageHeight(msg) ;
-					super.setText(msg.getCompleteMsg());
-				}
-				else {
-					super.setText(msg.getCompleteMsg()); //先设置文本再获取高度
-					SIZE.height = super.getPreferredScrollableViewportSize().height;
-				}
+				super.setText(msg.getCompleteMsg());
 			}
 		}
 
@@ -600,19 +575,18 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					setEditorKit(editorKit);
 				}
 				setText(msg.getShortMsg());
-				SIZE.height = 15;
 			}
 		}		
 	}
 	
 	//底部面板，就是一个回复框面板
-	class Bottom extends JPanel implements ActionListener, EventConstants
+	static class Bottom extends JPanel implements ActionListener, EventConstants
 	{
-		private JButton btnReply = new JButton("发送"),
-				btnCancel = new JButton("取消");
+		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-60, 30);
+		
+		private JButton btnReply = new JButton("发送"), btnCancel = new JButton("取消");
 		private JTextField replyTextField = new OTextField();
 		
-		Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-60, 30);
 		public Bottom() 
 		{
 			setVisible(false);//默认不可见

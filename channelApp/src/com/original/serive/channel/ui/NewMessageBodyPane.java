@@ -21,7 +21,6 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
@@ -50,7 +49,6 @@ import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.Constants.CHANNEL;
 import com.original.service.channel.core.ChannelService;
-import com.original.widget.OScrollBar;
 import com.original.widget.OTextField;
 
 /**
@@ -428,15 +426,9 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			content.setOpaque(false);
 			content.setCursor(ChannelConstants.TEXT_CURSOR);
 			content.setBackground(new Color(0, 0, 0, 0)); //设置文本面板透明的唯一方法
-			JScrollPane scrollPane = new JScrollPane(content,
-	                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-	                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-	        scrollPane.setVerticalScrollBar(new OScrollBar(JScrollBar.VERTICAL, Color.gray));
+			JScrollPane scrollPane = ChannelUtil.createScrollPane(content, Color.gray);
 	        scrollPane.setBorder(BorderFactory.createCompoundBorder(
 	        		new InnerShadowBorder(), new EmptyBorder(0, 5, 10, 5)));
-	        scrollPane.setOpaque(false);
-	        scrollPane.getViewport().setOpaque(false);
-	        scrollPane.setViewportBorder(null);
 	        
 			layoutMgr.addComToModel(scrollPane, 1, 1, GridBagConstraints.BOTH);
 		}

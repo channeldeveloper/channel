@@ -12,7 +12,6 @@ import weibo4j.model.User;
 import weibo4j.model.WeiboException;
 
 import com.original.serive.channel.server.ChannelAccesser;
-import com.original.serive.channel.ui.ChannelImageDialog;
 
 /**
  * 处理微博、邮件客户端中的超链接等
@@ -46,7 +45,7 @@ public class ChannelHyperlinkListener implements HyperlinkListener {
 	private void openURL(String despURL) {
 		String lastOfUrl = despURL.substring(despURL.lastIndexOf(".") + 1);
 		if ("|gif|jpg|jpeg|png|bmp|".indexOf("|" + lastOfUrl + "|") > -1) {
-			new ChannelImageDialog(despURL);
+			ChannelUtil.showImageDialog(despURL);
 		} else if (despURL.startsWith("http://")
 				|| despURL.startsWith("https://")) {
 			ChannelUtil.showBrowser(null, despURL);

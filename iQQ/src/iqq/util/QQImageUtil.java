@@ -8,6 +8,7 @@ package iqq.util;
 import iqq.comm.Auth.AuthInfo;
 import iqq.service.HttpService;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -22,8 +23,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 import javax.swing.text.Element;
 import javax.swing.text.ElementIterator;
 import javax.swing.text.html.HTML;
@@ -200,7 +201,16 @@ public class QQImageUtil {
             Logger.getLogger(QQImageUtil.class.getName()).log(Level.SEVERE, null, ex);
         }
         File f = new File(path);
-        String imgUrl = "<img src=\"" + f.toURI() + "\" title=\"图片或自定义表情\">";
+        String imgUrl = "<img src=\"" + f.toURI() + "\" title=\"图片或自定义表情\" width=\"0\" height=\"0\">";
+        try {
+        	BufferedImage image = ImageIO.read(f);
+        	if(image != null) {
+        		imgUrl = imgUrl.replace("width=\"0\"", "width=\"" + image.getWidth() + "\"")
+        				.replace("height=\"0\"", "height=\"" + image.getHeight() + "\"");
+        		image = null;
+        	}
+        } catch (IOException e) {
+        }
 
         return imgUrl;
     }
@@ -220,8 +230,22 @@ public class QQImageUtil {
         } catch (Exception ex) {
             Logger.getLogger(QQImageUtil.class.getName()).log(Level.SEVERE, null, ex);
         }
+//        File f = new File(path);
+//        String imgUrl = "<img src=\"" + f.toURI() + "\" title=\"图片或自定义表情\">";
+//
+//        return imgUrl;
+        
         File f = new File(path);
-        String imgUrl = "<img src=\"" + f.toURI() + "\" title=\"图片或自定义表情\">";
+        String imgUrl = "<img src=\"" + f.toURI() + "\" title=\"图片或自定义表情\" width=\"0\" height=\"0\">";
+        try {
+        	BufferedImage image = ImageIO.read(f);
+        	if(image != null) {
+        		imgUrl = imgUrl.replace("width=\"0\"", "width=\"" + image.getWidth() + "\"")
+        				.replace("height=\"0\"", "height=\"" + image.getHeight() + "\"");
+        		image  = null;
+        	}
+        } catch (IOException e) {
+        }
 
         return imgUrl;
     }

@@ -6,6 +6,7 @@
  */
 package com.original.service.channel.protocols.email.model;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
+import javax.imageio.ImageIO;
 import javax.mail.Message;
 import javax.mail.Multipart;
 import javax.mail.Part;
@@ -26,6 +28,10 @@ import javax.mail.internet.MimeUtility;
 
 import org.apache.log4j.Logger;
 import org.bson.types.ObjectId;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import com.original.service.channel.Utilies;
 import com.original.service.channel.protocols.email.services.MailParseUtil;
@@ -513,11 +519,52 @@ public class EMailParser {
     			attachParts.isEmpty())
     		return content;
     	
-    	for(Map.Entry<String, String> entry : attachParts.entrySet())
-    	{
-    		content = content.replace(entry.getKey(), entry.getValue());
-    	}
+//    	for(Map.Entry<String, String> entry : attachParts.entrySet())
+//    	{
+//    		content = content.replace(entry.getKey(), entry.getValue());
+//    	}
+    	 Document doc = Jsoup.parse(content);
+         Elements media = doc.select("img");
+         if (media == null || media.isEmpty()) {
+             return content;
+         }
+         
+         for (int i = 0; i < media.size(); i++) {
+             Element a = (Element) media.get(i);
+             String cid = a.attr("src");
+             String cdir = null;
+             if(cid != null && cid.startsWith("cid:")) {
+            	 cdir = attachParts.get(cid);
+             	a.removeAttr("src");
+             	a.attr("src", cdir);
+             }
+             
+             if(cdir == null ||
+            		 (a.hasAttr("width") && a.hasAttr("height")) )
+            	 continue;
+             
+             BufferedImage image = readBufferedImage(cdir);
+             if(image == null) continue;
+             
+             if(!a.hasAttr("width")) {
+            	 a.attr("width", "" + image.getWidth());
+             }
+             if(!a.hasAttr("height")) {
+            	 a.attr("height", "" + image.getHeight());
+             }
+         }
+         content =  doc.html();
     	return content;
     }
+    
+	private BufferedImage readBufferedImage(String URL) {
+		BufferedImage image = null;
+		try {
+			image = ImageIO.read(new File(new URI(URL)));
+		} catch (Exception ex) {
+
+		}
+		return image;
+	}
     ///////////////////////////////////New Parse///////////////////////////////
 }

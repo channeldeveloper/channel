@@ -118,7 +118,7 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 	/**
 	 * 初始化一些控件，如设置图标，颜色等。
 	 */
-	protected void initStatusBar() {
+	protected void initStatusBar() {		
 		Color color = ChannelConstants.LIGHT_TEXT_COLOR;
 		Cursor cursor = ChannelConstants.HAND_CURSOR;
 		

@@ -11,12 +11,18 @@ import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.Window;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.net.URL;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -31,6 +37,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRootPane;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -54,14 +62,16 @@ import com.original.serive.channel.ui.data.MenuItem;
 import com.original.serive.channel.ui.data.TitleItem;
 import com.original.serive.channel.ui.widget.FileChooserListener;
 import com.original.serive.channel.ui.widget.FilePreviewer;
+import com.original.serive.channel.ui.widget.ImagePane;
 import com.original.serive.channel.ui.widget.MessageBox;
+import com.original.widget.OScrollBar;
 
 /**
  * 一些通用算法，目前主要用于客户端界面应用，服务端类请勿使用。
  * @author WMS
  *
  */
-public class ChannelUtil
+public class ChannelUtil implements ChannelConstants
 {
 	/**
 	 * 判断文本是否为空
@@ -162,32 +172,38 @@ public class ChannelUtil
 		Dimension dim = new Dimension();
 		if(image != null && width >0 && height > 0)
 		{
-			int iconWidth = image.getIconWidth(), iconHeight = image
-					.getIconHeight();
-			
+			return adjustImage(image.getIconWidth(), image.getIconHeight(), width, height);
+		}
+		return dim;
+	}
+	public static Dimension adjustImage(int oldWidth, int oldHeight, int width, int height)
+	{
+		Dimension dim = new Dimension();
+		if(oldWidth >0 && oldHeight > 0 && width >0 && height > 0)
+		{			
 			//如果设定宽、高度和图片原来的宽、高度一致，就不需要调整了
-			if(width == iconWidth && height == iconHeight)
+			if(width == oldWidth && height == oldHeight)
 			{
 				dim.width = width;
 				dim.height = height;
 				return dim;
 			}
 
-			double d1 = iconWidth / (double) iconHeight, d2 = width
+			double d1 = oldWidth / (double) oldHeight, d2 = width
 					/ (double) height;
 
 			if (d2 >= d1) { // 以高度为准
-				if (iconHeight > height)
-					iconHeight = height;
-				iconWidth = (int) (iconHeight * d1);
+				if (oldHeight > height)
+					oldHeight = height;
+				oldWidth = (int) (oldHeight * d1);
 			} else {// 以宽度为准
-				if (iconWidth > width)
-					iconWidth = width;
-				iconHeight = (int) (iconWidth / d1);
+				if (oldWidth > width)
+					oldWidth = width;
+				oldHeight = (int) (oldWidth / d1);
 			}
 			
-			dim.width = iconWidth;
-			dim.height = iconHeight;
+			dim.width = oldWidth;
+			dim.height = oldHeight;
 		}
 		return dim;
 	}
@@ -225,7 +241,7 @@ public class ChannelUtil
 			if(item.getText() == null) {//如果是图片按钮
 				button.setMargin(new Insets(0, 0, 0, 0));
 				button.setContentAreaFilled(false);
-				button.setCursor(ChannelConstants.HAND_CURSOR);
+				button.setCursor(HAND_CURSOR);
 				
 				if(item.getSize() == null && item.getIcon() != null) { //如果没有设置大小，则用图片大小
 					button.setPreferredSize(new Dimension(item.getIcon().getIconWidth(), 
@@ -333,10 +349,9 @@ NativeInterface.open();
 		
 		if(browser != null) {
 			final Window window = (Window)WebBrowserWindowFactory.create(owner, browser);
-			if(listener2 != null) {
-				window.addWindowListener(listener2); //自定义窗体事件
-			}
-			else {
+			if (listener2 != null) {
+				window.addWindowListener(listener2); // 自定义窗体事件
+			} else {
 				window.addWindowListener(new WindowAdapter() {
 					public void windowClosing(WindowEvent e) {
 						window.dispose();
@@ -345,20 +360,20 @@ NativeInterface.open();
 			}
 			
 			//使用系统自带的标题栏
-			if(window instanceof JDialog) {
+			if (window instanceof JDialog) {
 				((JDialog) window).setUndecorated(false);
 				((JDialog) window).setModal(true);
 				((JDialog) window).getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-			}
-			else if(window instanceof JFrame) {
+			} else if (window instanceof JFrame) {
 				((JFrame) window).setUndecorated(false);
 				((JFrame) window).getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 			}
 			
-			window.setSize(ChannelConfig.getIntValue("width")*2/3,
-					ChannelConfig.getIntValue("height")*2/3);
+			window.setSize(CHANNELWIDTH*2/3, CHANNELHEIGHT*2/3);
+			window.setMaximumSize(new Dimension(CHANNELWIDTH, CHANNELHEIGHT-STATUSBARHEIGHT));
 			if(owner == null)
 				window.setLocationRelativeTo(null);
+			checkWindowLocation(window);
 			window.setVisible(true);
 //			window.dispose();
 		}
@@ -370,7 +385,7 @@ NativeInterface.open();
 	}
 	
 	/**
-	 * 弹出对话框
+	 * 弹出对话框，默认使用UIManager#getDefaultLookandFeel主题
 	 */
 	public static void showWithDialog(Component parent,
 			String title, boolean modal, Container cp) {
@@ -394,31 +409,71 @@ NativeInterface.open();
 		d.setVisible(true);
 	}
 	
+	/**
+	 * 弹出自定义风格的消息框
+	 */
 	public static void showMessageDialog(Component parent, String title,
 			Object content) {
 		MessageBox box = new MessageBox(content);
 		
-		JOptionPane   pane = new JOptionPane(box, JOptionPane.INFORMATION_MESSAGE,
+		final JOptionPane   pane = new JOptionPane(box, JOptionPane.INFORMATION_MESSAGE,
                 JOptionPane.DEFAULT_OPTION, null,
                 null, null);
+		
+pane.addPropertyChangeListener(new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				// TODO 自动生成的方法存根
+				if(evt.getPropertyName() == JOptionPane.VALUE_PROPERTY) {
+					
+					if(evt.getNewValue() instanceof Integer 
+							&& ((Integer)evt.getNewValue()).intValue() != JOptionPane.CLOSED_OPTION) {
+						SwingUtilities.getWindowAncestor(pane).dispose();
+					}
+				}
+			}
+		});
 		
 		showCustomedDialog(parent, title, true, pane);
 	}
 	
+	/**
+	 * 弹出自定义风格的确认框
+	 */
 	public static int showConfirmDialog(Component parent, String title,
 			Object content) {
 		
 MessageBox box = new MessageBox(content);
 		
-		JOptionPane   pane = new JOptionPane(box, JOptionPane.QUESTION_MESSAGE,
+		final JOptionPane   pane = new JOptionPane(box.getMessageBox(), JOptionPane.QUESTION_MESSAGE,
                 JOptionPane.YES_NO_OPTION, null,
                 null, null);
+		pane.addPropertyChangeListener(new PropertyChangeListener() {
+			
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				// TODO 自动生成的方法存根
+				if(evt.getPropertyName() == JOptionPane.VALUE_PROPERTY) {
+					
+					if(evt.getNewValue() instanceof Integer 
+							&& ((Integer)evt.getNewValue()).intValue() != JOptionPane.CLOSED_OPTION) {
+						SwingUtilities.getWindowAncestor(pane).dispose();
+					}
+				}
+			}
+		});
 		
 		showCustomedDialog(parent, title, true, pane);
 		return getOptionValue(pane);
 		
 	}
 	
+	/**
+	 * 返回选项面板的选项索引值
+	 * @param op 选项面板
+	 * @return
+	 */
 	private static int getOptionValue(JOptionPane op) {
 		Object selectedValue = op.getValue();
 		Object[] options = op.getOptions();
@@ -430,7 +485,8 @@ MessageBox box = new MessageBox(content);
 				return ((Integer) selectedValue).intValue();
 			return JOptionPane.CLOSED_OPTION;
 		}
-		for (int counter = 0, maxCounter = options.length; counter < maxCounter; counter++) {
+		for (int counter = 0, maxCounter = options.length; 
+				counter < maxCounter; counter++) {
 			if (options[counter].equals(selectedValue))
 				return counter;
 		}
@@ -468,7 +524,7 @@ MessageBox box = new MessageBox(content);
 	{
 		JPanel body = new JPanel(new VerticalGridLayout(
 				VerticalGridLayout.TOP_TO_BOTTOM,0,0,new Insets(0, 0, 5, 2)));
-		body.setBorder(new ShadowBorder());
+		body.setBorder(new ShadowBorder(2, 10, 0.4f, child.getBackground()));
 		
 		ChannelMessageTopBar topBar = new ChannelMessageTopBar(true) {
 			@Override
@@ -491,6 +547,8 @@ MessageBox box = new MessageBox(content);
 		ChannelDialogDragListener listener = new ChannelDialogDragListener(dialog);
 		topBar.addMouseListener(listener);
 		topBar.addMouseMotionListener(listener);
+		if(child.isOpaque() && child instanceof JComponent)
+			((JComponent)child).setOpaque(false);
 		body.add(child);
 		return body;
 	}
@@ -501,14 +559,85 @@ MessageBox box = new MessageBox(content);
 	public static void showCustomedDialog(Component parent, 
 			String title, boolean modal,final Container child)
 	{
+		JDialog dialog = createCustomedDialog(parent, title, modal, child);
+		checkWindowLocation(dialog);
+		dialog.setVisible(true);
+	}
+	public static JDialog createCustomedDialog(Component parent, 
+			String title, boolean modal,final Container child)
+	{
 		JDialog d = createDialog(parent, title, modal);
-		JPanel body = createCustomedPane(d, child, title);
+		final JPanel body = createCustomedPane(d, child, title);
 		
 		d.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		d.setContentPane(body);
 		d.pack();
 		d.setLocationRelativeTo(parent);
-		d.setVisible(true);
+//		checkWindowLocation(d);
+//		d.setVisible(true);
+		return d;
+	}
+	
+	public static void checkWindowLocation(Window window)
+	{
+		Point point = window.getLocation();
+		checkWindowLocation(point.x, point.y, window);
+	}
+	
+	public  static void checkWindowLocation(int x, int y, Window window)
+	{
+		if (x < MARGIN_LEFT)
+			x = MARGIN_LEFT;
+		else if (x + window.getWidth() > MARGIN_RIGHT)
+			x = MARGIN_RIGHT - window.getWidth();
+		else if (x > MARGIN_RIGHT)
+			x = MARGIN_RIGHT;
+
+		if (y < MARGIN_TOP)
+			y = MARGIN_TOP;
+		else if (y + window.getHeight() > MARGIN_BOTTOM)
+			y = MARGIN_BOTTOM - window.getHeight();
+		else if (y > MARGIN_BOTTOM)
+			y = MARGIN_BOTTOM;
+
+		window.setLocation(x, y);
+	}
+	
+	/**
+	 * 显示图片对话框
+	 */
+	public static void showImageDialog(final String imgURL)
+	{
+		BufferedImage image = null;
+		try {
+			image = ImageIO.read(new URL(imgURL));
+		} catch (Exception ex) {
+			System.err.println("加载图片失败：" + ex);
+		}
+
+		if (image != null) {
+			final ImagePane ip = new ImagePane();
+			final JDialog dialog = createCustomedDialog(null, "查看原图", true, ip);
+			
+			Thread loading = new Thread(new Runnable() {// 图片加载线程
+				public void run() {
+					ip.setBackground(imgURL);
+					if (ip.getBackgroundImage() != null) {
+						JPanel container = (JPanel) dialog.getContentPane();
+						container.remove(ip);
+						container.add(ip.getScrollImagePane());
+						container.validate();
+
+						dialog.pack();
+						checkWindowLocation(dialog);
+					}
+				}
+			}, "Loading Image");
+			loading.start();
+			
+			checkWindowLocation(dialog);
+			dialog.setVisible(true);
+		}
 	}
 	
 	/**
@@ -526,6 +655,7 @@ MessageBox box = new MessageBox(content);
 		dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		body.add(dialog.getContentPane());
 		dialog.setContentPane(body);
+		checkWindowLocation(dialog);
 		dialog.setVisible(true);
 		return chooserPane.getColor();
 	}
@@ -581,5 +711,25 @@ dialog.setContentPane(body);
 dialog.pack();
 dialog.setLocationRelativeTo(c);
 dialog.setVisible(true);
+	}
+	
+	/**
+	 * 创建带滚动条的面板
+	 */
+	public static JScrollPane createScrollPane(Component c) {
+		return createScrollPane(c, Color.gray);
+	}
+	public static JScrollPane createScrollPane(Component c, Color barColor) {
+		JScrollPane jsp = new JScrollPane(c, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+		// 不显示边框，同时设置背景透明
+		jsp.setBorder(null);
+		jsp.setOpaque(false);
+		jsp.setVerticalScrollBar(new OScrollBar(JScrollBar.VERTICAL, barColor));
+		jsp.setViewportBorder(null);
+		jsp.getViewport().setOpaque(false);
+		
+		return jsp;
 	}
 }

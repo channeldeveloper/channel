@@ -3,6 +3,8 @@ package com.original.serive.channel.util;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
+import java.awt.GraphicsEnvironment;
+import java.awt.Point;
 
 /**
  * Channel消息面板常量类
@@ -28,6 +30,19 @@ public interface ChannelConstants
 	
 	//颜色类
 	Color LIGHT_TEXT_COLOR = new Color(85,127,196);
+	
+	//坐标点
+	Point CENTER_POINT = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+	int CHANNELWIDTH = ChannelConfig.getIntValue("width"),
+			CHANNELHEIGHT = ChannelConfig.getIntValue("height"),
+			TOOLBARHEIGHT = ChannelConfig.getIntValue("toolbarHeight"),
+			STATUSBARHEIGHT = ChannelConfig.getIntValue("statusbarHeight"),
+	DESKTOPHEIGHT = ChannelConfig.getIntValue("desktopHeight");
+			
+	int MARGIN_TOP = CENTER_POINT.y - (CHANNELHEIGHT/2 - TOOLBARHEIGHT),
+			MARGIN_LEFT = CENTER_POINT.x - CHANNELWIDTH/2,
+			MARGIN_BOTTOM = CENTER_POINT.y + (CHANNELHEIGHT/2 - STATUSBARHEIGHT),
+			MARGIN_RIGHT = CENTER_POINT.x + CHANNELWIDTH/2;
 	
 	//枚举类
 	enum TYPE {MAIL, WEIBO, QQ}

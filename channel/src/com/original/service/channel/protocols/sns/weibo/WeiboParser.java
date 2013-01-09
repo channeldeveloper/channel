@@ -3,6 +3,7 @@ package com.original.service.channel.protocols.sns.weibo;
 import iqq.service.HttpService;
 import iqq.util.Method;
 
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -29,8 +30,6 @@ import java.util.regex.Pattern;
 
 import weibo4j.http.ImageItem;
 import weibo4j.model.Emotion;
-import weibo4j.model.Source;
-import weibo4j.model.Status;
 import weibo4j.model.WeiboException;
 
 import com.original.service.channel.ChannelMessage;
@@ -68,15 +67,8 @@ public class WeiboParser implements Constants
 		if(msg != null) {
 			return parse(msg.getBody() + "<br>")
 					+ parseImageText(msg) 
-					+ parseDateAndSource(msg);
-		}
-		return "";
-	}
-	public static String parseIgnoreImage(ChannelMessage msg) {
-		if(msg != null) {
-			return parse(msg.getBody() + "<br>")
-//					+ parseImageText(msg) 
-					+ parseDateAndSource(msg);
+//					+ parseDateAndSource(msg)
+					;
 		}
 		return "";
 	}
@@ -208,18 +200,9 @@ public class WeiboParser implements Constants
 	
 	/**
 	 * 从微博中获取图片的链接地址，点击该链接地址可以放大图片
-	 * @param status 微博消息对象
+	 * @param msg 微博消息对象
 	 * @return
 	 */
-	public static String parseImageText(Status status){
-		String imgUrl = "";
-		if (!"".equals(status.getThumbnailPic())) {
-			imgUrl =  "<br/><br/><a href=\"" + status.getBmiddlePic() 
-				+ "\"><img border=\"0\" src=" + status.getThumbnailPic()
-				+ " /></a>";
-		}
-		return imgUrl;
-	}
 	public static String parseImageText(ChannelMessage msg) {
 		HashMap exts = msg.getExtensions();
 		String imgUrl = "";
@@ -229,9 +212,12 @@ public class WeiboParser implements Constants
 		String thumbNailPic = (String)exts.get(Weibo_ThumbNail_Pic),
 				middlePic = (String)exts.get(Weibo_Middle_Pic);
 		if (!"".equals(thumbNailPic)) {
-			imgUrl =  "<br/><br/><a href=\"" + middlePic
-				+ "\"><img border=\"0\" src=" + thumbNailPic
-				+ " /></a>";
+			//这里读取高度
+			Dimension picSize = getImageSize(thumbNailPic);
+			
+			imgUrl = "<br/><a href=\"" + middlePic + "\">" +
+					"<img border=\"0\" src=" + thumbNailPic + " width=\"" + picSize.width + "\" height=\"" + picSize.height + "\"/>" +
+					"</a>";
 		}
 		return imgUrl;
 	}
@@ -241,11 +227,11 @@ public class WeiboParser implements Constants
 	 * @param imgURL
 	 * @return
 	 */
-	public static int  getImageHeight(String imgURL) {
+	private static Dimension  getImageSize(String imgURL) {
 		java.net.URL url = null;
-		int height = 0;
+		Dimension size = new Dimension();
 		if(imgURL == null || !imgURL.startsWith("http")) {
-			return height;
+			return size;
 		}
 		
 		try {
@@ -259,68 +245,52 @@ public class WeiboParser implements Constants
 		BufferedImage bi = null;
 		try {
 			bi = javax.imageio.ImageIO.read(url);
-			height = bi.getHeight() ;
-			bi = null;
+			size.width = bi.getWidth() ;
+			size.height = bi.getHeight();
+			
 		} catch (IOException e) {
 			System.err.println("载入图片失败 IOException");
 		} catch (java.lang.IllegalArgumentException e) {
 			System.err.println("载入图片失败 IllegalArgumentException");
+		} finally {
+			bi = null;
 		}
-		return height;
-	}
-	public static int getImageHeight(ChannelMessage msg) {
-		HashMap exts = msg.getExtensions();
-		String imgUrl = "";
-		if(exts!= null && !exts.isEmpty()) {
-			imgUrl = (String)exts.get(Weibo_ThumbNail_Pic);
-		}
-		return getImageHeight(imgUrl);
+		return size;
 	}
 	
-	/**
-	 * 获取微博的时间+来源
-	 * @param status
-	 * @return
-	 */
-	public static String parseDateAndSource(Status status){
-		String dateAndSource = "<br/><br/>"
-			+ weiboFormat.format(status.getCreatedAt()) + "  来自";
-		
-		Source source = status.getSource();// 来源
-		dateAndSource += "<a href=\"" + source.getUrl() + "\">"
-			+ source.getName() + "</a>";
-		return dateAndSource;
-	}
-	public static String parseDateAndSource(ChannelMessage msg){
-		HashMap exts = msg.getExtensions();
-		String sourceUrl = null,
-				sourceName = null;
-		if(exts != null && !exts.isEmpty()) {
-			sourceUrl = (String)exts.get(Weibo_SOURCE_URL);
-			sourceName = (String)exts.get(Weibo_SOURCE_NAME);
-		}
-		
-		if(sourceUrl != null && sourceName != null) {
-			String dateAndSource = "<br/><br/>"
-					+ weiboFormat.format(msg.getRecievedDate()) + "  来自";
-				
-				dateAndSource += "<a href=\"" + sourceUrl + "\">"
-					+ sourceName + "</a>";
-				return dateAndSource;
-		}
-		return "";
-	}
-	
-	/**
-	 * 返回带统计信息的标签文本(如转发数和微博数)
-	 * @param text 标签文本
-	 * @param count 统计数
-	 * @return
-	 */
-	public String parseCountText(String text, int count) {
-		return (text == null ? "" : text) +
-				(count == 0 ? "" : "(" + count + ")");
-	}
+//	/**
+//	 * 获取微博的时间+来源
+//	 * @param status
+//	 * @return
+//	 */
+//	public static String parseDateAndSource(Status status){
+//		String dateAndSource = "<br/><br/>"
+//			+ weiboFormat.format(status.getCreatedAt()) + "  来自";
+//		
+//		Source source = status.getSource();// 来源
+//		dateAndSource += "<a href=\"" + source.getUrl() + "\">"
+//			+ source.getName() + "</a>";
+//		return dateAndSource;
+//	}
+//	public static String parseDateAndSource(ChannelMessage msg){
+//		HashMap exts = msg.getExtensions();
+//		String sourceUrl = null,
+//				sourceName = null;
+//		if(exts != null && !exts.isEmpty()) {
+//			sourceUrl = (String)exts.get(Weibo_SOURCE_URL);
+//			sourceName = (String)exts.get(Weibo_SOURCE_NAME);
+//		}
+//		
+//		if(sourceUrl != null && sourceName != null) {
+//			String dateAndSource = "<br/><br/>"
+//					+ weiboFormat.format(msg.getRecievedDate()) + "  来自";
+//				
+//				dateAndSource += "<a href=\"" + sourceUrl + "\">"
+//					+ sourceName + "</a>";
+//				return dateAndSource;
+//		}
+//		return "";
+//	}
 	
 	//-------------------------------- 下面用于处理发送微博 --------------------------------//
 	/**

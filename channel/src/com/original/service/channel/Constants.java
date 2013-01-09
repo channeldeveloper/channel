@@ -159,11 +159,11 @@ public interface Constants {
 	public static final String Channel_Type_SNS = "email";
 
 	/* ---------------------------------------------------- Weibo -------------------------------------------------------------*/
-	String Weibo_REPOST_COUNT = "weibo repost count";
-	String Weibo_COMMENT_COUNT = "weibo comment count";
-	
-	String Weibo_SOURCE_URL = "weibo source url";
-	String Weibo_SOURCE_NAME = "weibo source name";
+//	String Weibo_REPOST_COUNT = "weibo repost count";
+//	String Weibo_COMMENT_COUNT = "weibo comment count";
+//	
+//	String Weibo_SOURCE_URL = "weibo source url";
+//	String Weibo_SOURCE_NAME = "weibo source name";
 	
 	String Weibo_ThumbNail_Pic = "weibo thumbnail pic"; //微博小图片地址
 	String Weibo_Middle_Pic = "weibo middle pic";//微博中型图片地址

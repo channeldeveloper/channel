@@ -11,6 +11,7 @@ package com.original.service.channel.protocols.im.iqq;
  */
 public class QQReceiveThread extends Thread {
     QQReceiver receiver;
+    volatile boolean isRun = true;
 
 	/**
 	 * 
@@ -25,6 +26,25 @@ public class QQReceiveThread extends Thread {
 
     @Override
     public void run() {
-    	
-    }	
+    	while (isRun) {
+            try {
+                synchronized (receiver) {
+                	receiver.receive();
+                	receiver.wait(((int)(Math.random()*3) + 2)*1000);
+                }
+            } catch (InterruptedException ex) {
+                break;
+            }
+        }
+    }
+
+	public boolean isRun() {
+		return isRun;
+	}
+
+	public void setRun(boolean isRun) {
+		this.isRun = isRun;
+	}	
+    
+    
 }

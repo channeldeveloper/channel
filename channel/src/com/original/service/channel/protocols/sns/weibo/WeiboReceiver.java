@@ -141,17 +141,17 @@ public class WeiboReceiver {
 		msg.setClazz(ChannelMessage.WEIBO);
 		
 		//转发数和评论数
-		HashMap<String, Integer> flags = new HashMap<String, Integer>();
-		flags.put(Constants.Weibo_REPOST_COUNT,	status.getRepostsCount());
-		flags.put(Constants.Weibo_COMMENT_COUNT, status.getCommentsCount());
-		msg.setFlags(flags);	
+//		HashMap<String, Integer> flags = new HashMap<String, Integer>();
+//		flags.put(Constants.Weibo_REPOST_COUNT,	status.getRepostsCount());
+//		flags.put(Constants.Weibo_COMMENT_COUNT, status.getCommentsCount());
+//		msg.setFlags(flags);	
 		msg.setFollowedID(null);
 		msg.setFromAddr(status.getUser().getName());
 		
 		//消息来源
 		HashMap<String, String> exts = new HashMap<String, String>();
-		exts.put(Constants.Weibo_SOURCE_URL, status.getSource().getUrl());
-		exts.put(Constants.Weibo_SOURCE_NAME, status.getSource().getName());
+//		exts.put(Constants.Weibo_SOURCE_URL, status.getSource().getUrl());
+//		exts.put(Constants.Weibo_SOURCE_NAME, status.getSource().getName());
 		
 		exts.put(Constants.Weibo_ThumbNail_Pic, status.getThumbnailPic());
 		exts.put(Constants.Weibo_Middle_Pic, status.getBmiddlePic());

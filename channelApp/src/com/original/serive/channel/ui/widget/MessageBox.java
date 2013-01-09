@@ -3,13 +3,14 @@ package com.original.serive.channel.ui.widget;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.FontMetrics;
 
-import javax.swing.BorderFactory;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import com.original.serive.channel.util.ChannelUtil;
 import com.original.widget.OScrollBar;
 
 /**
@@ -17,48 +18,45 @@ import com.original.widget.OScrollBar;
  * @author WMS
  *
  */
-public class MessageBox extends JTextArea
+public class MessageBox
 {
-	Dimension defaultSize = new Dimension(500, 200);
+	private JTextArea boxArea = null;
+	private Dimension boxMaximumSize = new Dimension(500, 150);  //消息框的最大显示大小
 	
 	public MessageBox(Object content) {
-		super(content == null ? null : content.toString());
-		setOpaque(false);
-		setLineWrap(true);
-		setWrapStyleWord(true);
-		setEditable(false);
+		boxArea = new JTextArea(content == null ? null : content.toString());
+		boxArea.setBorder(null);
+		//设置背景透明
+		boxArea.setOpaque(false);
+		boxArea.setBackground(new Color(255, 255, 255, 0));
+		//设置自动换行
+		boxArea.setLineWrap(true);
+		boxArea.setWrapStyleWord(true);
+		//设置不可编辑
+		boxArea.setEditable(false);
 		
-		adjustBoxSize();
+		//设置大小
+		Font font = boxArea.getFont();
+		FontMetrics fontMetrics = boxArea.getFontMetrics(font);
+		Dimension boxSize = new Dimension(Math.min(boxMaximumSize.width,
+				fontMetrics.stringWidth(boxArea.getText())), font.getSize());
+		boxArea.setSize(boxSize);
 	}
 	
-	/**
-	 * 根据文本内容自动调整宽度和高度
-	 */
-	private void adjustBoxSize() {
-		FontMetrics fm = getFontMetrics(getFont());
-		Dimension boxSize = new Dimension(Math.min(defaultSize.width, fm.stringWidth(getText())), getFont().getSize());
-		setSize(boxSize);
-	}
 	
-	public Container getMessageContainer() 
-	{
-		Container container = this;
-		if (this.getUI().getPreferredSize(this).height > defaultSize.height) {
-			JScrollPane jsp = new JScrollPane(this);
-			
-			jsp.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
-			jsp.setVerticalScrollBar(new OScrollBar(JScrollBar.VERTICAL, Color.gray));
-			jsp.setViewportBorder(null);
-			jsp.setOpaque(false);
-			jsp.getViewport().setOpaque(false);
+	public Container getMessageBox() {
+		Container container = boxArea;
+		
+		if (boxArea.getUI().getPreferredSize(boxArea).height > boxMaximumSize.height) {
+			JScrollPane boxPane = ChannelUtil.createScrollPane(boxArea, Color.gray);
 
-			Dimension size = (Dimension)this.getSize().clone();
-			size.height = defaultSize.height;
-			jsp.setPreferredSize(size);
-			
-			container = jsp;
+			//设置相对大小
+			Dimension preferedSize = (Dimension) boxArea.getSize().clone();
+			preferedSize.height = boxMaximumSize.height;
+			boxPane.setPreferredSize(preferedSize);
+
+			container = boxPane;
 		}
 		return container;
-	}
-	
+	}	
 }

@@ -11,7 +11,6 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
@@ -28,7 +27,6 @@ import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Utilies;
 import com.original.service.channel.protocols.im.iqq.QQParser;
 import com.original.service.channel.protocols.sns.weibo.WeiboParser;
-import com.original.widget.OScrollBar;
 
 public class ShowMessageBodyPane extends ChannelMessageBodyPane implements ActionListener, EventConstants
 {
@@ -36,9 +34,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	
 	private JLabel title = new JLabel();
 	private JPanel ctrlGroup = new JPanel(new ChannelGridLayout(2, 0, new Insets(0, 0, 0, 0)));
-	
 	private JTextPane content = new JTextPane();//文本面板
-	private JScrollBar scrollBar = new OScrollBar(JScrollBar.VERTICAL, Color.gray); //滚动条，用于文本面板中
 	
 	private ChannelMessage newMsg = null;
 	
@@ -57,7 +53,8 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	private void constructMessageBody() 
 	{
 		this.setBorder(new EmptyBorder(new Insets(0, 45, 0, 5))); //设置页边距
-		this.setPreferredSize(new Dimension(ChannelConfig.getIntValue("msgBodyWidth"), 500)); //这里的大小以后再做调整
+		this.setPreferredSize(new Dimension(ChannelConfig.getIntValue("msgBodyWidth"), 
+				ChannelConfig.getIntValue("desktopHeight") - 100)); 
 		
 		//设置一些控件的属性
 		content.setEditorKit(new HTMLEditorKit());
@@ -65,25 +62,17 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 		content.setOpaque(false);
 		content.setEditable(false);
 		content.setBackground(new Color(0, 0, 0, 0)); //设置文本面板透明的唯一方法
-		JScrollPane scrollPane = new JScrollPane(content,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setVerticalScrollBar(scrollBar);
+		JScrollPane scrollPane = ChannelUtil.createScrollPane(content, Color.gray);
         scrollPane.setBorder(new EmptyBorder(0, 0, 10, 5));
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false);
-        scrollPane.setViewportBorder(null);
-        
-        this.setDefaultControls();
         
         //开始添加控件
         layoutMgr.addComToModel(title, 1, 1, GridBagConstraints.HORIZONTAL);
         layoutMgr.newLine();
-        
         layoutMgr.addComToModel(ctrlGroup, 1, 1, GridBagConstraints.HORIZONTAL);
         layoutMgr.newLine();
-        
         layoutMgr.addComToModel(scrollPane, 1, 1, GridBagConstraints.BOTH);
+        
+        setDefaultControls();
 	}
 	
 	/**

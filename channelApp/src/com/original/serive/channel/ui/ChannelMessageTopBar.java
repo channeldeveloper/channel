@@ -6,7 +6,10 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.event.MouseMotionListener;
+import java.util.EventListener;
 
 import com.original.serive.channel.ChannelGUI;
 import com.original.serive.channel.ui.data.TitleItem;
@@ -26,6 +29,7 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 	private boolean drawSeparateLine = true; //是否显示分割线
 	
 	private TitleItem[] titleItems = null; //标题，可以有多个，支持多种样式
+	protected boolean hasIconConfirmed = false; //用于确认关闭按钮的bounds
 	
 	public ChannelMessageTopBar() {
 		this(true);
@@ -39,6 +43,8 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 	{
 		this.closeIcon = closeIcon;
 		this.drawSeparateLine = drawSeparateLine;
+		
+		installListeners();
 	}
 	
 	/**
@@ -46,28 +52,37 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 	 */
 	protected void initStatusBar () {
 		//下面是一些鼠标事件，用于关闭当前面板操作
-		if(this.closeIcon != null) {
-			addMouseMotionListener(new MouseMotionAdapter()
-			{
-				public void mouseMoved(MouseEvent e)
-				{
-					if(closeIcon.getBounds().contains(e.getPoint())) {
-						setCursor(ChannelConstants.HAND_CURSOR);
+//		installListeners();
+	}
+	
+	protected void installListeners() {		
+		if (this.closeIcon != null) {
+			EventListener[] listeners = this.getListeners(MouseMotionListener.class);
+			if (listeners == null || listeners.length < 1) {
+				addMouseMotionListener(new MouseMotionAdapter() {
+					public void mouseMoved(MouseEvent e) {
+						confirmCloseIconBounds();
+						if (closeIcon.getBounds().contains(e.getPoint())) {
+							setCursor(ChannelConstants.HAND_CURSOR);
+						} else {
+							setCursor(ChannelConstants.DEFAULT_CURSOR);
+						}
 					}
-					else {
-						setCursor(ChannelConstants.DEFAULT_CURSOR);
+				});
+			}
+
+			listeners = this.getListeners(MouseListener.class);
+			if (listeners == null || listeners.length < 1) {
+				addMouseListener(new MouseAdapter() {
+					public void mouseClicked(MouseEvent e) {
+						confirmCloseIconBounds();
+						if (closeIcon.getBounds().contains(e.getPoint())) 
+						{
+							doClose();
+						}
 					}
-				}
-			});
-			addMouseListener(new MouseAdapter()
-			{
-				public void mouseClicked(MouseEvent e)
-				{
-					if(closeIcon.getBounds().contains(e.getPoint())) {
-						doClose();
-					}
-				}
-			});
+				});
+			}
 		}
 	}
 	
@@ -77,7 +92,7 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 	protected void constructStatusBar() {
 		setPreferredSize(SIZE);
 	}
-
+	
 	/**
 	 * 关闭操作
 	 */
@@ -102,6 +117,23 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 					desktop.removeShowComp(PREFIX_SHOWALL+newMsg.getContactName(), true);
 				}
 			}
+		}
+	}
+
+	/**
+	 * 确认关闭按钮的bounds。当setPreferedSize()时，关闭按钮的bounds需要重新调整。
+	 */
+	protected void confirmCloseIconBounds() {
+//		Dimension prefSize = this.getPreferredSize();
+//		closeIcon.setBounds(prefSize.width - closeIcon.getWidth() - 12,
+//				(prefSize.height - closeIcon.getHeight()) / 2,
+//				closeIcon.getWidth(),
+//				closeIcon.getHeight()
+//		);
+		
+		if(!hasIconConfirmed) {
+			repaint();
+			hasIconConfirmed = true;
 		}
 	}
 
