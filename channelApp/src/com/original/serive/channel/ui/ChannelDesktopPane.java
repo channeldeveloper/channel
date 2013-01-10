@@ -5,18 +5,13 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.LayoutManager;
-import java.awt.Point;
-import java.awt.RadialGradientPaint;
-import java.awt.Rectangle;
-import java.awt.geom.Area;
-import java.awt.geom.Point2D;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
@@ -25,7 +20,7 @@ import javax.swing.JScrollPane;
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelUtil;
-import com.original.serive.channel.util.GraphicsHandler;
+import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
@@ -43,6 +38,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 	private CardLayout layoutMgr = new CardLayout(); //卡片布局，带有切换功能
 	public static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("width"), 
 			ChannelConfig.getIntValue("desktopHeight"));
+	public static ImageIcon BACKGROUND = IconFactory.loadIconByConfig("background");
 	
 	public static JPanel DEFAULT_PANE = new JPanel(); //桌面默认显示的面板，消息列表面板，带滚动条
 	public static JScrollBar DEFAULT_SCROLLBAR = 
@@ -291,19 +287,20 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 	@Override
 	public void paintComponent(Graphics g)
 	{
-		Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
-		
-		Area bounds = new Area(new Rectangle(0, 0, getWidth(), getHeight()));
-		Color backColor = new Color(35,85,105);
-		g2d.setColor(backColor);
-		
-		int radius = (int)(getWidth()/2);
-		Point2D center = new Point(getWidth()/2, getHeight()/2);
-		RadialGradientPaint paint = new RadialGradientPaint(center, radius,  
-                new float[]{0.0f, 1.0f}, new Color[]{backColor.brighter().brighter(), backColor});  
-		g2d.setPaint(paint);
-		g2d.fill(bounds);
-		GraphicsHandler.suspendRendering(g2d);
+//		Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
+//		
+//		Area bounds = new Area(new Rectangle(0, 0, getWidth(), getHeight()));
+//		Color backColor = new Color(35,85,105);
+//		g2d.setColor(backColor);
+//		
+//		int radius = (int)(getWidth()/2);
+//		Point2D center = new Point(getWidth()/2, getHeight()/2);
+//		RadialGradientPaint paint = new RadialGradientPaint(center, radius,  
+//                new float[]{0.0f, 1.0f}, new Color[]{backColor.brighter().brighter(), backColor});  
+//		g2d.setPaint(paint);
+//		g2d.fill(bounds);
+//		GraphicsHandler.suspendRendering(g2d);
+		g.drawImage(BACKGROUND.getImage(), 0, 0, this);
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import com.google.code.morphia.annotations.Indexed;
 import com.google.code.morphia.annotations.Reference;
 import com.google.code.morphia.utils.IndexDirection;
 import com.google.gson.Gson;
+import com.original.service.channel.protocols.email.model.EMailParser;
 import com.original.service.channel.protocols.im.iqq.QQParser;
 import com.original.service.channel.protocols.sns.weibo.WeiboParser;
 
@@ -430,15 +431,20 @@ public class ChannelMessage implements Cloneable, Constants{
 
 	public String getCompleteMsg()
 	{
+		return getCompleteMsg(false);
+	}
+	
+	public String getCompleteMsg(boolean showCompleteImage)
+	{
 		clazz = this.getClazz();
 		if(WEIBO.equals(clazz)) {
-			return WeiboParser.parse(this);
+			return WeiboParser.parse(this); //微博不做任何处理
 		}
 		else if(QQ.equals(clazz)) {
-			return QQParser.parseMessage(this);
+			return QQParser.parseMessage(this, showCompleteImage);
 		}
 		else {
-			return  body;
+			return  showCompleteImage ? EMailParser.showComplete(body) : body;
 		}
 	}
 

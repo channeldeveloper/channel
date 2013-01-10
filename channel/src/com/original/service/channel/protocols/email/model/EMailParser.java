@@ -513,6 +513,7 @@ public class EMailParser {
         return mail;
     }    
     
+    
     private String parseCidParts(String content, EMail mail) {
     	Map<String, String> attachParts = mail.getAttachParts();
     	if(attachParts == null ||
@@ -530,28 +531,46 @@ public class EMailParser {
          }
          
          for (int i = 0; i < media.size(); i++) {
-             Element a = (Element) media.get(i);
-             String cid = a.attr("src");
-             String cdir = null;
-             if(cid != null && cid.startsWith("cid:")) {
-            	 cdir = attachParts.get(cid);
-             	a.removeAttr("src");
-             	a.attr("src", cdir);
-             }
+        	 Element a = (Element) media.get(i);
+        	 String cid = a.attr("src");
+        	 String cdir = null;
+        	 if (cid != null && cid.startsWith("cid:")) { // 内嵌图片
+        		 cdir = attachParts.get(cid);
+        		 a.removeAttr("src");
+        		 a.attr("src", cdir);
+        	 } else if (cid != null && cid.startsWith("http")) {// 网页图片
+        		 cdir = cid;
+        	 }
+			
+			  if(cdir == null) continue; //找不到图片URL，不向下处理
+            
+			int width = -1, height = -1;
+			if (a.hasAttr("width") && a.hasAttr("height")) {
+				width = Integer.parseInt(a.attr("width"));
+				height = Integer.parseInt(a.attr("height"));
+			}
+			
+			if(width < 0 || height < 0)
+			{
+				  BufferedImage image = readBufferedImage(cdir);
+		           if(image == null) continue;
+		           
+		           width = image.getWidth();
+		           height = image.getHeight();
+			}
+			
+			String[] scales = Utilies.scale(width, height);
              
-             if(cdir == null ||
-            		 (a.hasAttr("width") && a.hasAttr("height")) )
-            	 continue;
+			if(a.hasAttr("width")) {
+				a.removeAttr("width");
+			}
+			if(a.hasAttr("height")) {
+				a.removeAttr("height");
+			}
              
-             BufferedImage image = readBufferedImage(cdir);
-             if(image == null) continue;
-             
-             if(!a.hasAttr("width")) {
-            	 a.attr("width", "" + image.getWidth());
-             }
-             if(!a.hasAttr("height")) {
-            	 a.attr("height", "" + image.getHeight());
-             }
+             a.attr("width", scales[0]);
+             a.attr("height", scales[1]);
+             a.attr("scale", scales[2]); //保留缩放比例，待以后处理用
          }
          content =  doc.html();
     	return content;
@@ -560,11 +579,43 @@ public class EMailParser {
 	private BufferedImage readBufferedImage(String URL) {
 		BufferedImage image = null;
 		try {
-			image = ImageIO.read(new File(new URI(URL)));
+			if (URL != null && URL.startsWith("file")) {
+				image = ImageIO.read(new File(new URI(URL)));
+			} else if (URL != null && URL.startsWith("http")) {
+				image = ImageIO.read(new java.net.URL(URL));
+			}
 		} catch (Exception ex) {
 
 		}
 		return image;
 	}
-    ///////////////////////////////////New Parse///////////////////////////////
+	
+    public static String showComplete(String content)
+    {
+    	 Document doc = Jsoup.parse(content);
+         Elements media = doc.select("img");
+         if (media == null || media.isEmpty()) {
+             return content;
+         }
+         
+         for (int i = 0; i < media.size(); i++) {
+        	 Element a = (Element) media.get(i);
+        	 String scaleValue = a.attr("scale");
+        	 if(scaleValue == null || scaleValue.isEmpty()) 
+        		 continue;
+        	 else
+        		 a.removeAttr("scale");
+        	
+        	int[] sizes = Utilies.unScale(new String[]{a.attr("width"), a.attr("height"), scaleValue});
+        	 
+        	 //更新宽、高度
+        	 a.removeAttr("width");
+        	 a.removeAttr("height");
+        	 a.attr("width", ""+sizes[0]);
+        	 a.attr("height", ""+sizes[1]);
+         }
+         content =  doc.html();
+    	return content;
+    }
+
 }

@@ -171,7 +171,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	private void parseQQ(ChannelMessage msg)
 	{
 		if(msg != null && msg.getMessageID() != null) {
-			content.setText(QQParser.parseMessage(msg));
+			content.setText(QQParser.parseMessage(msg, true));
 			content.setCaretPosition(0); //使滚动条保持在顶部
 		}
 	}

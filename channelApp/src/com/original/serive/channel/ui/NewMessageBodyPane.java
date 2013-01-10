@@ -363,7 +363,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 				new ChannelGridBagLayoutManager(this);
 		
 		Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth"),
-				380);
+				375);
 		
 		//一些组件，显示或隐藏由消息类型(QQ、微博、邮件等)来决定
 		private JTextField  txtCC = new OTextField(),//分享/抄送

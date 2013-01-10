@@ -1,6 +1,5 @@
 package com.original.serive.channel.util;
 
-import java.awt.Desktop;
 import java.io.File;
 import java.net.URI;
 
@@ -49,15 +48,12 @@ public class ChannelHyperlinkListener implements HyperlinkListener {
 		} else if (despURL.startsWith("http://")
 				|| despURL.startsWith("https://")) {
 			ChannelUtil.showBrowser(null, despURL);
-		} else if (despURL.startsWith("file:/")) {
-			Desktop desktop = null;
-			if (Desktop.isDesktopSupported()) {
-				desktop = Desktop.getDesktop();
-				try {
-					desktop.open(new File(new URI(despURL)));
-				} catch (Exception ex) { // 打开本地文件出错
-					System.err.println(ex.getMessage());
-				}
+		} else if (despURL.startsWith("file:/")) { //这里直接另存为文件，不直接打开！
+			try {
+				File file = new File(new URI(despURL)); 
+				ChannelUtil.showFileSaveDialog(null, "另存为", true, null, file);
+			} catch (Exception ex) { // 打开本地文件出错
+				System.err.println(ex);
 			}
 		}
 	}

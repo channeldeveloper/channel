@@ -1,6 +1,8 @@
 package com.original.service.channel.protocols.im.iqq;
 
 import iqq.model.MessageDetail;
+import iqq.util.QQImageUtil;
+import iqq.util.Utilies;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -24,7 +26,7 @@ public class QQParser
 	 * @param msg
 	 * @return
 	 */
-	public static String parseMessage(ChannelMessage msg)
+	public static String parseMessage(ChannelMessage msg, boolean showCompleteImage)
 	{
 		String shortMsg = null;
 		if(msg != null && (shortMsg = msg.getShortMsg()) != null)
@@ -49,10 +51,10 @@ public class QQParser
 							shortMsg = shortMsg.replaceFirst("\\[" + name + "\\]", uri);
 						}
 						else if(MessageDetail.OFFPIC_NAME.equals(name) && (uri = offpics.poll()) != null) {
-							shortMsg = shortMsg.replaceFirst("\\[" + name + "\\]", uri);
+							shortMsg = shortMsg.replaceFirst("\\[" + name + "\\]", !showCompleteImage ? uri : showCompleteImageURL(uri));
 						}
 						else if(MessageDetail.CFACE_NAME.equals(name) && (uri = cfaces.poll()) != null) {
-							shortMsg = shortMsg.replaceFirst("\\[" + name + "\\]", uri);
+							shortMsg = shortMsg.replaceFirst("\\[" + name + "\\]", !showCompleteImage ? uri : showCompleteImageURL(uri));
 						}
 					}
 				}
@@ -60,6 +62,29 @@ public class QQParser
 			}
 		}
 		return shortMsg;
+	}
+	
+	/**
+	 * 显示完整图片的URL
+	 * @param url
+	 * @return
+	 */
+	public static String showCompleteImageURL(String url) {
+		if(url == null || url.isEmpty())
+			return url;
+		
+		String scale = QQImageUtil.findImageAttr("scale", url);
+		if(scale == null || scale.isEmpty())
+			return url;
+		
+		String width = QQImageUtil.findImageAttr("width", url),
+				height = QQImageUtil.findImageAttr("height", url);
+		
+		int[] sizes = Utilies.unScale(new String[]{width, height, scale});
+		url = QQImageUtil.removeImageAttr("scale", url);
+		url = QQImageUtil.updateImageAttr("width", ""+sizes[0], url);
+		url = QQImageUtil.updateImageAttr("height", ""+sizes[1], url);
+		return url;
 	}
 	
 	/**

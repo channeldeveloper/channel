@@ -201,13 +201,15 @@ public class QQImageUtil {
             Logger.getLogger(QQImageUtil.class.getName()).log(Level.SEVERE, null, ex);
         }
         File f = new File(path);
-        String imgUrl = "<img src=\"" + f.toURI() + "\" title=\"图片或自定义表情\" width=\"0\" height=\"0\">";
+        String imgUrl = "<img src=\"" + f.toURI() + "\" title=\"图片或自定义表情\" width=\"0\" height=\"0\" scale=\"1.0\">";
         try {
         	BufferedImage image = ImageIO.read(f);
         	if(image != null) {
-        		imgUrl = imgUrl.replace("width=\"0\"", "width=\"" + image.getWidth() + "\"")
-        				.replace("height=\"0\"", "height=\"" + image.getHeight() + "\"");
-        		image = null;
+        		String[] scales = Utilies.scale(image.getWidth(), image.getHeight());
+        		imgUrl = imgUrl.replace("width=\"0\"", "width=\"" + scales[0] + "\"")
+        				.replace("height=\"0\"", "height=\"" + scales[1] + "\"")
+        				.replace("scale=\"1.0\"", "scale=\"" + scales[2] + "\"");
+        		image  = null;
         	}
         } catch (IOException e) {
         }
@@ -236,12 +238,14 @@ public class QQImageUtil {
 //        return imgUrl;
         
         File f = new File(path);
-        String imgUrl = "<img src=\"" + f.toURI() + "\" title=\"图片或自定义表情\" width=\"0\" height=\"0\">";
+        String imgUrl = "<img src=\"" + f.toURI() + "\" title=\"图片或自定义表情\" width=\"0\" height=\"0\" scale=\"1.0\">";
         try {
         	BufferedImage image = ImageIO.read(f);
         	if(image != null) {
-        		imgUrl = imgUrl.replace("width=\"0\"", "width=\"" + image.getWidth() + "\"")
-        				.replace("height=\"0\"", "height=\"" + image.getHeight() + "\"");
+        		String[] scales = Utilies.scale(image.getWidth(), image.getHeight());
+        		imgUrl = imgUrl.replace("width=\"0\"", "width=\"" + scales[0] + "\"")
+        				.replace("height=\"0\"", "height=\"" + scales[1] + "\"")
+        				.replace("scale=\"1.0\"", "scale=\"" + scales[2] + "\"");
         		image  = null;
         	}
         } catch (IOException e) {
@@ -249,6 +253,42 @@ public class QQImageUtil {
 
         return imgUrl;
     }
+    
+	public static String findImageAttr(String attr, String imgURL) {
+		if (attr != null && imgURL != null) {
+			String regex = Matcher.quoteReplacement(attr + "=\"(.*?)\"");
+			Matcher matcher = Pattern.compile(regex).matcher(imgURL);
+			if (matcher.find())
+				return matcher.group(1);
+		}
+		return null;
+	}
+
+	public static String removeImageAttr(String attr, String imgURL) {
+		if (attr != null && imgURL != null) {
+			String regex = Matcher.quoteReplacement(attr + "=\"(.*?)\"");
+			Matcher matcher = Pattern.compile(regex).matcher(imgURL);
+			if (matcher.find()) {
+				imgURL = imgURL.replace(matcher.group(), "");
+			}
+			return imgURL;
+		}
+		return null;
+	}
+
+	public static String updateImageAttr(String attr, String attrValue,
+			String imgURL) {
+		if (attr != null && imgURL != null) {
+			String regex = Matcher.quoteReplacement(attr + "=\"(.*?)\"");
+			Matcher matcher = Pattern.compile(regex).matcher(imgURL);
+			if (matcher.find()) {
+				imgURL = imgURL.replace(matcher.group(), attr + "=\""
+						+ attrValue + "\"");
+			}
+			return imgURL;
+		}
+		return null;
+	}
 
     public static String getGroupPic(AuthInfo ai, JSONObject obj, long gid, long uin) {
         try {

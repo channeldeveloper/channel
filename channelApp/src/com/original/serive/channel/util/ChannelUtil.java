@@ -19,8 +19,21 @@ import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.lang.reflect.Method;
 import java.net.URL;
+import java.nio.Buffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileChannel.MapMode;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractButton;
@@ -416,7 +429,7 @@ NativeInterface.open();
 			Object content) {
 		MessageBox box = new MessageBox(content);
 		
-		final JOptionPane   pane = new JOptionPane(box, JOptionPane.INFORMATION_MESSAGE,
+		final JOptionPane   pane = new JOptionPane(box.getMessageBox(), JOptionPane.INFORMATION_MESSAGE,
                 JOptionPane.DEFAULT_OPTION, null,
                 null, null);
 		
@@ -692,6 +705,198 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		return fcl.getChooseFile();
 	}	
 	
+	public static void showFileSaveDialog(Component c, String title, boolean modal,
+		     JFileChooser savePane, File saveFile) {
+		if(savePane == null) {
+			savePane = new JFileChooser();
+			savePane.setDialogType(JFileChooser.SAVE_DIALOG);
+		}
+		savePane.setSelectedFile(saveFile);
+		savePane.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		savePane.setOpaque(false);
+		
+		FileChooserListener fcl = new FileChooserListener(savePane);
+		savePane.addActionListener(fcl);
+		showCustomedDialog(c, title, true, savePane);
+		
+		File chooseFile = fcl.getChooseFile();
+		if(chooseFile != null) {
+			try {
+				copyBigFile(saveFile, chooseFile); //复制文件
+				showMessageDialog(c, "保存成功", "文件保存成功！");
+			} catch (IOException ex) {
+				// TODO 自动生成的 catch 块
+				showMessageDialog(c, "错误", ex);
+			}
+		}
+	}
+	
+	/**
+	 * 复制文件操作。将源文件复制到目标文件(夹)指定的路径。如果目标文件存在，则覆盖。
+	 * @param sourceFile 源文件
+	 * @param targetFile 目标文件(夹)
+	 */
+	public static void copyFile(File sourceFile, File targetFile)
+			throws IOException {
+		if (sourceFile == null || !sourceFile.exists()) {
+			throw new IOException("源文件[" + sourceFile + "]不存在或没有访问权限！");
+		}
+
+		if (targetFile == null) {
+			throw new IOException("无法指定目标文件的位置！");
+		} else if (targetFile.isDirectory()) {
+			targetFile = new File(targetFile, sourceFile.getName());
+		}
+
+		File parentFile = null;
+		if (!(parentFile = targetFile.getParentFile()).exists()) {
+			parentFile.mkdirs();
+		}
+
+		if (sourceFile.isDirectory()) // 允许源文件是空目录的情况。
+		{
+			if (sourceFile.listFiles().length == 0) {
+				targetFile.mkdir();
+				return;
+			} else {
+				throw new IOException("源文件[" + sourceFile + "]是目录，不允许直接复制！");
+			}
+		}
+
+		BufferedInputStream in = null;
+		BufferedOutputStream out = null;
+
+		try {
+			in = new BufferedInputStream(new FileInputStream(sourceFile));
+			out = new BufferedOutputStream(new FileOutputStream(targetFile, false));
+
+			byte[] buffer = new byte[1024 * 1024];
+			int read = -1;
+			while ((read = in.read(buffer)) != -1) {
+				out.write(buffer, 0, read);
+			}
+
+			out.flush();
+		} catch (Exception ex) {
+			throw new IOException(ex.getMessage());
+		} finally {
+			if (in != null)
+				in.close();
+			if (out != null)
+				out.close();
+		}
+	}
+	
+	/**
+	 * 复制大文件操作。将源文件复制到目标文件(夹)指定的路径。如果目标文件存在，则覆盖。
+	 * 利用JAVA内存映射机制快速高效地复制文件。注意映射时，要考虑JVM内存的承受能力，不要一次全部映射(文件大小可能远大于JVM内存大小)。
+	 * @param sourceFile 源文件
+	 * @param targetFile 目标文件(夹)
+	 */
+	public static void copyBigFile(File sourceFile, File targetFile)
+			throws IOException {
+		if (sourceFile == null || !sourceFile.exists()) {
+			throw new IOException("源文件[" + sourceFile + "]不存在或没有访问权限！");
+		}
+		if (sourceFile.isDirectory() || sourceFile.length() <= 10 * 1024 * 1024) {
+			copyFile(sourceFile, targetFile);
+			return;
+		}
+
+		if (targetFile == null) {
+			throw new IOException("无法指定目标文件的位置！");
+		} else if (targetFile.isDirectory()) {
+			targetFile = new File(targetFile, sourceFile.getName());
+		}
+
+		File parentFile = null;
+		if (!(parentFile = targetFile.getParentFile()).exists()) {
+			parentFile.mkdirs();
+		}
+
+		// 上面初始化源、目标文件后，开始进行复制文件。
+		RandomAccessFile rafi = null;
+		RandomAccessFile rafo = null;
+
+		MappedByteBuffer mbbi = null;
+		MappedByteBuffer mbbo = null;
+
+		try {
+			rafi = new RandomAccessFile(sourceFile, "r"); // 源文件读
+			rafo = new RandomAccessFile(targetFile, "rw");// 目标文件读写，没有只写的方式
+			if (targetFile.exists()) {
+				rafo.setLength(0L);// 如果目标存在则覆盖。然后重新写。
+			}
+
+			FileChannel fci = rafi.getChannel(); // 文件取通道
+			FileChannel fco = rafo.getChannel(); // 文件写通道
+
+			long length = 0, position = 0; // 每次读取字节长度 和 当前读取位置
+			long remaining = fci.size(); // 剩余字节长度
+
+			long freeMemorySize = Runtime.getRuntime().freeMemory();
+			while (remaining > 0) {
+				length = Math.min(remaining, freeMemorySize);
+				mbbi = fci.map(MapMode.READ_ONLY, position, length);
+				mbbo = fco.map(MapMode.READ_WRITE, position, length);
+
+				for (int i = 0; i < length; i++) {
+					mbbo.put(mbbi.get(i));
+				}
+
+				position += length;
+				remaining -= length;
+
+				// 每次读写完毕后，释放内存空间，否则会报文件已被占用或打开的错误。
+				// MappedByteBuffer自身的一个Bug。
+				releaseMappedBuffer(mbbi);
+				releaseMappedBuffer(mbbo);
+			}
+		} catch (Exception ex) {
+			throw new IOException(ex.getMessage());
+		} finally {
+			if (rafi != null) {
+				rafi.close();
+			}
+			if (rafo != null) {
+				rafo.close();
+			}
+		}
+	}
+	
+	/**
+	 * 清除MapperBuffer占用的内存空间(MappedByteBuffer自身Bug)
+	 * @param buffer
+	 */
+	private static void releaseMappedBuffer(final Buffer buffer) {
+		if(buffer != null)
+		{
+			AccessController.doPrivileged(new PrivilegedAction<Object>() {
+				public Object run() 
+				{
+					try {
+						Method cleanerMethod = buffer.getClass().getMethod("cleaner");
+						if(cleanerMethod != null)
+						{
+							cleanerMethod.setAccessible(true);
+							Object cleanerObj = cleanerMethod.invoke(buffer);
+
+							Method cleanMethod = (cleanerObj == null) ? null :
+								cleanerObj.getClass().getMethod("clean");
+							if(cleanMethod != null)
+							{
+								cleanMethod.invoke(cleanerObj);
+							}
+						}
+					} catch (Throwable ex) {
+						// TODO Auto-generated catch block
+					}
+					return null;
+				}
+			});
+		}		
+	}
+	
 	/**
 	 * 显示QQ表情对话框
 	 */
@@ -710,6 +915,7 @@ dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 dialog.setContentPane(body);
 dialog.pack();
 dialog.setLocationRelativeTo(c);
+checkWindowLocation(dialog);
 dialog.setVisible(true);
 	}
 	

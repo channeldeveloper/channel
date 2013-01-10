@@ -199,7 +199,11 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 
 	@Override
 	public void put(String action, ChannelMessage msg) throws Exception{
-		// TODO Auto-generated method stub
+		//QQ目前不需要附件等这些信息
+		msg.setFlags(null);
+		msg.setExtensions(null);
+		msg.setAttachments(null);
+		
 		sender.put(action, msg);
 	}
 
