@@ -54,7 +54,7 @@ public class WeiboReceiver {
 	 */
 	public void start()
 	{
-//		backgroud.start();
+		backgroud.start();
 	}
 
 	/**
@@ -157,7 +157,7 @@ public class WeiboReceiver {
 		exts.put(Constants.Weibo_Middle_Pic, status.getBmiddlePic());
 		exts.put(Constants.Weibo_Original_Pic, status.getOriginalPic());
 		msg.setExtensions(exts);
-		msg.setRecievedDate(status.getCreatedAt());
+		msg.setReceivedDate(status.getCreatedAt());
 		msg.setToAddr(ca.getAccount().getUser());
 		
 		return msg;

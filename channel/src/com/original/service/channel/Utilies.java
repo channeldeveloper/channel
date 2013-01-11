@@ -145,10 +145,10 @@ public class Utilies {
 		msg.setClazz(ChannelMessage.MAIL);
 		
 		HashMap<String, Integer> flags = new HashMap<String, Integer>();
-		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_REPLYED,	email.getIsReplay());
-		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_SIGNED, email.getIsSign());
-		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_SEEN,	email.getIsRead());
-		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_DELETED, email.getIsDelete());
+		flags.put(ChannelMessage.FLAG_REPLYED,	email.getIsReplay());
+		flags.put(ChannelMessage.FLAG_SIGNED, email.getIsSign());
+		flags.put(ChannelMessage.FLAG_SEEN,	email.getIsRead());
+		flags.put(ChannelMessage.FLAG_DELETED, email.getIsDelete());
 		flags.put("isProcess",	email.getIsProcess());//?
 		flags.put("isTrash", email.getIsTrash());//?
 		msg.setFlags(flags);		
@@ -156,14 +156,14 @@ public class Utilies {
 		msg.setFromAddr(email.getAddresser());
 		
 		HashMap<String, String> exts = new HashMap<String, String>();
-		exts.put(Constants.Message_Header_Ext_EMAIL_BCC, email.getBcc());
-		exts.put(Constants.Message_Header_Ext_EMAIL_CC, email.getCc());
-		exts.put(Constants.Message_Header_Ext_EMAIL_ReplyTo, email.getReplayTo());
-		exts.put(Constants.Message_Header_Ext_EMAIL_Foler, email.getType());
+		exts.put(ChannelMessage.EXT_EMAIL_BCC, email.getBcc());
+		exts.put(ChannelMessage.EXT_EMAIL_CC, email.getCc());
+		exts.put(ChannelMessage.EXT_EMAIL_ReplyTo, email.getReplayTo());
+		exts.put(ChannelMessage.EXT_EMAIL_Foler, email.getType());
 		msg.setExtensions(exts);
 		msg.setSubject(email.getMailtitle());
 		
-		msg.setRecievedDate(email.getSendtime());
+		msg.setReceivedDate(email.getSendtime());
 //		msg.setToAddr(ca.getAccount().getUser());
 		return msg;
 	}
@@ -185,15 +185,15 @@ public class Utilies {
     	
     	if (msg.getExtensions() != null)
     	{
-    		email.setType(msg.getExtensions().get(Constants.Message_Header_Ext_EMAIL_Foler));
-    		email.setBcc(parseHTMLFlags(msg.getExtensions().get(Constants.Message_Header_Ext_EMAIL_BCC)));
-    		email.setCc(parseHTMLFlags(msg.getExtensions().get(Constants.Message_Header_Ext_EMAIL_CC)));
-    		email.setReplayTo(msg.getExtensions().get(Constants.Message_Header_Ext_EMAIL_ReplyTo));
+    		email.setType(msg.getExtensions().get(ChannelMessage.EXT_EMAIL_Foler));
+    		email.setBcc(parseHTMLFlags(msg.getExtensions().get(ChannelMessage.EXT_EMAIL_BCC)));
+    		email.setCc(parseHTMLFlags(msg.getExtensions().get(ChannelMessage.EXT_EMAIL_CC)));
+    		email.setReplayTo(msg.getExtensions().get(ChannelMessage.EXT_EMAIL_ReplyTo));
     	}
 
     	email.setMailtitle(msg.getSubject());
     	email.setSendtime(ChannelMessage.TYPE_SEND.equals(msg.getType()) ? 
-    			msg.getSentDate() : msg.getRecievedDate());
+    			msg.getSentDate() : msg.getReceivedDate());
     	
     	//where're attachments??
     	email.setAttachments(parseAttachments(msg.getAttachments()));

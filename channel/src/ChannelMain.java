@@ -102,7 +102,7 @@ public class ChannelMain {
 //		//4. 按照过滤器来过滤by filter(Pending).
 		try
 		{
-			MessageFilter filter = new MessageFilter("fromAddr", "franzsoong<franzsoong@gmail.com>", "recievedDate");
+			MessageFilter filter = new MessageFilter("fromAddr", "franzsoong<franzsoong@gmail.com>", "receivedDate");
 			result = msgMg.getMessage(filter);
 			while(result.hasNext())
 			{

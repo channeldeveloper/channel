@@ -48,7 +48,7 @@ public class QQReceiver {
 	 */
 	public void start()
 	{
-//		backgroud.start();
+		backgroud.start();
 	}
 	
 	public void receive() {
@@ -132,7 +132,7 @@ public class QQReceiver {
 			exts.put(entry.getKey(), entry.getValue());
 		}
 		msg.setExtensions(exts);
-		msg.setRecievedDate(qqMsg.getCreateDate());
+		msg.setReceivedDate(qqMsg.getCreateDate());
 		msg.setToAddr(ca.getAccount().getUser());
 		
 		return msg;

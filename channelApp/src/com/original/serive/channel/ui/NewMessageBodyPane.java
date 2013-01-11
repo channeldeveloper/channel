@@ -223,7 +223,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			msg.setId(null); //注意，这里是关键
 			msg.setType(ChannelMessage.TYPE_SEND);
 			msg.setSentDate(new Date());
-			msg.setRecievedDate(msg.getSentDate());//设置和发送时间一样
+			msg.setReceivedDate(msg.getSentDate());//设置和发送时间一样
 			
 			String clazz = newMsg.getClazz(); //类别
 			if (ChannelMessage.WEIBO.equals(clazz)) {

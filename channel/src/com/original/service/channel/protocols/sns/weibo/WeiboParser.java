@@ -283,7 +283,7 @@ public class WeiboParser implements Constants
 //		
 //		if(sourceUrl != null && sourceName != null) {
 //			String dateAndSource = "<br/><br/>"
-//					+ weiboFormat.format(msg.getRecievedDate()) + "  来自";
+//					+ weiboFormat.format(msg.getReceivedDate()) + "  来自";
 //				
 //				dateAndSource += "<a href=\"" + sourceUrl + "\">"
 //					+ sourceName + "</a>";
