@@ -47,7 +47,7 @@ public class ShowMessageTopBar extends ChannelMessageTopBar
 			
 			messageHeader.setForeground(ChannelConstants.LIGHT_TEXT_COLOR);
 			messageHeader.setFont(ChannelConstants.DEFAULT_FONT);
-			messageHeader.setText(channelMsg.getRecievedDate() == null ? "" : messageFormat.format(channelMsg.getRecievedDate()));
+			messageHeader.setText(channelMsg.getReceivedDate() == null ? "" : messageFormat.format(channelMsg.getReceivedDate()));
 			messageHeader.setIconTextGap(10);
 			messageHeader.setHorizontalTextPosition(JLabel.RIGHT);
 		}

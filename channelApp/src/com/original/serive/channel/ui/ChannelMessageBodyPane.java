@@ -411,7 +411,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					messageHeader.setText(msg.getSentDate() == null ? "" : messageFormat.format(msg.getSentDate()));
 				}
 				else {
-					messageHeader.setText(msg.getRecievedDate() == null ? "" : messageFormat.format(msg.getRecievedDate()));
+					messageHeader.setText(msg.getReceivedDate() == null ? "" : messageFormat.format(msg.getReceivedDate()));
 				}
 				messageHeader.setIconTextGap(10);
 				messageHeader.setHorizontalTextPosition(JLabel.RIGHT);
@@ -644,7 +644,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					newMsg.setId(null); //注意，这里是关键
 					newMsg.setType(ChannelMessage.TYPE_SEND);
 					newMsg.setSentDate(new Date());
-					newMsg.setRecievedDate(newMsg.getSentDate());//设置和发送时间一样
+					newMsg.setReceivedDate(newMsg.getSentDate());//设置和发送时间一样
 					newMsg.setBody(replyContent);
 					newMsg.setToAddr(body.iMsg.getFromAddr()); //交换一下发送和接受人的顺序
 					newMsg.setFromAddr(body.iMsg.getToAddr());

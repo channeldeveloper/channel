@@ -1,5 +1,6 @@
 ﻿package com.original.serive.channel;
 
+import java.awt.Window;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
 import javax.swing.JRootPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import com.original.serive.channel.server.ChannelAccesser;
@@ -66,22 +68,29 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 		return (ChannelDesktopPane)channelNativeStore.get("ChannelDesktopPane");
 	}
 	
+
 	//程序执行入口
-	public static void main(String[] args) throws Exception
+	/**
+	 * 为了整合到统一的应用。
+	 * @throws Exception
+	 */
+	private void init() throws Exception
 	{
 		//开始应用程序：
-				UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
-				UIManager.getDefaults().put("defaultFont", ChannelConstants.DEFAULT_FONT);
-				UIManager.put("ScrollBar.width",10); //滚动条默认宽度
+		UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
+		UIManager.getDefaults().put("defaultFont", ChannelConstants.DEFAULT_FONT);
+		UIManager.put("ScrollBar.width",10); //滚动条默认宽度
 				
 		//1. Data 和 View 要分开
 		//2. 服务 和 应用(控制) 要分开
 		//3. 服务控制自服务，不由第3方应用外部控制，
 		//4. 服务不能启动，不影响存库数据(ChannelMessage)访问
-		ChannelGUI main = new ChannelGUI();
+		
 		cs = ChannelAccesser.getChannelService();
 		
 		//渠道服务的控制内部控制。
+		//不联网也能启动，因为需要看历史数据
+		Window win = SwingUtilities.getWindowAncestor(this);
 		while(!cs.isStartupAll()) {
 			try {
 				cs.restartService();
@@ -95,7 +104,7 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 					switch(((ChannelException) ex).getChannel())
 					{
 					case WEIBO: //如果出现需要微博授权的提示错误
-						 ChannelUtil.showAuthorizeWindow(main, ca.getAccount().getUser(), new WindowAdapter()
+						 ChannelUtil.showAuthorizeWindow(win, ca.getAccount().getUser(), new WindowAdapter()
 						{
 							public void windowClosing(WindowEvent e) //当用户关闭授权浏览器窗口时，表示跳过此错误
 							{
@@ -105,7 +114,7 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 						break;
 						
 					case QQ: //如果出现QQ登录需要验证码
-						int option = JOptionPane.showConfirmDialog(main, ex.getMessage(),
+						int option = JOptionPane.showConfirmDialog(win, ex.getMessage(),
 								"是否重试", JOptionPane.YES_NO_OPTION);
 						if(option != JOptionPane.YES_OPTION) {//-1:关闭 1:否 0:是
 							cs.skipService(ca);
@@ -118,14 +127,14 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 				}
 				else {
 					cs.skipAllService();
-					break;
+//					break;
 				}
 			}
 		}
 		cs.start();
 		
 		//使用层面板的方式来布局
-		JLayeredPane mp = main.getLayeredPane();
+		JLayeredPane mp = getLayeredPane();
 		//用户头像(第1层)
 		ChannelToolBar.ChannelUserHeadLabel userHead = new ChannelToolBar.ChannelUserHeadLabel();
 		channelNativeStore.put("ChannelUserHeadLabel", userHead);
@@ -147,15 +156,23 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 		cs.addMessageListener(desktop);
 		
 		mp.add(desktop, JLayeredPane.DEFAULT_LAYER);
-		main.setVisible(true);
+		setVisible(true);
 		
 //开始添加信息：
 		MessageManager msm =ChannelAccesser.getMsgManager();
-		List<ChannelMessage> msgs = msm.getMessages(new MessageFilter(null, null, "-recievedDate"));
+		List<ChannelMessage> msgs = msm.getMessages(new MessageFilter(null, null, "-receivedDate"));
 		for (ChannelMessage m : msgs)
 		{			
 			desktop.initMessage(m); //注意不要使用addMessage()，用途不一样
 		}
+	}
+	
+//程序执行入口
+	public static void main(String[] args) throws Exception
+	{
+		ChannelGUI main = new ChannelGUI();
+		main.init();
+		
 	}
 	
 }
