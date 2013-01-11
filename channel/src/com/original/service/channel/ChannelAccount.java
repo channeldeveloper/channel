@@ -170,50 +170,6 @@ public class ChannelAccount implements Serializable{
 		return false;
 	}
 
-	/**
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-		// Mapping
-		Morphia morphia = new Morphia();
-
-		morphia.map(com.original.service.channel.ChannelAccount.class);
-		morphia.map(com.original.service.channel.Channel.class);
-		morphia.map(com.original.service.profile.Profile.class);
-		// DB
-		Mongo mongo = new Mongo("localhost", 27017);
-		DB db = mongo.getDB("song");
-
-		// db mapping to object
-		Datastore ds = morphia.createDatastore(mongo, "song");
-		ds.ensureIndexes();
-
-		// by mongo db
-		DBCursor cursor = db.getCollection("channelAccount").find();
-		while (cursor.hasNext()) {
-			System.out.println(cursor.next());
-		}
-
-		long cc = ds.getCount(ChannelAccount.class);
-		System.out.println("cc:" + cc);
-
-		// query and list
-
-		Query<ChannelAccount> chs = ds.find(ChannelAccount.class);
-		List<ChannelAccount> chslist = chs.asList();
-
-		Iterator<ChannelAccount> ite = chs.iterator();
-		while (ite.hasNext()) {
-			System.out.println(ite.next());
-		}
-
-		for (int i = 0; i < chslist.size(); i++) {
-			System.out.println(chslist.get(i));
-		}
-
-//		init() ;/
-	}
 
 	
 }

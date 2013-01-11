@@ -63,9 +63,9 @@ public final class ChannelService extends AbstractService {
 	private MessageManager msgManager;
 	private PeopleManager peopleManager;
 
-	private String dbServer = "localhost";
-	private int dbServerPort = 27017;
-	private String channlDBName = "song";
+	private String dbServer = Constants.Channel_DB_Server;
+	private int dbServerPort = Constants.Channel_DB_Server_Port;
+	private String channlDBName = Constants.Channel_DB_Name;
 
 	private Morphia morphia;
 	private Mongo mongo;

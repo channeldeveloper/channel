@@ -23,6 +23,7 @@ import com.google.code.morphia.query.UpdateOperations;
 import com.mongodb.Mongo;
 import com.original.service.channel.Account;
 import com.original.service.channel.Channel;
+import com.original.service.channel.Constants;
 import com.original.service.channel.event.ChannelEvent;
 import com.original.service.channel.event.ChannelListener;
 
@@ -35,14 +36,13 @@ import com.original.service.channel.event.ChannelListener;
  * @version 1.0
  * @create 2012-11-11 20:17:13
  */
-public class ChannelManager {
+public class ChannelManager implements Constants{
 	java.util.logging.Logger logger ;
 	private HashMap<String, Channel> channelMap = new HashMap<String, Channel>();
 	Mongo mongo;
 	Morphia morphia;
 	Datastore ds;
-	public static final String ChannelDB = "song";
-	public static final String ChannelCollectiion = "channel";
+
 	
 	/**
 	 * Manager Channel Instance.
@@ -63,13 +63,13 @@ public class ChannelManager {
 	 */
 	protected void init()
 	{
-		logger = Logger.getLogger(this.ChannelDB);
+		logger = Logger.getLogger(Channel_Collection_Message);
 		Query<Channel> chs = ds.find(Channel.class);
 		List<Channel> chslist = chs.asList();
 
 		// put all channels into memory for channel is limited.
 		for (Channel ch : chslist) {
-			logger.log(Level.INFO, " Load Channel form DB " + this.ChannelCollectiion
+			logger.log(Level.INFO, " Load Channel form DB " + Channel_Collection_Message
 					+ " " + ch);
 			channelMap.put(ch.getName(), ch);
 		}

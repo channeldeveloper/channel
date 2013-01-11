@@ -14,13 +14,13 @@ package com.original.service.channel;
  * 
  * @author Song XueYong
  */
-public interface Constants {
-	
+public interface Constants {	
 	
 	//DB and collection names
 	public static String Channel_DB_Server = "localhost";
 	public static int     Channel_DB_Server_Port = 27017;
-	public static String Channel_DB_Name = "song";//tempdb later change to 
+	public static String Channel_DB_Name = "tempdb";//tempdb later change to 
+	public static String Channel__SYSTEM_DB = "sysdb";//system db later change to 
 	public static String Channel_Collection_Message = "messages";
 	public static String Channel_Collection_Channel = "channel";
 	public static String Channel_Collection_ChannelAccount = "channelAccount";

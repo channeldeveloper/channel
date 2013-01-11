@@ -159,47 +159,6 @@ public class Attachment {
 		this.filePath = filePath;
 	}
 
-	/**
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-		// Mapping
-		Morphia morphia = new Morphia();
-
-		morphia.map(com.original.service.channel.Channel.class);
-		// DB
-		Mongo mongo = new Mongo("localhost", 27017);
-		DB db = mongo.getDB("song");
-
-		// db mapping to object
-		Datastore ds = morphia.createDatastore(mongo, "song");
-		ds.ensureIndexes();
-
-		// by mongo db
-		DBCursor cursor = db.getCollection("attachment").find();
-		while (cursor.hasNext()) {
-			System.out.println(cursor.next());
-		}
-
-		long cc = ds.getCount(Attachment.class);
-		System.out.println("cc:" + cc);
-
-		// query and list
-
-		Query<Attachment> chs = ds.find(Attachment.class);
-		List<Attachment> chslist = chs.asList();
-
-		Iterator<Attachment> ite = chs.iterator();
-		while (ite.hasNext()) {
-			System.out.println(ite.next());
-		}
-
-		for (int i = 0; i < chslist.size(); i++) {
-			System.out.println(chslist.get(i));
-		}
-
-	}
 
 
 }
