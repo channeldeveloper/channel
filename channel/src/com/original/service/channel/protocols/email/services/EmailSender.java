@@ -470,7 +470,7 @@ public class EmailSender{// extends AbstractProcessingResource {
     	String bccTo = null;
     	if (exts != null)
     	{
-    		bccTo = exts.get(Constants.Message_Header_Ext_EMAIL_BCC);
+    		bccTo = exts.get(ChannelMessage.EXT_EMAIL_BCC);
     	}
     	String content = msg.getBody();
     	String title = msg.getSubject();

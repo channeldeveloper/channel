@@ -764,11 +764,11 @@ public final class ChannelService extends AbstractService {
 			return;
 		}
 		// 已经在垃圾箱内部
-		if ((msg.getFlags().get(ChannelMessage.Flag_Trash) != null)
-				&& (msg.getFlags().get(ChannelMessage.Flag_Trash).equals(1))) {
+		if ((msg.getFlags().get(ChannelMessage.FLAG_DELETED) != null)
+				&& (msg.getFlags().get(ChannelMessage.FLAG_DELETED).equals(1))) {
 			this.deleteMessage(msg.getId());
 		} else {
-			this.updateMessageFlag(msg, ChannelMessage.Flag_Trash, 1);
+			this.updateMessageFlag(msg, ChannelMessage.FLAG_DELETED, 1);
 		}
 	}
 

@@ -70,7 +70,7 @@ public class EmailReceiver {
 	 */
 	public void start()
 	{
-//		backgroud.start();
+		backgroud.start();
 	}
 
 	/**
@@ -219,26 +219,26 @@ public class EmailReceiver {
 		msg.setClazz(ChannelMessage.MAIL);
 		
 		HashMap<String, Integer> flags = new HashMap<String, Integer>();
-		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_REPLYED,	email.getIsReplay());
-		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_SIGNED, email.getIsSign());
-		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_SEEN,	email.getIsRead());
-		flags.put(Constants.Message_Header_Ctr_EMAIL_Flag_DELETED, email.getIsDelete());
-		flags.put("isProcess",	email.getIsProcess());//?
-		flags.put("isTrash", email.getIsTrash());//?
+		flags.put(ChannelMessage.FLAG_REPLYED,	email.getIsReplay());
+		flags.put(ChannelMessage.FLAG_SIGNED, email.getIsSign());
+		flags.put(ChannelMessage.FLAG_SEEN,	email.getIsRead());
+		flags.put(ChannelMessage.FLAG_DELETED, email.getIsDelete());
+		flags.put(ChannelMessage.FLAG_PROCESSED,	email.getIsProcess());//?
+		flags.put(ChannelMessage.FLAG_TRASHED, email.getIsTrash());//?
 		msg.setFlags(flags);		
 		msg.setFollowedID(null);
 		msg.setFromAddr(email.getAddresser());
 		
 		HashMap<String, String> exts = new HashMap<String, String>();
-		exts.put(Constants.Message_Header_Ext_EMAIL_BCC, email.getBcc());
-		exts.put(Constants.Message_Header_Ext_EMAIL_CC, email.getCc());
-		exts.put(Constants.Message_Header_Ext_EMAIL_ReplyTo, email.getReplayTo());
-		exts.put(Constants.Message_Header_Ext_EMAIL_Foler, email.getType());
+		exts.put(ChannelMessage.EXT_EMAIL_BCC, email.getBcc());
+		exts.put(ChannelMessage.EXT_EMAIL_CC, email.getCc());
+		exts.put(ChannelMessage.EXT_EMAIL_ReplyTo, email.getReplayTo());
+		exts.put(ChannelMessage.EXT_EMAIL_Foler, email.getType());
 		msg.setExtensions(exts);
 		msg.setSubject(email.getMailtitle());
 		msg.setToAddr(ca.getAccount().getUser());
 		
-		msg.setRecievedDate(email.getSendtime());
+		msg.setReceivedDate(email.getSendtime());
 		
 		//parse Attachments.
 		parseAttachments(msg, email);

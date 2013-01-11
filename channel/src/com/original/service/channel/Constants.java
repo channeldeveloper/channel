@@ -137,23 +137,7 @@ public interface Constants {
 	
 	public static final String Content_Type_Text_Html = "text/html";
 	public static final String Content_Type_Text_plain = "text/plain";
-	
-	public static final String Message_Header_Ext_EMAIL_CC = "CC";
-	public static final String Message_Header_Ext_EMAIL_BCC = "BCC";
-	public static final String Message_Header_Ext_EMAIL_ReplyTo = "ReplyTo";
-	public static final String Message_Header_Ext_EMAIL_Foler = "Foler";
-	
-	
-	public static final String Message_Header_Ctr_EMAIL_Flag_ANSWERED = "ANSWERED";
-	public static final String Message_Header_Ctr_EMAIL_Flag_DELETED = "DELETED";
-	public static final String Message_Header_Ctr_EMAIL_Flag_DRAFT = "DRAFT";
-	public static final String Message_Header_Ctr_EMAIL_Flag_FLAGGED = "FLAGGED";
-	public static final String Message_Header_Ctr_EMAIL_Flag_RECENT = "RECENT";
-	public static final String Message_Header_Ctr_EMAIL_Flag_SEEN = "SEEN";
-	public static final String Message_Header_Ctr_EMAIL_Flag_REPLYED = "REPLYED";
-	public static final String Message_Header_Ctr_EMAIL_Flag_SIGNED  = "SIGNED";	
 
-	
 	public static final String Channel_Type_Email = "email";
 	public static final String Channel_Type_IM = "email";
 	public static final String Channel_Type_SNS = "email";

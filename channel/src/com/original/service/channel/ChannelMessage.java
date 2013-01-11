@@ -44,62 +44,66 @@ import com.original.service.channel.protocols.sns.weibo.WeiboParser;
 public class ChannelMessage implements Cloneable, Constants{
 
 	
-	// 基本信息
-	// MessageHeader
-	// id
+	// 基本信息 MessageHeader
 	@Id
 	private ObjectId id;
 	// 信息原始的ID，相对自己的服务器,，唯一定义，（Now MessageID from server , franz pending channelID+messageID)
 	@Indexed(value = IndexDirection.ASC, name = "messageID", unique = true, dropDups = false)
 	private String messageID;
-
+	//followed id for session
 	private String followedID;
 	@Reference
 	private ChannelAccount channelAccount;
-
+	//send date
 	@Indexed(value = IndexDirection.ASC, name = "settimestamp", unique = false, dropDups = false)
 	private Date sentDate;
-
+	//received (franz pending 拼写错误)
 	@Indexed(value = IndexDirection.ASC, name = "gettimestamp", unique = false, dropDups = false)
-	private Date recievedDate;
-
+	private Date receivedDate;
 	// received, send , draft 
 	private String status;
 	// size
 	private int size;
-
 	// 控制信息MassageControl	
 	private String type = Constants.TYPE_RECEIVED;// send received post comment
 	@Indexed(value = IndexDirection.ASC, name = "fromwho", unique = false, dropDups = false)
 	private String fromAddr;
 	@Indexed(value = IndexDirection.ASC, name = "towho", unique = false, dropDups = false)
 	private String toAddr;
-	// 头部扩展信息
-	private HashMap<String, String> extensions;// other controls such as cc bcc
-
+	// 头部扩展信息， other controls such as cc bcc
+	private HashMap<String, String> extensions;
 	// control flags
 	//	current draft, sent, unread, read , pending , done, saved, trash.
 	private HashMap<String, Integer> flags;
-
-	// 内容信息
-	// MessageBody
-	private String subject;// 主题，邮件主题，微博主题
-	private String contentType;// plaintext, html,xml,json
-	private String body;//
-//	private String[] attachmentIds;
+	// 内容信息 MessageBody
+	// 主题，邮件主题，微博主题
+	private String subject;
+	// plaintext, html,xml,json
+	private String contentType;
+	//内容
+	private String body;
 	@Embedded
-	private List<Attachment> attachments;
+	private List<Attachment> attachments;	
+	//pending 类(type)
+	private String clazz; 	
+	//常量
+	public static final String EXT_EMAIL_CC = "CC";
+	public static final String EXT_EMAIL_BCC = "BCC";
+	public static final String EXT_EMAIL_ReplyTo = "ReplyTo";
+	public static final String EXT_EMAIL_Foler = "Foler";	
+	//控制 0,1
+	public static final String FLAG_DELETED = "DELETED";//是否删除 0未，1是
+	public static final String FLAG_TRASHED = "TRASHED";//是否垃圾 0未，1是 isTrash
+	public static final String FLAG_DRAFT = "DRAFT";//是否草稿 0未，1是
+	public static final String FLAG_FLAGGED = "FLAGGED";//是否旗标 0未，1是
+	public static final String FLAG_RECENT = "RECENT";//是否最新 0未，1是
+	public static final String FLAG_SEEN = "SEEN";//是否看过 0未，1是
+	public static final String FLAG_DONE = "DONE";//是否处理过 0未，1是
+	public static final String FLAG_REPLYED = "REPLYED";//是否回复了 0未，1是
+	public static final String FLAG_SAVED = "SAVED";//是否存库了 0未，1是
+	public static final String FLAG_SIGNED  = "SIGNED";	//是否签名  0未，1是
+	public static final String FLAG_PROCESSED  = "PROCESSED";	//是否处理  0未，1是（邮件原来的）
 	
-	//pending 
-	//分类(type)
-	private String clazz; 
-
-	//	current draft, sent, unread, read , pending , done, saved, trash.
-	public static final String Flag_Read = "Read";//0  没有，1已经读
-	public static final String Flag_Done = "Done";//0  待做，1已做
-	public static final String Flag_Trash = "Trash";//0 未删，1已删
-	public static final String Flag_Saved = "Saved";//0 未存，1已存
-	public static final String Flag_Feedback = "Feedback";//0 不需要 1需要
 	
 	/**
 	 * default constructor.
@@ -404,19 +408,22 @@ public class ChannelMessage implements Cloneable, Constants{
 	}
 
 	/**
-	 * @return the recievedDate
-	 */
-	public Date getRecievedDate() {
-		return recievedDate;
+	 * 拼写错误。
+	 * @return the receivedDate
+	 */	
+	public Date getReceivedDate() {
+		return receivedDate;
 	}
 
 	/**
-	 * @param recievedDate
-	 *            the recievedDate to set
+	 * 拼写错误。
+	 * @param receivedDate
+	 *            the receivedDate to set
 	 */
-	public void setRecievedDate(Date recievedDate) {
-		this.recievedDate = recievedDate;
+	public void setReceivedDate(Date receivedDate) {
+		this.receivedDate = receivedDate;
 	}
+	
 	
 	public String getShortMsg()
 	{
