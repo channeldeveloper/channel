@@ -340,9 +340,9 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			if(e.getActionCommand() == CANCEL) {
 				ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 				if (newMsg != null) {
-					desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName(), true);
+					desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName());
 				} else {
-					desktop.removeShowComp(PREFIX_NEW, true);
+					desktop.removeShowComp(PREFIX_NEW);
 				}
 			}
 			else if(e.getActionCommand() == POST) { //发送

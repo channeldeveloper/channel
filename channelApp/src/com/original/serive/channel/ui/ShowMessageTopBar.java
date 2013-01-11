@@ -68,7 +68,7 @@ public class ShowMessageTopBar extends ChannelMessageTopBar
 	public void doClose() {
 		ChannelDesktopPane desktop =ChannelGUI.getDesktop();
 		if(channelMsg != null) {
-			desktop.removeShowComp(PREFIX_SHOW + channelMsg.getContactName(), true);
+			desktop.removeShowComp(PREFIX_SHOW + channelMsg.getContactName());
 		}
 		else {
 			desktop.showDefaultComp();

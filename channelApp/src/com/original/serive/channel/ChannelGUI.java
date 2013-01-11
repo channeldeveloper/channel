@@ -70,12 +70,7 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 		return (ChannelDesktopPane)channelNativeStore.get("ChannelDesktopPane");
 	}
 	
-
-	//程序执行入口
-	/**
-	 * 为了整合到统一的应用。
-	 * @throws Exception
-	 */
+	//初始化应用程序，也方便外部程序整合
 	private void init() throws Exception
 	{
 		//开始应用程序：

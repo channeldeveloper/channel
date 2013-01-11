@@ -24,6 +24,7 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.event.MouseInputListener;
 
+import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelConstants;
@@ -42,7 +43,7 @@ import com.original.widget.OScrollBar;
  * @author WMS
  *
  */
-public class ChannelDesktopPane extends JPanel implements MessageListner, AdjustmentListener, MouseInputListener
+public class ChannelDesktopPane extends JPanel implements MessageListner, AdjustmentListener, MouseInputListener, EventConstants
 {
 	private CardLayout layoutMgr = new CardLayout(); //卡片布局，带有切换功能
 	public static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("width"), 
@@ -223,6 +224,9 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		jsp.addMouseListener(this);
 		jsp.addMouseMotionListener(this);
 		add("DEFAULT", jsp);
+		
+		this.putClientProperty(LAST_SHOW_COMPONENT, null);
+		this.putClientProperty(CURRENT_SHOW_COMPONENT, "DEFAULT");
 	}
 	
 	/**
@@ -251,6 +255,9 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		
 		add(name, jsp);
 		showComp(name);
+		
+		this.putClientProperty(LAST_SHOW_COMPONENT, getClientProperty(CURRENT_SHOW_COMPONENT));
+		this.putClientProperty(CURRENT_SHOW_COMPONENT, name);
 	}
 	
 	/**
@@ -267,7 +274,10 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 */
 	public void showComp(String name)
 	{
-		layoutMgr.show(this, name);	
+		if (name == null) {
+			name = "DEFAULT";
+		}
+		layoutMgr.show(this, name);
 	}
 	
 	/**
@@ -291,7 +301,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 * @param name 面板名称
 	 * @param showDefault 移除后是否显示默认面板
 	 */
-	public void removeShowComp(String name, boolean showDefault)
+	public void removeShowComp(String name)
 	{
 		int index = -1;
 		if(name == null || "DEFAULT".equals(name)
@@ -299,8 +309,9 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 			return;
 		
 		remove(index);
-		if(showDefault)
-			showDefaultComp();
+		//返回历史面板
+		String history = (String)this.getClientProperty(LAST_SHOW_COMPONENT);
+		showComp(history);
 	}
 
 	@Override
