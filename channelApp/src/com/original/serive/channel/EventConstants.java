@@ -36,15 +36,26 @@ public interface EventConstants
 	String VIEW_UNDO = "view undo";
 	String VIEW_TRASH = "view trash";
 	
+	/* 消息状态 */
+	String STATUS_UNKNOWN = "unknown";
+	String STATUS_UNREAD = "unread";
+	String STATUS_READ = "read";
+	String STATUS_POST = "post";
+	
 	/* 设置和新建联系人消息 */
 	String SETTING = "setting";
-	String NEWMSG = "new message";
+	String NEW = "new";
 		
 	/* 面板的消息数改变事件 */
 	String 
 			MAIL_COUNT_CHANGE_PROPERTY = "MAIL",
 			WEIBO_COUNT_CHANGE_PROPERTY = "WEIBO",
 			QQ_COUNT_CHANGE_PROPERTY = "QQ";
+	
+	/* 面板的状态改变事件 */
+	String LAST_SHOW_COMPONENT = "last show component",//component
+			CURRENT_SHOW_COMPONENT = "current show component",//component
+			SCROLLBAR_SHOW_STATUS = "scrollbar show status";//Boolean	
 	
 	/* 联系人快捷通道 */
 	String CHANNEL_FOR_QQ = "QQ",

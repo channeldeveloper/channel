@@ -47,7 +47,11 @@ public class ChannelHyperlinkListener implements HyperlinkListener {
 			ChannelUtil.showImageDialog(despURL);
 		} else if (despURL.startsWith("http://")
 				|| despURL.startsWith("https://")) {
-			ChannelUtil.showBrowser(null, despURL);
+			try {
+				ChannelUtil.showBrowser(null, despURL);
+			} catch (Exception ex) {
+				System.err.println(ex);
+			}
 		} else if (despURL.startsWith("file:/")) { //这里直接另存为文件，不直接打开！
 			try {
 				File file = new File(new URI(despURL)); 

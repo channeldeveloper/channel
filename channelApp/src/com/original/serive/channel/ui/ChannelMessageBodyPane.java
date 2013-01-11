@@ -304,6 +304,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			if(isOn) {
 				top.setVisible(QUICK_REPLY, false);
 				top.setVisible(SHOW_COMPLETE, true);
+				top.notifyStatusChange(iMsg, STATUS_READ); //通知已读
 				center.showComplete(iMsg);
 				bottom.showMessageReplyArea();
 				
@@ -393,16 +394,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		{
 			if(msg != null && msg.getMessageID() != null)
 			{
-				if (ChannelMessage.QQ.equals((msg.getClazz())))
-				{
-					messageHeader.setIcon(IconFactory.loadIconByConfig("defaultQQIcon"));
-				} else if (ChannelMessage.WEIBO.equals((msg.getClazz())))
-				{
-					messageHeader.setIcon(IconFactory.loadIconByConfig("defaultWeiboIcon"));
-				} else if (ChannelMessage.MAIL.equals((msg.getClazz())))
-				{
-					messageHeader.setIcon(IconFactory.loadIconByConfig("defaultMailIcon"));
-				}
+				notifyStatusChange(msg, STATUS_UNREAD);
 				
 				messageHeader.setForeground(ChannelConstants.LIGHT_TEXT_COLOR);
 				messageHeader.setFont(ChannelConstants.DEFAULT_FONT);
@@ -416,6 +408,29 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				messageHeader.setIconTextGap(10);
 				messageHeader.setHorizontalTextPosition(JLabel.RIGHT);
 			}
+		}
+		
+		/**
+		 * 通知消息状态发生改变，目前主要更换图标。
+		 */
+		public void notifyStatusChange(ChannelMessage msg, String statusConstant)
+		{
+			String icon = "Icon"; //图标名称
+			if (ChannelMessage.QQ.equals((msg.getClazz())))
+				icon = "QQ" + icon;
+			else if (ChannelMessage.WEIBO.equals((msg.getClazz())))
+				icon = "Weibo" + icon;
+			else if (ChannelMessage.MAIL.equals((msg.getClazz())))
+				icon = "Mail" + icon;
+
+			if (statusConstant == STATUS_UNREAD)
+				icon = "default" + icon;
+			else if (statusConstant == STATUS_READ)
+				icon = "read" + icon;
+			else if (statusConstant == STATUS_POST)
+				icon = "post" + icon;
+			
+			messageHeader.setIcon(IconFactory.loadIconByConfig(icon));
 		}
 		
 		/**
@@ -508,7 +523,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	//中间面板
 	static class Center extends JEditorPane implements  EventConstants
 	{
-		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-60,  25);
+		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-65,  25);
 		EditorKit editorKit = createDefaultEditorKit();
 		HTMLEditorKit	htmlEditorKit = new HTMLEditorKit();		
 		

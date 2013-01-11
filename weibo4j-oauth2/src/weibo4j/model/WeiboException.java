@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package weibo4j.model;
 
+import weibo4j.http.HttpClient;
 import weibo4j.org.json.JSONException;
 import weibo4j.org.json.JSONObject;
 
@@ -87,5 +88,23 @@ public class WeiboException extends Exception {
 
 	public String getError() {
 		return error;
+	}
+	
+	public boolean isHttpStatusError() {
+		switch (statusCode) {
+		case HttpClient.BAD_REQUEST://400
+		case HttpClient.NOT_AUTHORIZED://401
+		case HttpClient.FORBIDDEN://403
+		case HttpClient.NOT_FOUND://404
+		case HttpClient.NOT_ACCEPTABLE://406
+		case HttpClient.INTERNAL_SERVER_ERROR://500
+		case HttpClient.BAD_GATEWAY://502
+		case HttpClient.SERVICE_UNAVAILABLE://503
+			return true;
+
+		case -1:
+		default:
+			return false;
+		}
 	}
 }

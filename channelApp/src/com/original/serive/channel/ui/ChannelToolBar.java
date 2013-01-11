@@ -33,6 +33,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.plaf.basic.BasicMenuItemUI;
 
+import com.original.serive.channel.ChannelGUI;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.ui.data.MenuItem;
@@ -49,7 +50,7 @@ import com.original.serive.channel.util.LocationIcon;
  * @author WMS
  *
  */
-public class ChannelToolBar extends JPanel implements ActionListener
+public class ChannelToolBar extends JPanel implements ActionListener, EventConstants
 {
 	/** 工具栏的固定大小 */
 	public static Dimension SIZE = new Dimension(
@@ -60,11 +61,9 @@ public class ChannelToolBar extends JPanel implements ActionListener
 //			btnSetting = new JButton(IconFactory.loadIconByConfig("settingIcon"));//设置
 	
 	private JButton btnNew = ChannelUtil.createAbstractButton(
-			new AbstractButtonItem(null, EventConstants.NEWMSG, 
-					IconFactory.loadIconByConfig("newIcon"))),
+			new AbstractButtonItem(null, NEW, 	IconFactory.loadIconByConfig("newIcon"))),
 					btnSetting = ChannelUtil.createAbstractButton(
-							new AbstractButtonItem(null, EventConstants.SETTING, 
-					IconFactory.loadIconByConfig("settingIcon")));
+							new AbstractButtonItem(null, SETTING, IconFactory.loadIconByConfig("settingIcon")));
 	
 	public ChannelToolBar() {
 				constructToolBar();
@@ -81,10 +80,10 @@ public class ChannelToolBar extends JPanel implements ActionListener
 		ChannelButton typeButton = new ChannelButton("类型", IconFactory.loadIconByConfig("viewdownIcon"));
 		typeButton.setBounds(73+7, 10, 90,25);
 		typeButton.initPopupMenu(new MenuItem[]{
-				new MenuItem("全部", EventConstants.VIEW_ALL_TYPE, true),
-				new MenuItem("邮件", EventConstants.VIEW_MAIL),
-				new MenuItem("QQ", EventConstants.VIEW_QQ),
-				new MenuItem("微博", EventConstants.VIEW_WEIBO),
+				new MenuItem("全部", VIEW_ALL_TYPE, true),
+				new MenuItem("邮件", VIEW_MAIL),
+				new MenuItem("QQ", VIEW_QQ),
+				new MenuItem("微博", VIEW_WEIBO),
 		});
 		add(typeButton);
 		
@@ -92,9 +91,9 @@ public class ChannelToolBar extends JPanel implements ActionListener
 		ChannelButton statusButton = new ChannelButton("状态", IconFactory.loadIconByConfig("viewdownIcon"));
 		statusButton.setBounds(73+102, 10, 90,25);
 		statusButton.initPopupMenu(new MenuItem[]{
-				new MenuItem("全部", EventConstants.VIEW_ALL_STATUS, true),
-				new MenuItem("未处理", EventConstants.VIEW_UNDO),
-				new MenuItem("垃圾箱", EventConstants.VIEW_TRASH),
+				new MenuItem("全部", VIEW_ALL_STATUS, true),
+				new MenuItem("未处理", VIEW_UNDO),
+				new MenuItem("垃圾箱", VIEW_TRASH),
 		});
 		add(statusButton);
 		
@@ -118,7 +117,12 @@ public class ChannelToolBar extends JPanel implements ActionListener
 	//一些控制按钮的触发事件
 	public void actionPerformed(ActionEvent e)
 	{
-		
+		if(e.getActionCommand() == NEW) {
+			ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(true));
+			cmp.newMessage(null); 
+			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+			desktop.addOtherShowComp(PREFIX_NEW,  cmp);
+		}
 	}
 
 	/**

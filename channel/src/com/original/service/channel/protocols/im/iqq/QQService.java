@@ -72,7 +72,11 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 				 categoryService.getFriends(ai);
 			}
 			catch(Exception ex) {
-				throw new ChannelException(ca, CHANNEL.QQ, ex.getMessage() + "\n是否重试？");
+				if (ex instanceof IllegalStateException) {
+					System.err.println(ex); //无法连接QQ，一般为网络不通
+				} else if (ex instanceof RuntimeException) {
+					throw new ChannelException(ca, CHANNEL.QQ, ex.getMessage()	+ "\n是否重试？");
+				}
 			}
 		}
 	}

@@ -5,8 +5,14 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.LayoutManager;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.awt.event.MouseEvent;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -16,10 +22,13 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.event.MouseInputListener;
 
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.util.ChannelConfig;
+import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
+import com.original.serive.channel.util.GraphicsHandler;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.event.MessageEvent;
@@ -33,12 +42,13 @@ import com.original.widget.OScrollBar;
  * @author WMS
  *
  */
-public class ChannelDesktopPane extends JPanel implements MessageListner
+public class ChannelDesktopPane extends JPanel implements MessageListner, AdjustmentListener, MouseInputListener
 {
 	private CardLayout layoutMgr = new CardLayout(); //卡片布局，带有切换功能
 	public static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("width"), 
 			ChannelConfig.getIntValue("desktopHeight"));
-	public static ImageIcon BACKGROUND = IconFactory.loadIconByConfig("background");
+	public static ImageIcon BACKGROUND = IconFactory.loadIconByConfig("background"), //背景图片
+			TOPICON = IconFactory.loadIconByConfig("top");//置顶图标
 	
 	public static JPanel DEFAULT_PANE = new JPanel(); //桌面默认显示的面板，消息列表面板，带滚动条
 	public static JScrollBar DEFAULT_SCROLLBAR = 
@@ -51,9 +61,16 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 	
 	public static Lock channelLock = new ReentrantLock(); //用于控制消息的添加，即initMessage()和addMessage()的同步
 	
+	private boolean isScrollBarVisible = false; //滚动条是否可见
+	private int scrollBarValue = 0;//滚动条当前值
+	
+	private Rectangle showMoreArea = null, topIconArea = null; //显示更新信息和置顶图标的区域
+	private String showMore = "显示更多信息";
+	
 	public ChannelDesktopPane() {
 		setLayout(layoutMgr);
 		DEFAULT_PANE.setLayout(DEFAULT_UP_LAYOUT);
+		DEFAULT_SCROLLBAR.addAdjustmentListener(this);
 		
 		addDefaultShowComp(DEFAULT_PANE);
 	}
@@ -67,23 +84,24 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 		if(!checkMsgValidity(msg))
 			return;
 		
-		channelLock.lock();
+		boolean isLock = false;
 		try {
-			ChannelMessagePane msgContainer = null;
-//			if (DEFAULT_UP_LAYOUT != DEFAULT_PANE.getLayout()) {
-//				DEFAULT_PANE.setLayout(DEFAULT_UP_LAYOUT);
-//			}
+			if(isLock = channelLock.tryLock()) {
+				ChannelMessagePane msgContainer = null;
 
-			if ((msgContainer = findMessage(msg)) == null) {
-				msgContainer = new ChannelMessagePane();
-				msgContainer.initMessage(msg);
-				DEFAULT_PANE.add(msgContainer);
-				DEFAULT_PANE.validate();
-			} else {
-				msgContainer.initMessage(msg);
+				if ((msgContainer = findMessage(msg)) == null) {
+					msgContainer = new ChannelMessagePane();
+					msgContainer.initMessage(msg);
+					DEFAULT_PANE.add(msgContainer);
+					DEFAULT_PANE.validate();
+				} else {
+					msgContainer.initMessage(msg);
+				}
 			}
 		} finally {
-			channelLock.unlock();
+			if(isLock) {
+				channelLock.unlock();
+			}
 		}
 	}
 	
@@ -96,31 +114,31 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 		if (!checkMsgValidity(msg))
 			return;
 
-		channelLock.lock();
+		boolean isLock = false;
 		try {
-			ChannelMessagePane msgContainer = null;
-			if ((msgContainer = findMessage(msg)) == null) {
-				msgContainer = new ChannelMessagePane();
-			}
-			msgContainer.addMessage(msg, true);
-			
-//			if (DEFAULT_DOWN_LAYOUT != DEFAULT_PANE.getLayout()) {
-//				DEFAULT_PANE.setLayout(DEFAULT_DOWN_LAYOUT);
-//			}
-			DEFAULT_PANE.add(msgContainer, 0);
-			DEFAULT_PANE.validate();
+			if(isLock = channelLock.tryLock()) {
+				ChannelMessagePane msgContainer = null;
+				if ((msgContainer = findMessage(msg)) == null) {
+					msgContainer = new ChannelMessagePane();
+				}
+				msgContainer.addMessage(msg, true);
+				DEFAULT_PANE.add(msgContainer, 0);
+				DEFAULT_PANE.validate();
 
-			//如果当前显示界面已经切换到<显示全部>面板，则该面板也要添加最新消息
-			JPanel showComp = (JPanel) currentShowComp();
-			if (showComp != DEFAULT_PANE
-					&& showComp.getComponentCount() > 0
-					&& (showComp = (JPanel) showComp.getComponent(0)) instanceof ChannelMessagePane) {
-				msgContainer = (ChannelMessagePane) showComp;
-				msgContainer.addMessage(msg, false);
+				//如果当前显示界面已经切换到<显示全部>面板，则该面板也要添加最新消息
+				JPanel showComp = (JPanel) currentShowComp();
+				if (showComp != DEFAULT_PANE
+						&& showComp.getComponentCount() > 0
+						&& (showComp = (JPanel) showComp.getComponent(0)) instanceof ChannelMessagePane) {
+					msgContainer = (ChannelMessagePane) showComp;
+					msgContainer.addMessage(msg, false);
+				}
 			}
 		}
 		finally {
-			channelLock.unlock();
+			if(isLock) {
+				channelLock.unlock();
+			}
 		}
 	}
 	
@@ -170,11 +188,10 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 	 */
 	public Component currentShowComp() {
 		Component comp = null;
-		for(int i=0; i<getComponentCount(); i++)
-		{
+		for (int i = 0; i < getComponentCount(); i++) {
 			comp = getComponent(i);
-			if(comp.isVisible()) {
-				if(comp instanceof JScrollPane) {
+			if (comp.isVisible()) {
+				if (comp instanceof JScrollPane) {
 					comp = ((JScrollPane) comp).getViewport().getView();
 				}
 				break;
@@ -195,7 +212,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		
 		jsp.setVerticalScrollBar(DEFAULT_SCROLLBAR);
-		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 5));
+		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 55, 5));
 		
 		//设置滚动面板透明
 		jsp.setViewportBorder(null);
@@ -203,6 +220,8 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 		jsp.getViewport().setOpaque(false);
 		
 		jsp.setName("DEFAULT");
+		jsp.addMouseListener(this);
+		jsp.addMouseMotionListener(this);
 		add("DEFAULT", jsp);
 	}
 	
@@ -227,7 +246,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 		otherPane.setOpaque(false);
 		//为载体添加滚动条
 		JScrollPane jsp =  ChannelUtil.createScrollPane(otherPane, new Color(225,240,240));
-		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 25, 5));
+		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 55, 5));
 		jsp.setName(name);
 		
 		add(name, jsp);
@@ -287,7 +306,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 	@Override
 	public void paintComponent(Graphics g)
 	{
-//		Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
+		Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
 //		
 //		Area bounds = new Area(new Rectangle(0, 0, getWidth(), getHeight()));
 //		Color backColor = new Color(35,85,105);
@@ -300,13 +319,116 @@ public class ChannelDesktopPane extends JPanel implements MessageListner
 //		g2d.setPaint(paint);
 //		g2d.fill(bounds);
 //		GraphicsHandler.suspendRendering(g2d);
-		g.drawImage(BACKGROUND.getImage(), 0, 0, this);
+		g2d.drawImage(BACKGROUND.getImage(), 0, 0, this);
+		
+		if(isScrollBarVisible) {
+			g2d.setFont(ChannelConstants.DEFAULT_FONT.deriveFont(16F));
+			g2d.setColor(Color.WHITE);
+			
+			if(showMoreArea == null) {
+				int fontWidth = g2d.getFontMetrics().stringWidth(showMore), 
+						fontHeight = g2d.getFont().getSize();
+				showMoreArea = new Rectangle((SIZE.width - fontWidth) / 2,
+						SIZE.height - fontHeight - 5, 
+						fontWidth, 
+						fontHeight);
+			}
+			g2d.drawString(showMore, showMoreArea.x, showMoreArea.y);
+			
+			if (topIconArea == null) {
+				topIconArea = new Rectangle(SIZE.width - TOPICON.getIconWidth() - 25, 
+						SIZE.height - TOPICON.getIconHeight() - 15,
+						TOPICON.getIconWidth(), 
+						TOPICON.getIconHeight());
+			}
+			g2d.drawImage(TOPICON.getImage(), topIconArea.x, topIconArea.y, this);
+		}
+	}
+
+	@Override
+	public void adjustmentValueChanged(AdjustmentEvent e) {
+		// TODO 自动生成的方法存根
+		if(e.getAdjustmentType() == AdjustmentEvent.TRACK) {
+			JScrollBar scrollBar =(JScrollBar) e.getSource();
+			if(scrollBar.getValue() != scrollBarValue) {
+				scrollBarValue = scrollBar.getValue();
+
+				// 滚动条消失
+				if (isScrollBarVisible
+						&& scrollBarValue == 0
+						&& scrollBar.getVisibleAmount() == scrollBar	.getMaximum()) {
+					isScrollBarVisible = false;
+					repaint();
+				}
+				
+				int currentValue = scrollBar.getMaximum() - scrollBar.getVisibleAmount();
+				if (e.getValue() != 0 && e.getValue() == currentValue) {// 滚动条移至底部
+					if(!isScrollBarVisible) {
+						isScrollBarVisible = true;
+						repaint();
+					}
+					
+					//addMessage();
+				}
+			}
+		}
+	}
+	
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		// TODO 自动生成的方法存根
+		Point point  = e.getPoint();
+		if (showMoreArea != null
+				&& showMoreArea.contains(point.x, point.y + showMoreArea.height)) {
+			showMoreMessage();
+		} else if (topIconArea != null && topIconArea.contains(point)) {
+			backToTop();
+		} 
+	}
+	
+	@Override
+	public void mouseMoved(MouseEvent e) {
+		// TODO 自动生成的方法存根
+		Point point  = e.getPoint();
+		if (showMoreArea != null
+				&& showMoreArea.contains(point.x, point.y + showMoreArea.height)) {
+			setCursor(ChannelConstants.HAND_CURSOR);
+		} else if (topIconArea != null && topIconArea.contains(point)) {
+			setCursor(ChannelConstants.HAND_CURSOR);
+		} else {
+			setCursor(ChannelConstants.DEFAULT_CURSOR);
+		}
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) { }
+
+	@Override
+	public void mouseReleased(MouseEvent e) { }
+
+	@Override
+	public void mouseEntered(MouseEvent e) { }
+
+	@Override
+	public void mouseExited(MouseEvent e) { }
+
+	@Override
+	public void mouseDragged(MouseEvent e) { }
+	
+	//显示更多的消息列表
+	private void showMoreMessage() {
+		System.out.println("show more message!");
+	}
+	
+	//滚动条置顶
+	private void backToTop() {
+		DEFAULT_SCROLLBAR.setValue(0);
 	}
 
 	@Override
 	public void change(MessageEvent evnt)
 	{
-		if(evnt.getType() == MessageEvent.Type_Added) {
+		if (evnt.getType() == MessageEvent.Type_Added) {
 			addMessage(evnt.getAdded()[0]);
 		}
 	}

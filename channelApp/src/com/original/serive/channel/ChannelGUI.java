@@ -13,6 +13,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JRootPane;
 import javax.swing.UIManager;
 
+import weibo4j.model.WeiboException;
+
 import com.original.serive.channel.server.ChannelAccesser;
 import com.original.serive.channel.ui.ChannelDesktopPane;
 import com.original.serive.channel.ui.ChannelToolBar;
@@ -95,13 +97,16 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 					switch(((ChannelException) ex).getChannel())
 					{
 					case WEIBO: //如果出现需要微博授权的提示错误
-						 ChannelUtil.showAuthorizeWindow(main, ca.getAccount().getUser(), new WindowAdapter()
-						{
-							public void windowClosing(WindowEvent e) //当用户关闭授权浏览器窗口时，表示跳过此错误
-							{
-								cs.skipService(ca);
-							}
-						});
+						try {
+							ChannelUtil.showAuthorizeWindow(main, ca.getAccount().getUser(), new WindowAdapter() {
+								public void windowClosing(WindowEvent e) //当用户关闭授权浏览器窗口时，表示跳过此错误
+								{
+									cs.skipService(ca);
+								}
+							});
+						} catch (WeiboException we) {//未知错误，可能网络不通
+							cs.skipService(ca);
+						}
 						break;
 						
 					case QQ: //如果出现QQ登录需要验证码

@@ -21,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.border.EmptyBorder;
 
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
@@ -31,6 +32,7 @@ import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants.CHANNEL;
+import com.original.widget.OTextField;
 
 /**
  * 新建消息顶部栏，可以新建已知或未知联系人消息
@@ -57,7 +59,7 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 	private boolean editable = false; //是否可编辑。如果为true，则联系人地址可以编辑(文本框)；否则只显示(标签)
 	//由editable来决定是用lbMsgTo还是txtMsgTo(中)
 	private JLabel lbMsgTo = new JLabel();
-	private JTextField txtMsgTo = new JTextField();
+	private JTextField txtMsgTo = new OTextField();
 	
 	private MessageButtonGroup mbg = new MessageButtonGroup();//按钮控制组(左)
 	private JPanel control = new  JPanel(); //按钮控制面板，如选择联系人、添加分享/抄送等(右)
@@ -93,9 +95,10 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		layoutMgr.addComToModel(left);
 		
 		JPanel center = new JPanel(new BorderLayout(5,0));
-		center.setPreferredSize(new Dimension(450, 35));//450无意义，主要就是设定输入框的高度
+		center.setBorder(new EmptyBorder(10, 0, 0, 0));
 		JLabel lbTo = new JLabel("To：");
 		lbTo.setForeground(ChannelConstants.LIGHT_TEXT_COLOR);
+		lbTo.setVerticalAlignment(JLabel.TOP);
 		center.add(lbTo, BorderLayout.WEST);
 		if(!this.editable) {
 			center.add(lbMsgTo, BorderLayout.CENTER);
@@ -185,25 +188,27 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		this.newMsg = msg;
 	}
 	private void setMessage2GUI() {
-		if(newMsg != null) {
+		if (newMsg != null) {
 			setMessageTo(newMsg.getContactAddr());
-			
-			//同时设置Body父面板的消息
-			NewMessageBodyPane body = (NewMessageBodyPane)getMessageBody();
+
+			// 同时设置Body父面板的消息
+			NewMessageBodyPane body = (NewMessageBodyPane) getMessageBody();
 			body.setMessage(newMsg);
-			
-			if(ChannelMessage.MAIL.equals(newMsg.getClazz())) {
+
+			if (ChannelMessage.MAIL.equals(newMsg.getClazz())) {
 				setEnabled(newMail.getActionCommand());
 				newMail.getSource().doClick();
-			}
-			else if(ChannelMessage.QQ.equals(newMsg.getClazz())) {
+			} else if (ChannelMessage.QQ.equals(newMsg.getClazz())) {
 				setEnabled(newQQ.getActionCommand());
 				newQQ.getSource().doClick();
-			}
-			else if(ChannelMessage.WEIBO.equals(newMsg.getClazz())) {
+			} else if (ChannelMessage.WEIBO.equals(newMsg.getClazz())) {
 				setEnabled(newWeibo.getActionCommand());
 				newWeibo.getSource().doClick();
 			}
+		} else {
+			setMessageTo(null);
+			
+			newMail.getSource().doClick();//默认打开邮件
 		}
 	}
 	

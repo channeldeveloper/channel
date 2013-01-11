@@ -13,8 +13,6 @@ import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Window;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
@@ -290,14 +288,14 @@ public class ChannelUtil implements ChannelConstants
 	 * @throws WeiboException
 	 * @return 授权是否成功
 	 */
-	public static void showAuthorizeWindow(final Window owner, final String account, final WindowListener wlistener) throws WeiboException
+	public static void showAuthorizeWindow(final Window owner, final String account, final WindowListener listener) throws WeiboException
 	{
 		if(owner == null)
 			throw new IllegalArgumentException("Authorize window hasn't known it's owner");
 
 		final String authorizeURL = ChannelAccesser.getOauthRemoteURL();
 		final JWebBrowser browser = new JWebBrowser();
-		final WebBrowserListener listener = new WebBrowserAdapter()
+		final WebBrowserListener wlistener = new WebBrowserAdapter()
 		{
 			public void locationChanged(WebBrowserNavigationEvent evt)
 			{
@@ -323,78 +321,71 @@ public class ChannelUtil implements ChannelConstants
 					SwingUtilities.getWindowAncestor(browser).dispose();//自动关闭浏览器窗口
 				}
 			}};
-			showBrowser(browser, owner, authorizeURL, listener, wlistener);
+			
+			try {
+				Window window = showBrowser(browser, owner, authorizeURL, wlistener);
+				window.addWindowListener(listener);
+				window.setVisible(true);
+			}
+			catch(Exception ex) {
+				throw new WeiboException(ex);
+			}
+			
 	}
 	
 	/**
 	 * 显示本地浏览器窗口
 	 * @param URL
 	 */
-	public static void showBrowser(Window owner, String URL)
+	public static Window showBrowser(Window owner, String URL) throws Exception
 	{
-		showBrowser(owner, URL, null,null);
+		return showBrowser(owner, URL, null);
 	}
-	public static void showBrowser(Window owner,  final String URL, final WebBrowserListener listener, final WindowListener listener2)
+	public static Window showBrowser(Window owner,  final String URL, final WebBrowserListener listener) throws Exception
 	{
-		showBrowser(null, owner, URL, null,null);
+		return showBrowser(null, owner, URL, listener);
 	}
-	public static void showBrowser(JWebBrowser webBrowser, Window owner,  final String URL, final WebBrowserListener listener, final WindowListener listener2)
+	public static Window showBrowser(JWebBrowser webBrowser, Window owner,  final String URL, final WebBrowserListener listener) throws Exception
 	{
 NativeInterface.open();
 		
 		 final JWebBrowser browser = webBrowser == null ? new JWebBrowser() : webBrowser;
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				try {
-					browser.setBarsVisible(false);
-					browser.setButtonBarVisible(false);
-					browser.setDefaultPopupMenuRegistered(false);
-					browser.navigate(URL);
-					
-					if(listener != null)
+				browser.setBarsVisible(false);
+				browser.setButtonBarVisible(false);
+				browser.setDefaultPopupMenuRegistered(false);
+				browser.navigate(URL);
+				
+				if(listener != null) {
 					browser.addWebBrowserListener(listener);
-					
-				} catch (Exception ex) {
-					System.err.println(ex);
 				}
 			}
 		});
 		
-		if(browser != null) {
-			final Window window = (Window)WebBrowserWindowFactory.create(owner, browser);
-			if (listener2 != null) {
-				window.addWindowListener(listener2); // 自定义窗体事件
-			} else {
-				window.addWindowListener(new WindowAdapter() {
-					public void windowClosing(WindowEvent e) {
-						window.dispose();
-					}
-				});
-			}
-			
-			//使用系统自带的标题栏
-			if (window instanceof JDialog) {
-				((JDialog) window).setUndecorated(false);
-				((JDialog) window).setModal(true);
-				((JDialog) window).getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-			} else if (window instanceof JFrame) {
-				((JFrame) window).setUndecorated(false);
-				((JFrame) window).getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-			}
-			
-			window.setSize(CHANNELWIDTH*2/3, CHANNELHEIGHT*2/3);
-			window.setMaximumSize(new Dimension(CHANNELWIDTH, CHANNELHEIGHT-STATUSBARHEIGHT));
-			if(owner == null)
-				window.setLocationRelativeTo(null);
-			checkWindowLocation(window);
-			window.setVisible(true);
-//			window.dispose();
+		final Window window = (Window)WebBrowserWindowFactory.create(owner, browser);			
+		//使用系统自带的标题栏
+		if (window instanceof JDialog) {
+			((JDialog) window).setUndecorated(false);
+			((JDialog) window).setModal(true);
+			((JDialog) window).getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+		} else if (window instanceof JFrame) {
+			((JFrame) window).setUndecorated(false);
+			((JFrame) window).getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		}
+		
+		window.setSize(CHANNELWIDTH*2/3, CHANNELHEIGHT*2/3);
+		window.setMaximumSize(new Dimension(CHANNELWIDTH, CHANNELHEIGHT-STATUSBARHEIGHT));
+		if(owner == null)
+			window.setLocationRelativeTo(null);
+		checkWindowLocation(window);
 
 		try{
 			NativeInterface.runEventPump();
 		}
 		catch(Exception ex) { }
+		
+		return window;
 	}
 	
 	/**

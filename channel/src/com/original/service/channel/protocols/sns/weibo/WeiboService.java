@@ -116,13 +116,15 @@ public class WeiboService extends AbstractService {
 			WeiboParser.collectionEmotions(token);
 		}
 		catch(WeiboException ex) {
-			if ("expired_token".equals(ex.getError()) || 21327 == ex.getErrorCode())
-			{
-				throw new ChannelException(account ,CHANNEL.WEIBO,
-						"Weibo AccessToken has been expired, " +
-						"you need to reauthorize your weibo account again!");
+			if (ex.isHttpStatusError()) { //网络不通的情况
+				System.err.println("Weibo Channel service cannont connect to: " + (ex.getError() == null ? ex.getMessage() : ex.getError()));
+			} else if ("expired_token".equals(ex.getError()) || 21327 == ex.getErrorCode()) {
+				throw new ChannelException(account, CHANNEL.WEIBO,
+						"Weibo AccessToken has been expired, you need to reauthorize your weibo account again!");
 			} else {
-			    throw new ChannelException(null, CHANNEL.WEIBO,  ex);
+				// throw new ChannelException(null, CHANNEL.WEIBO, ex);
+				System.err.println("Weibo Channel service initialize error:  " + (ex.getError() == null ? ex.getMessage() : 
+					(ex.getError() + "(errorCode=" + ex.getErrorCode() + ")") ));
 			}
 		}
 	}

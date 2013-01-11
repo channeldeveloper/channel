@@ -61,7 +61,7 @@ public class HttpService {
     }
 
     public String sendHttpMessage() {
-        if (errorCount > 3) {//suppose within 3 times to check connection ok!
+        if (errorCount >= 3) {//suppose within 3 times to check connection ok!
             throw new java.lang.IllegalStateException("QQ Channel service connected fail!");
         }
         try {
@@ -133,8 +133,8 @@ public class HttpService {
     }
 
     public InputStream getInputStream() {
-        if (errorCount > 3) {
-            throw new java.lang.IllegalStateException("iQQ 无法连接互联网！");
+        if (errorCount >= 3) {
+            throw new java.lang.IllegalStateException("QQ Channel service connected fail!");
         }
         InputStream is = null;
         conn = connect();
@@ -223,7 +223,7 @@ public class HttpService {
     }
 
     public void checkResponseCode(final HttpURLConnection conn) {
-        if (timeoutCount > 3) {
+        if (timeoutCount >= 3) {
             throw new java.lang.IllegalStateException("QQ Channel service connected fail!");
         }
         timeoutCount++;

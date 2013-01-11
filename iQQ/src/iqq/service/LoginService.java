@@ -113,12 +113,12 @@ public class LoginService {
                 if (vCode == null || vCode.trim().equals("")) {
 //                    ErrorMessage.show("验证码输入有误!");
 //                    return false;
-                	throw new RuntimeException("验证码输入有误！");
+                	throw new RuntimeException("验证码输入有误！");//RuntimeException其他地方有用，不要换！
                 }
             } else {
 //                ErrorMessage.show("验证码获取失败！请重试。");
 //                return false;
-            	throw new RuntimeException("验证码获取失败！");
+            	throw new RuntimeException("验证码获取失败！");//RuntimeException其他地方有用，不要换！
             }
 
         } else {
@@ -143,7 +143,7 @@ public class LoginService {
         } else {
 //            ErrorMessage.show(result);
 //            return false;
-        	throw new RuntimeException(result);
+        	throw new RuntimeException(result);//RuntimeException其他地方有用，不要换！
         }
 
         // 从cookie中提取ptwebqq,skey

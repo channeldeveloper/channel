@@ -199,14 +199,11 @@ public class ChannelMessagePane extends JPanel
 	 */
 	public void newMessage(ChannelMessage msg)
 	{
-		if(msg != null && msg.getMessageID() != null)
-		{
-			header.setContactName(msg.getContactName());
-			if(statusBar instanceof NewMessageTopBar) {
-				((NewMessageTopBar) statusBar).setMessage(msg);
-			}
-			setPostMsgLayout();
+		header.setContactName(msg == null ? null : msg.getContactName());
+		if(statusBar instanceof NewMessageTopBar) {
+			((NewMessageTopBar) statusBar).setMessage(msg);
 		}
+		setPostMsgLayout();
 	}
 	
 	/**
@@ -415,11 +412,13 @@ public class ChannelMessagePane extends JPanel
 			g2d.fill(outer);
 			
 			//最后绘制文字
-			g2d.translate(0, SIZE.height-4);
-			g2d.setColor(Color.white);
-			g2d.setFont(ChannelConstants.DEFAULT_FONT.deriveFont(16F));
-			g2d.drawString(contactName, 
-					(SIZE.width-g.getFontMetrics().stringWidth(contactName))/2, 0);
+			if(contactName != null) {
+				g2d.translate(0, SIZE.height-4);
+				g2d.setColor(Color.white);
+				g2d.setFont(ChannelConstants.DEFAULT_FONT.deriveFont(16F));
+				g2d.drawString(contactName, 
+						(SIZE.width-g.getFontMetrics().stringWidth(contactName))/2, 0);
+			}
 		}
 	}
 }
