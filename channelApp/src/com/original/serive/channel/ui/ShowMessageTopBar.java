@@ -33,14 +33,13 @@ public class ShowMessageTopBar extends ChannelMessageTopBar
 		super.initStatusBar();
 		if(channelMsg != null && channelMsg.getMessageID() != null)
 		{
-			String msgClazz = channelMsg.getClazz();
-			if (ChannelMessage.QQ.equals(msgClazz))
+			if (channelMsg.isQQ())
 			{
 				messageHeader.setIcon(IconFactory.loadIconByConfig("defaultQQIcon"));
-			} else if (ChannelMessage.WEIBO.equals(msgClazz))
+			} else if (channelMsg.isWeibo())
 			{
 				messageHeader.setIcon(IconFactory.loadIconByConfig("defaultWeiboIcon"));
-			} else if (ChannelMessage.MAIL.equals(msgClazz))
+			} else if (channelMsg.isMail())
 			{
 				messageHeader.setIcon(IconFactory.loadIconByConfig("defaultMailIcon"));
 			}

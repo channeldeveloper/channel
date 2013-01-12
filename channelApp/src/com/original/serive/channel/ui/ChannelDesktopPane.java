@@ -63,7 +63,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	public static Lock channelLock = new ReentrantLock(); //用于控制消息的添加，即initMessage()和addMessage()的同步
 	
 	private boolean isScrollBarVisible = false; //滚动条是否可见
-	private int scrollBarValue = 0;//滚动条当前值
+	private int scrollBarValue = 0, scrollBarAmount = 0;//滚动条当前值和当前可见长度
 	
 	private Rectangle showMoreArea = null, topIconArea = null; //显示更新信息和置顶图标的区域
 	private String showMore = "显示更多信息";
@@ -225,8 +225,11 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		jsp.addMouseMotionListener(this);
 		add("DEFAULT", jsp);
 		
+		//记录当前显示的组件和上一次显示的组件
 		this.putClientProperty(LAST_SHOW_COMPONENT, null);
 		this.putClientProperty(CURRENT_SHOW_COMPONENT, "DEFAULT");
+		
+		jsp.putClientProperty(LAST_SHOW_COMPONENT, this.getClientProperty(LAST_SHOW_COMPONENT));
 	}
 	
 	/**
@@ -256,8 +259,11 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		add(name, jsp);
 		showComp(name);
 		
-		this.putClientProperty(LAST_SHOW_COMPONENT, getClientProperty(CURRENT_SHOW_COMPONENT));
+		//记录当前显示的组件和上一次显示的组件
+		this.putClientProperty(LAST_SHOW_COMPONENT, this.getClientProperty(CURRENT_SHOW_COMPONENT));
 		this.putClientProperty(CURRENT_SHOW_COMPONENT, name);
+		
+		jsp.putClientProperty(LAST_SHOW_COMPONENT, this.getClientProperty(LAST_SHOW_COMPONENT));
 	}
 	
 	/**
@@ -277,6 +283,14 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		if (name == null) {
 			name = "DEFAULT";
 		}
+		
+		if (!"DEFAULT".equals(name)) {
+			setScrollBarVisible(false);// 其他面板不显示滚动条
+		} else {
+			Boolean showStatus = (Boolean) getClientProperty(SCROLLBAR_SHOW_STATUS);
+			setScrollBarVisible(showStatus == null ? false : 	showStatus.booleanValue());
+		}
+		
 		layoutMgr.show(this, name);
 	}
 	
@@ -297,9 +311,8 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	}
 	
 	/**
-	 * 移除其他面板
+	 * 移除其他面板，同时返回历史面板
 	 * @param name 面板名称
-	 * @param showDefault 移除后是否显示默认面板
 	 */
 	public void removeShowComp(String name)
 	{
@@ -312,6 +325,14 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		//返回历史面板
 		String history = (String)this.getClientProperty(LAST_SHOW_COMPONENT);
 		showComp(history);
+		
+		//更新当前显示的组件和上一次显示的组件
+		index = indexOfShowComp(history);
+		JComponent lastShowComp = index == -1 ? null : (JComponent)getComponent(index);
+		
+		this.putClientProperty(CURRENT_SHOW_COMPONENT, history);
+		this.putClientProperty(LAST_SHOW_COMPONENT, lastShowComp == null ? null :
+			lastShowComp.getClientProperty(LAST_SHOW_COMPONENT));
 	}
 
 	@Override
@@ -361,27 +382,43 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		// TODO 自动生成的方法存根
 		if(e.getAdjustmentType() == AdjustmentEvent.TRACK) {
 			JScrollBar scrollBar =(JScrollBar) e.getSource();
-			if(scrollBar.getValue() != scrollBarValue) {
-				scrollBarValue = scrollBar.getValue();
-
-				// 滚动条消失
-				if (isScrollBarVisible
-						&& scrollBarValue == 0
-						&& scrollBar.getVisibleAmount() == scrollBar	.getMaximum()) {
-					isScrollBarVisible = false;
-					repaint();
-				}
-				
-				int currentValue = scrollBar.getMaximum() - scrollBar.getVisibleAmount();
-				if (e.getValue() != 0 && e.getValue() == currentValue) {// 滚动条移至底部
-					if(!isScrollBarVisible) {
-						isScrollBarVisible = true;
-						repaint();
-					}
-					
-					//addMessage();
-				}
+			
+			//滚动条消失
+			if (isScrollBarVisible && scrollBar.getValue() == 0
+					&& !scrollBar.isVisible()/*scrollBarAmount == 0*/) {
+				setScrollBarVisible(false);
+				putClientProperty(SCROLLBAR_SHOW_STATUS, Boolean.FALSE); // 记录滚动条的状态
 			}
+			
+			if(scrollBar.getValue() == scrollBarValue &&
+					scrollBar.getVisibleAmount() == scrollBarAmount)
+				return; //滚动条未发生变化
+			
+			scrollBarValue = scrollBar.getValue();
+			scrollBarAmount = scrollBar.getVisibleAmount();
+			
+			//滚动条移至底部(不考虑滚动条最大的情况，即scrollBar.getMaximum() == scrollBarAmount的情况)
+			if (scrollBarValue != 0
+					&& scrollBarValue == (scrollBar.getMaximum() - scrollBarAmount)) {
+				if (!isScrollBarVisible) {
+					setScrollBarVisible(true);
+					putClientProperty(SCROLLBAR_SHOW_STATUS, Boolean.TRUE); // 记录滚动条的状态
+				}
+
+				// add Message
+
+			}
+		}
+	}
+	
+	/**
+	 * 设置滚动条是否可见
+	 * @param isVisible 如果为true，则可见；否则不可见
+	 */
+	public void setScrollBarVisible( boolean isVisible) {
+		if(isScrollBarVisible != isVisible) {
+			isScrollBarVisible = isVisible;
+			repaint();
 		}
 	}
 	

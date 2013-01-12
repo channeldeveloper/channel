@@ -92,18 +92,19 @@ public class ChannelMessage implements Cloneable, Constants{
 	public static final String EXT_EMAIL_ReplyTo = "ReplyTo";
 	public static final String EXT_EMAIL_Foler = "Foler";	
 	//控制 0,1
+	public static final String FLAG_REPLYED = "REPLYED";//是否回复了 0未，1是
+	public static final String FLAG_SIGNED  = "SIGNED";	//是否签名  0未，1是
+	public static final String FLAG_SEEN = "SEEN";//是否看过 0未，1是
 	public static final String FLAG_DELETED = "DELETED";//是否删除 0未，1是
+	public static final String FLAG_PROCESSED  = "PROCESSED";	//是否处理  0未，1是（邮件原来的）
+	public static final String FLAG_DONE = "DONE";//是否处理过 0未，1是 （程序的）
 	public static final String FLAG_TRASHED = "TRASHED";//是否垃圾 0未，1是 isTrash
+	
+	//下面这些目前没有使用到：
 	public static final String FLAG_DRAFT = "DRAFT";//是否草稿 0未，1是
 	public static final String FLAG_FLAGGED = "FLAGGED";//是否旗标 0未，1是
 	public static final String FLAG_RECENT = "RECENT";//是否最新 0未，1是
-	public static final String FLAG_SEEN = "SEEN";//是否看过 0未，1是
-	public static final String FLAG_DONE = "DONE";//是否处理过 0未，1是
-	public static final String FLAG_REPLYED = "REPLYED";//是否回复了 0未，1是
 	public static final String FLAG_SAVED = "SAVED";//是否存库了 0未，1是
-	public static final String FLAG_SIGNED  = "SIGNED";	//是否签名  0未，1是
-	public static final String FLAG_PROCESSED  = "PROCESSED";	//是否处理  0未，1是（邮件原来的）
-	
 	
 	/**
 	 * default constructor.
@@ -199,6 +200,13 @@ public class ChannelMessage implements Cloneable, Constants{
 	 */
 	public void setType(String type) {
 		this.type = type;
+	}
+	
+	public boolean isReceived() {
+		return TYPE_RECEIVED.equals(type);
+	}
+	public boolean isSent() {
+		return TYPE_SEND.equals(type);
 	}
 	
 	public String getContactName() {
@@ -352,20 +360,15 @@ public class ChannelMessage implements Cloneable, Constants{
 	public void setMessageID(String messageID) {
 		this.messageID = messageID;
 	}
-
-
-
 	
 	public String getClazz()
 	{
-		if(clazz == null && channelAccount != null) {
-			if("email".equalsIgnoreCase(channelAccount.getChannel().getType())) {
+		if (clazz == null && channelAccount != null) {
+			if ("email".equalsIgnoreCase(channelAccount.getChannel().getType())) {
 				clazz = MAIL;
-			}
-			else if("sns_weibo".equalsIgnoreCase(channelAccount.getChannel().getName())) {
+			} else if ("sns_weibo".equalsIgnoreCase(channelAccount.getChannel().getName())) {
 				clazz = WEIBO;
-			}
-			else if("im_qq".equalsIgnoreCase(channelAccount.getChannel().getName())) {
+			} else if ("im_qq".equalsIgnoreCase(channelAccount.getChannel().getName())) {
 				clazz = QQ;
 			}
 		}
@@ -373,6 +376,16 @@ public class ChannelMessage implements Cloneable, Constants{
 	}
 	public void setClazz(String clazz) {
 		this.clazz = clazz;
+	}
+	
+	public boolean isQQ() {
+		return QQ.equals(getClazz());
+	}
+	public boolean isWeibo() {
+		return WEIBO.equals(getClazz());
+	}
+	public boolean isMail() {
+		return MAIL.equals(getClazz());
 	}
 
 	/**
@@ -425,13 +438,10 @@ public class ChannelMessage implements Cloneable, Constants{
 	}
 	
 	
-	public String getShortMsg()
-	{
-		clazz = this.getClazz();
-		if(MAIL.equals(clazz)) {
+	public String getShortMsg() {
+		if (isMail()) {
 			return subject;
-		}
-		else {
+		} else {
 			return body;
 		}
 	}
@@ -440,18 +450,13 @@ public class ChannelMessage implements Cloneable, Constants{
 	{
 		return getCompleteMsg(false);
 	}
-	
-	public String getCompleteMsg(boolean showCompleteImage)
-	{
-		clazz = this.getClazz();
-		if(WEIBO.equals(clazz)) {
-			return WeiboParser.parse(this); //微博不做任何处理
-		}
-		else if(QQ.equals(clazz)) {
+	public String getCompleteMsg(boolean showCompleteImage) {
+		if (isWeibo()) {
+			return WeiboParser.parse(this); // 微博不做任何处理
+		} else if (isQQ()) {
 			return QQParser.parseMessage(this, showCompleteImage);
-		}
-		else {
-			return  showCompleteImage ? EMailParser.showComplete(body) : body;
+		} else {
+			return showCompleteImage ? EMailParser.showComplete(body) : body;
 		}
 	}
 
@@ -459,17 +464,16 @@ public class ChannelMessage implements Cloneable, Constants{
 	{
 		ChannelMessage msg = null;
 		try {
-			msg = (ChannelMessage)super.clone();
-			msg.setFlags(flags == null ? null : (HashMap)flags.clone());
-			msg.setExtensions(extensions == null ? null : (HashMap)extensions.clone());
-			msg.setAttachments(attachments == null ? null : (List) (((ArrayList)attachments).clone()));
-		}
-		catch(CloneNotSupportedException ex)
-		{
-			
+			msg = (ChannelMessage) super.clone();
+			msg.setFlags(flags == null ? null : (HashMap) flags.clone());
+			msg.setExtensions(extensions == null ? null : (HashMap) extensions.clone());
+			msg.setAttachments(attachments == null ? null	: (List) (((ArrayList) attachments).clone()));
+		} catch (CloneNotSupportedException ex) {
+
 		}
 		return msg;
 	}
+
 	/**
 	 * @return the flags
 	 */
@@ -487,6 +491,28 @@ public class ChannelMessage implements Cloneable, Constants{
 	 */
 	public void setExtensions(HashMap<String, String> extensions) {
 		this.extensions = extensions;
+	}
+	
+	public boolean hasRead() {
+		Integer read = flags == null ? null : flags.get(FLAG_SEEN);
+		return read != null && read.intValue() == 1;
+	}
+
+	public void setRead(boolean read) {
+		if (flags == null)
+			flags = new HashMap<String, Integer>();
+		flags.put(FLAG_SEEN, read ? new Integer(1) : new Integer(0));
+	}
+	
+	public boolean hasProcessed() {
+		Integer processed = flags == null ? null : flags.get(FLAG_DONE);
+		return processed != null && processed.intValue() == 1;
+	}
+
+	public void setProcessed(boolean processed) {
+		if (flags == null)
+			flags = new HashMap<String, Integer>();
+		flags.put(FLAG_DONE, processed ? new Integer(1) : new Integer(0));
 	}
 	
 }

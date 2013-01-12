@@ -195,13 +195,13 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 			NewMessageBodyPane body = (NewMessageBodyPane) getMessageBody();
 			body.setMessage(newMsg);
 
-			if (ChannelMessage.MAIL.equals(newMsg.getClazz())) {
+			if (newMsg.isMail()) {
 				setEnabled(newMail.getActionCommand());
 				newMail.getSource().doClick();
-			} else if (ChannelMessage.QQ.equals(newMsg.getClazz())) {
+			} else if (newMsg.isQQ()) {
 				setEnabled(newQQ.getActionCommand());
 				newQQ.getSource().doClick();
-			} else if (ChannelMessage.WEIBO.equals(newMsg.getClazz())) {
+			} else if (newMsg.isWeibo()) {
 				setEnabled(newWeibo.getActionCommand());
 				newWeibo.getSource().doClick();
 			}

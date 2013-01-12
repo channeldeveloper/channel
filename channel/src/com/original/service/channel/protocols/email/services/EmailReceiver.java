@@ -223,8 +223,8 @@ public class EmailReceiver {
 		flags.put(ChannelMessage.FLAG_SIGNED, email.getIsSign());
 		flags.put(ChannelMessage.FLAG_SEEN,	email.getIsRead());
 		flags.put(ChannelMessage.FLAG_DELETED, email.getIsDelete());
-		flags.put(ChannelMessage.FLAG_PROCESSED,	email.getIsProcess());//?
-		flags.put(ChannelMessage.FLAG_TRASHED, email.getIsTrash());//?
+		flags.put(ChannelMessage.FLAG_PROCESSED,	email.getIsProcess());
+		flags.put(ChannelMessage.FLAG_TRASHED, email.getIsTrash());
 		msg.setFlags(flags);		
 		msg.setFollowedID(null);
 		msg.setFromAddr(email.getAddresser());

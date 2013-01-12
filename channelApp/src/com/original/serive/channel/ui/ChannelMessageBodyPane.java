@@ -61,6 +61,8 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	private PropertyChangeSupport changeSupport =
 			new SwingPropertyChangeSupport(this);
 	
+	private static ChannelService channelService = ChannelAccesser.getChannelService();
+	
 	public ChannelMessageBodyPane()
 	{
 		//这里设置messageBody面板的布局方式为从下而上的垂直布局方式
@@ -106,11 +108,11 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		}
 	}
 	public void fireMessageChange(ChannelMessage msg) {
-		if (ChannelMessage.MAIL.equals(msg.getClazz())) {
+		if (msg.isMail()) {
 			fireMessageChange(MAIL_COUNT_CHANGE_PROPERTY, 0, 1);
-		} else if (ChannelMessage.QQ.equals(msg.getClazz())) {
+		} else if (msg.isQQ()) {
 			fireMessageChange(QQ_COUNT_CHANGE_PROPERTY, 0, 1);
-		} else if (ChannelMessage.WEIBO.equals(msg.getClazz())) {
+		} else if (msg.isWeibo()) {
 			fireMessageChange(WEIBO_COUNT_CHANGE_PROPERTY, 0, 1);
 		}
 	}
@@ -209,7 +211,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			}
 			nw.addMessage(msg, false);
 		}
-		nw.body.messageBodyList = messageBodyList;// 复制一份消息列表
 
 		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 		desktop.addOtherShowComp(PREFIX_SHOWALL + newMsg.getContactName(), nw);
@@ -224,7 +225,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				.firstElement();
 	}
 	
-	/* ---------------------------------- 下面是面板的构成，使用人员无需关心 -------------------------------------------*/
 	//主体部分，即下面3个部分的整合。
 	public class Body extends JPanel implements EventConstants
 	{
@@ -232,9 +232,8 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		Top top = new Top();
 		Center center = new Center();
 		Bottom bottom = new Bottom();
+		
 		ChannelMessage iMsg;//消息对象
-
-		Body origin = null; //当使用copyTo(Body newBody)方法时，newBody.origin = this; 其实就是this的一个副本
 		boolean toFirst; //是否添加至顶部(即是否只显示1条)
 		
 		public Body() { }
@@ -264,7 +263,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		private void analyzeMessage(ChannelMessage msg)
 		{
 			//设置背景(由消息来源类型来区分)
-			if(ChannelMessage.TYPE_RECEIVED.equals(msg.getType()))
+			if(msg.isReceived())
 				setBackground(Color.white);
 			else
 				setBackground(new Color(186, 212, 229));
@@ -304,7 +303,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			if(isOn) {
 				top.setVisible(QUICK_REPLY, false);
 				top.setVisible(SHOW_COMPLETE, true);
-				top.notifyStatusChange(iMsg, STATUS_READ); //通知已读
+				top.notifyStatusChange(iMsg, STATUS_READ, true); //通知已读
 				center.showComplete(iMsg);
 				bottom.showMessageReplyArea();
 				
@@ -327,7 +326,52 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		
 		//删除
 		public void doDelete() {
-			
+			if (ChannelUtil.confirm(this, "确认删除", "是否删除该消息？")) {
+				if(toFirst) { //如果只显示一条，即顶部显示
+					messageBodyList.remove(messageBodyList.size()-1); //从list中先删除
+					ChannelMessageBodyPane body = (ChannelMessageBodyPane)this.getParent();
+					body.remove(this);
+					body.validate();
+					
+					if(messageBodyList.isEmpty() && container != null) {
+						container.remove(body);
+						ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
+						parent.remove(container);
+						
+						JPanel root = 	(JPanel)	parent.getParent();
+						root.remove(parent);
+						root.validate();
+					}
+					else {
+						ChannelMessage newMsg = messageBodyList.remove(messageBodyList.size()-1);
+						addMessage(newMsg, true);
+						
+						ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
+						parent.changeMsgLayoutIfNeed(newMsg);
+						parent.validate();
+					}
+				}
+				else {
+					ChannelMessageBodyPane body = (ChannelMessageBodyPane)this.getParent();
+					body.remove(this);
+					body.validate();
+					
+					ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
+					JPanel root = 	(JPanel)	parent.getParent();
+					root.validate();
+					
+					ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+					if(body.getComponentCount() == 0) {
+					ChannelMessage msg = this.iMsg;
+					
+					desktop.removeShowComp(PREFIX_SHOWALL + msg.getContactName());
+					}
+					else {
+						desktop.validate();
+					}
+					
+				}
+			}
 		}
 		
 		//完整信息
@@ -339,35 +383,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 
 			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
-		}
-		
-		//将当前面板的一些属性复制到newBody中。
-		public void copyTo(Body newBody)
-		{
-			if(newBody == null || newBody == this)
-				return;
-			
-			if(this.origin != newBody) {
-				newBody.origin = this;
-			}
-			
-			//快速回复属性复制
-			if(this.getClientProperty(QUICK_REPLY) == Boolean.TRUE) { //表示已经快速回复了，那么newBody也需要快速回复的功能
-				if(newBody.getClientProperty(QUICK_REPLY) != Boolean.TRUE) //如果newBody未快速回复
-				{					
-					newBody.doQuickReply(true);
-				}
-				newBody.bottom.setReplyContent(this.bottom.getReplyContent());
-			}
-			else {
-				if(newBody.getClientProperty(QUICK_REPLY) == Boolean.TRUE) //如果newBody已快速回复
-				{
-					newBody.doQuickReply(false);
-				}
-				newBody.bottom.setReplyContent(null);
-			}
-			
-			//其他
 		}
 	}
 	
@@ -394,15 +409,14 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		{
 			if(msg != null && msg.getMessageID() != null)
 			{
-				notifyStatusChange(msg, STATUS_UNREAD);
+				notifyStatusChange(msg, STATUS_UNKNOWN, false);
 				
 				messageHeader.setForeground(ChannelConstants.LIGHT_TEXT_COLOR);
 				messageHeader.setFont(ChannelConstants.DEFAULT_FONT);
 				//目前messageHeader只显示收发的时间
-				if(ChannelMessage.TYPE_SEND.equals(msg.getType())) {
+				if(msg.isSent()) {
 					messageHeader.setText(msg.getSentDate() == null ? "" : messageFormat.format(msg.getSentDate()));
-				}
-				else {
+				} else {
 					messageHeader.setText(msg.getReceivedDate() == null ? "" : messageFormat.format(msg.getReceivedDate()));
 				}
 				messageHeader.setIconTextGap(10);
@@ -413,22 +427,47 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		/**
 		 * 通知消息状态发生改变，目前主要更换图标。
 		 */
-		public void notifyStatusChange(ChannelMessage msg, String statusConstant)
+		public void notifyStatusChange(ChannelMessage msg, String statusConstant, boolean notifyDB)
 		{
 			String icon = "Icon"; //图标名称
-			if (ChannelMessage.QQ.equals((msg.getClazz())))
-				icon = "QQ" + icon;
-			else if (ChannelMessage.WEIBO.equals((msg.getClazz())))
-				icon = "Weibo" + icon;
-			else if (ChannelMessage.MAIL.equals((msg.getClazz())))
-				icon = "Mail" + icon;
+			if (msg.isQQ()) 	icon = "QQ" + icon;
+			else if (msg.isWeibo())	icon = "Weibo" + icon;
+			else if (msg.isMail())	icon = "Mail" + icon;
 
+			if (statusConstant == STATUS_UNKNOWN) {// 未知状态，则需要解析msg
+				if (msg.hasProcessed()) {
+					statusConstant = STATUS_POST;
+				} else if (msg.hasRead()) {
+					statusConstant = STATUS_READ;
+				} else {
+					statusConstant = STATUS_UNREAD;
+				}
+				
+				if (msg.isSent()) {
+					statusConstant = STATUS_POST;
+				}
+			}
+			
 			if (statusConstant == STATUS_UNREAD)
 				icon = "default" + icon;
 			else if (statusConstant == STATUS_READ)
 				icon = "read" + icon;
 			else if (statusConstant == STATUS_POST)
 				icon = "post" + icon;
+			
+			if(notifyDB) {
+				if(statusConstant == STATUS_READ) {
+					if(!msg.hasRead()) {
+						channelService.updateMessageFlag(msg, ChannelMessage.FLAG_SEEN, "1");
+						msg.setRead(true);
+					}
+				} else if(statusConstant == STATUS_POST) {
+					if(!msg.hasProcessed()) {
+						channelService.updateMessageFlag(msg, ChannelMessage.FLAG_DONE, "1");
+						msg.setProcessed(true);
+					}
+				}
+			}
 			
 			messageHeader.setIcon(IconFactory.loadIconByConfig(icon));
 		}
@@ -450,7 +489,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				messageHeader.setBounds(0, 10, dim.width, dim.height);
 				add(messageHeader);
 				
-				if(!ChannelMessage.TYPE_SEND.equals( msg.getType())) { //已经回复了，就不再有回复功能
+				if(!msg.isSent()) { //已经回复了，就不再有回复功能
 					btnReply.setBounds(SIZE.width-(60*2+85), 10, 85, 28);
 					add(btnReply);
 				}
@@ -663,9 +702,10 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					newMsg.setBody(replyContent);
 					newMsg.setToAddr(body.iMsg.getFromAddr()); //交换一下发送和接受人的顺序
 					newMsg.setFromAddr(body.iMsg.getToAddr());
+					newMsg.setProcessed(true);//设置已处理状态
 					
 					//邮件单独处理：
-					if(ChannelMessage.MAIL.equals(newMsg.getClazz())) {
+					if(newMsg.isMail()) {
 						newMsg.setSubject("Re：" + body.iMsg.getSubject());
 						newMsg.setBody(replyContent + Utilies.getMailSeparatorFlags()
 								+ Utilies.parseMail(body.iMsg));

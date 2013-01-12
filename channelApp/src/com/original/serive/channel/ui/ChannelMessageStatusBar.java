@@ -47,9 +47,8 @@ public class ChannelMessageStatusBar extends JPanel implements PropertyChangeLis
 	
 	public void addNotify()
 	{
+		super.addNotify();
 		if(!hasNotify) {
-			super.addNotify();
-			
 			initStatusBar();
 			constructStatusBar();
 			hasNotify = true;

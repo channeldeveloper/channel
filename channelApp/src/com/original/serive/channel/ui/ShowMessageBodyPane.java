@@ -54,7 +54,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	{
 		this.setBorder(new EmptyBorder(new Insets(0, 45, 0, 5))); //设置页边距
 		this.setPreferredSize(new Dimension(ChannelConfig.getIntValue("msgBodyWidth"), 
-				ChannelConfig.getIntValue("desktopHeight") - 100)); 
+				ChannelConfig.getIntValue("desktopHeight") - 130)); 
 		
 		//设置一些控件的属性
 		content.setEditorKit(new HTMLEditorKit());
@@ -82,7 +82,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	public void setMessageToGUI(ChannelMessage msg)
 	{
 		if(msg != null) {
-			if(ChannelMessage.MAIL.equals(msg.getClazz())) {//是邮件
+			if(msg.isMail()) {//是邮件
 				title.setText(msg.getSubject());
 				//对于邮件类型，再添加一些其他按钮
 				addControlItems(false, 
@@ -92,12 +92,12 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 				
 				parseMail(msg);
 			}
-			else if(ChannelMessage.QQ.equals(msg.getClazz())) {//是QQ
+			else if(msg.isQQ()) {//是QQ
 				title.setVisible(false);
 				
 				parseQQ(msg);
 			}
-			else if(ChannelMessage.WEIBO.equals(msg.getClazz())) {//是微博
+			else if(msg.isWeibo()) {//是微博
 				title.setVisible(false);
 				
 				parseWeibo(msg);

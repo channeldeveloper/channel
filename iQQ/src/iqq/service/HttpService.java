@@ -167,9 +167,9 @@ public class HttpService {
             Log.println("request=" + url);
             URL serverUrl = new URL(url);
             conn = (HttpURLConnection) serverUrl.openConnection();
-            conn.setConnectTimeout(60000);
+            conn.setConnectTimeout(30000);
             conn.setReadTimeout(100000);
-            System.setProperty("sun.net.client.defaultConnectTimeout", "60000");
+            System.setProperty("sun.net.client.defaultConnectTimeout", "30000");
             System.setProperty("sun.net.client.defaultReadTimeout", "100000");
             conn.setRequestMethod(method);// "POST" ,"GET"
             if (null != refer) {

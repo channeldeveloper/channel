@@ -472,6 +472,10 @@ MessageBox box = new MessageBox(content);
 		return getOptionValue(pane);
 		
 	}
+	public static boolean confirm(Component parent, String title,
+			Object content) {
+		return JOptionPane.YES_OPTION == showConfirmDialog(parent, title, content);
+	}
 	
 	/**
 	 * 返回选项面板的选项索引值

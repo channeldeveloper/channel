@@ -225,21 +225,19 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			msg.setSentDate(new Date());
 			msg.setReceivedDate(msg.getSentDate());//设置和发送时间一样
 			
-			String clazz = newMsg.getClazz(); //类别
-			if (ChannelMessage.WEIBO.equals(clazz)) {
+			if (newMsg.isWeibo()) {
 				msg.setBody(center.getText(true));
 				
-			} else if (ChannelMessage.QQ.equals(clazz)) {
+			} else if (newMsg.isQQ()) {
 				msg.setBody(center.getText(true));
 
-			} else if (ChannelMessage.MAIL.equals(clazz)) {
+			} else if (newMsg.isMail()) {
 				msg.setSubject(center.getSubject());// 主体
 				msg.setBody(center.getText(false));
 				msg.setAttachments(center.getAttachments());//附件
 			}
 			
-			String type = newMsg.getType(); //消息类型
-			if (!ChannelMessage.TYPE_SEND.equals(type)) { // 方向不一致，需要交换一下发送和接受人的顺序
+			if (!newMsg.isSent()) { // 方向不一致，需要交换一下发送和接受人的顺序
 				msg.setToAddr(newMsg.getFromAddr());
 				msg.setFromAddr(newMsg.getToAddr());
 			}
@@ -247,7 +245,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			//对于QQ、邮件还有字体样式：
 			HashMap<String, String> exts = msg.getExtensions();
 			exts.clear(); //先清空再添加
-			if(ChannelMessage.QQ.equals(clazz)) {
+			if(newMsg.isQQ()) {
 				FontStyle fs = center.getFontStyle();
 				try {
 					exts.put(Constants.QQ_FONT_STYLE, fs.toJSONString());
@@ -364,8 +362,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		ChannelGridBagLayoutManager layoutMgr =
 				new ChannelGridBagLayoutManager(this);
 		
-		Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth"),
-				375);
+		Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth"), 340);
 		
 		//一些组件，显示或隐藏由消息类型(QQ、微博、邮件等)来决定
 		private JTextField  txtCC = new OTextField(),//分享/抄送

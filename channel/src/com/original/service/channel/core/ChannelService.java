@@ -615,11 +615,11 @@ public final class ChannelService extends AbstractService {
 					//3、完整回复，目前设定微博不需要保存，其他都保存：
 					else if (action == Constants.ACTION_REPLY) 
 					{
-						if (ChannelMessage.WEIBO.equals(msg.getClazz())) {
+						if (msg.isWeibo()) {
 							return;
-						} else if (ChannelMessage.MAIL.equals(msg.getClazz())) {
+						} else if (msg.isMail()) {
 							//return;
-						} else if (ChannelMessage.QQ.equals(msg.getClazz())) {
+						} else if (msg.isQQ()) {
 							//return;
 						}
 						

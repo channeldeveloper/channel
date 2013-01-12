@@ -80,11 +80,11 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 		//暂时的处理方法，判断消息类型是哪一种：
 		ChannelMessage msg = getMessage();
 		if(msg != null) {
-			if (ChannelMessage.MAIL.equals(msg.getClazz())) {
+			if (msg.isMail()) {
 				setEnabled(CHANNEL_FOR_MAIL);
-			} else if (ChannelMessage.WEIBO.equals(msg.getClazz())) {
+			} else if (msg.isWeibo()) {
 				setEnabled(CHANNEL_FOR_WEIBO);
-			} else if (ChannelMessage.QQ.equals(msg.getClazz())) {
+			} else if (msg.isQQ()) {
 				setEnabled(CHANNEL_FOR_QQ);
 			}
 		}

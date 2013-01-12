@@ -101,17 +101,13 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 		if(body != null)
 		{
-			ChannelMessageBodyPane.Body child, origin = null;
-			if(body.getChannelMessage() == null || body.getComponentCount() == 0) {
+			ChannelMessageBodyPane.Body child = null;
+			if(body.getComponentCount() == 0) {
 				desktop.showDefaultComp();
 			}
 			else {
 				if(body.getComponent(0) instanceof ChannelMessageBodyPane.Body) {
 					child = (ChannelMessageBodyPane.Body)body.getComponent(0);
-					if( (origin = child.origin) != null ) //关闭的时候也要通知origin
-					{
-						child.copyTo(origin);
-					}
 					
 					ChannelMessage newMsg = child.iMsg;
 					desktop.removeShowComp(PREFIX_SHOWALL+newMsg.getContactName());

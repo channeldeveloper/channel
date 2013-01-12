@@ -91,6 +91,7 @@ public class WeiboException extends Exception {
 	}
 	
 	public boolean isHttpStatusError() {
+		System.out.println("statusCode = " + statusCode);
 		switch (statusCode) {
 		case HttpClient.BAD_REQUEST://400
 		case HttpClient.NOT_AUTHORIZED://401

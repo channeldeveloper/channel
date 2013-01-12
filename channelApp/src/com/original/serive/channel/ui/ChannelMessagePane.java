@@ -132,12 +132,12 @@ public class ChannelMessagePane extends JPanel
 	 * @param msg 消息对象
 	 */
 	public void changeMsgLayoutIfNeed(ChannelMessage msg) {
-		if(ChannelMessage.TYPE_RECEIVED.equals(msg.getType())
+		if(msg.isReceived()
 				&& ChannelGridBagLayoutManager.ALIGN_RIGHT == layoutMgr.getAlignment())
 		{
 			changeMsgLayout();
 		}
-		else if(ChannelMessage.TYPE_SEND.equals(msg.getType())
+		else if(msg.isSent()
 				&& ChannelGridBagLayoutManager.ALIGN_LEFT == layoutMgr.getAlignment())
 		{
 			changeMsgLayout();
@@ -155,9 +155,9 @@ public class ChannelMessagePane extends JPanel
 			uid = uName;
 			header.setContactName(uName);
 
-			if (ChannelMessage.TYPE_RECEIVED.equals(msg.getType())) { // 是接受过来的消息
+			if (msg.isReceived()) { // 是接受过来的消息
 				setReceiveMsgLayout();
-			} else if (ChannelMessage.TYPE_SEND.equals(msg.getType())) { // 是发送(回复)过去的消息
+			} else if (msg.isSent()) { // 是发送(回复)过去的消息
 				setPostMsgLayout();
 			}
 
@@ -181,9 +181,9 @@ public class ChannelMessagePane extends JPanel
 			body.addMessage(msg, toFirst);
 			header.setContactName(uName);
 
-			if (ChannelMessage.TYPE_RECEIVED.equals(msg.getType())) { // 是接受过来的消息
+			if (msg.isReceived()) { // 是接受过来的消息
 				setReceiveMsgLayout();
-			} else if (ChannelMessage.TYPE_SEND.equals(msg.getType())) { // 是发送(回复)过去的消息
+			} else if (msg.isSent()) { // 是发送(回复)过去的消息
 				setPostMsgLayout();
 			}
 		} else if (uid.equals(uName)) {

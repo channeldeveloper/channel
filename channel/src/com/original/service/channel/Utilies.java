@@ -192,8 +192,7 @@ public class Utilies {
     	}
 
     	email.setMailtitle(msg.getSubject());
-    	email.setSendtime(ChannelMessage.TYPE_SEND.equals(msg.getType()) ? 
-    			msg.getSentDate() : msg.getReceivedDate());
+    	email.setSendtime(msg.isSent() ? msg.getSentDate() : msg.getReceivedDate());
     	
     	//where're attachments??
     	email.setAttachments(parseAttachments(msg.getAttachments()));
