@@ -240,13 +240,13 @@ public class Utilies {
 	 */
 	public static String parseMail(EMail email) {
 		if (email != null) {
-			StringBuffer header = new StringBuffer("<div style=\"font-size: 10px;color:#557fc4;background:#efefef;padding:8px;\">");
+			//这部分后面会被接内容时会删除
+			StringBuffer header = new StringBuffer("<html><head></head><body><div style=\"font-size: 10px;color:#557fc4;background:#efefef;padding:8px;\">");
 			header.append("发件人：").append(email.getAddresser()).append("<br>");
 			header.append("收件人：").append(email.getReceiver()).append("<br>");
 			if(email.getCc() != null) {
 				header.append("抄　送：").append(email.getCc()).append("<br>");
-			}
-			
+			}			
 			String content = email.getContent();
 			//附件名
 			StringBuilder attach = new StringBuilder();
