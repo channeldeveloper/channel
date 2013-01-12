@@ -16,8 +16,231 @@
       "extension" :
       {
     	  "country" : "us"				
+      }
+  } 
+ 
+ {
+	  "name" : "email_hotmail", 
+	  "vendor" : "microsoft", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "hotmail.com",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop3.live.com", "port" : 995, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.live.com", "port" : 587, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "us"				
+         }
+ }
+ 
+ {
+	  "name" : "email_126", 
+	  "vendor" : "netease", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "126.com",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop.126.com", "port" : 110, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.126.com", "port" : 25, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "cn"				
           }
-  }
+ }
+  
+ {
+	  "name" : "email_163", 
+	  "vendor" : "netease", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "163.com",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop3.163.com", "port" : 110, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.163.com", "port" : 25, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "cn"				
+	      }
+ }
+ 
+ {
+	  "name" : "email_yeah", 
+	  "vendor" : "netease", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "yeah.net",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop3.yeah.net", "port" : 110, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.yeah.net", "port" : 25, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "cn"				
+	      }
+}
+ 
+{
+	  "name" : "email_sina", 
+	  "vendor" : "sina", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "sina.com",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop3.sina.com", "port" : 110, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.sina.com", "port" : 25, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "cn"				
+	      }
+}
+
+{
+	  "name" : "email_sohu", 
+	  "vendor" : "sohu", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "sohu.com",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop3.sohu.com", "port" : 110, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.sohu.com", "port" : 25, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "cn"				
+	      }
+}
+
+
+{
+	  "name" : "email_qq", 
+	  "vendor" : "tencent", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "qq.com",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop.qq.com", "port" : 110, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.qq.com", "port" : 25, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "cn"				
+	      }
+}
+
+
+{
+	  "name" : "email_yahoo", 
+	  "vendor" : "yahoo", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "yahoo.com",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop.mail.yahoo.cn", "port" : 110, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.mail.yahoo.cn", "port" : 25, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "us"				
+	      }
+}
+
+{
+	  "name" : "email_21cn", 
+	  "vendor" : "21cn", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "21cn.com",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop.21cn.com", "port" : 110, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.21cn.com", "port" : 25, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "cn"				
+	      }
+}
+
+
+{
+	  "name" : "email_tom", 
+	  "vendor" : "tom", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "tom.com",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop.tom.com", "port" : 110, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.tom.com", "port" : 25, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "cn"				
+	      }
+}
+ 
+ {
+	  "name" : "email_sogou", 
+	  "vendor" : "sogou", 
+	  "type" : "email" , 
+	  "status" : "running", 
+	  "domain" : "sogou.com",
+	  "port" : "-1",	
+	  "protocols" :  [
+	                  {"name" : "POP3", "type" : "incoming", "server" : "pop3.sogou.com", "port" : 110, "auth" : "ssl"},
+	                  {"name" : "SMTP", "type" : "outgoing", "server" : "smtp.sogou.com", "port" : 25, "auth" : "none"}
+	                  ],
+	      "contentType" : ["html"],
+	      "actions" :	 ["send", "receive", "replay", "quick replay"],
+	      "policy" : "no",
+	      "extension" :
+	      {
+	    	  "country" : "cn"				
+	      }
+}
  
  {
   "name" : "im_gtalk", 
