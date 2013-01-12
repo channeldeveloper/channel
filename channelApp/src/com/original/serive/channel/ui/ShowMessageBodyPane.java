@@ -16,6 +16,7 @@ import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.html.HTMLEditorKit;
 
+import com.original.serive.channel.ChannelGUI;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.ChannelGridLayout;
@@ -37,6 +38,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	private JTextPane content = new JTextPane();//文本面板
 	
 	private ChannelMessage newMsg = null;
+	private ChannelMessageBodyPane.Body origin = null;
 	
 	public ShowMessageBodyPane() 
 	{
@@ -112,6 +114,10 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 		// TODO 自动生成的方法存根
 		return this.newMsg;
 	}
+	
+	public void setOriginMessageBody(ChannelMessageBodyPane.Body body) {
+		this.origin = body;
+	}
 
 	/**
 	 * 设置默认的控制按钮组(从左到右：回复-保存-删除)
@@ -152,9 +158,12 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
-		if(DELETE == e.getActionCommand()) {
-			int option = ChannelUtil.showConfirmDialog(null, "确认删除", "是否删除该消息？");
-			System.out.println(option);
+		if(DELETE == e.getActionCommand()) {			
+			if(origin != null) {
+				origin.doDelete();
+			}
+			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+			desktop.removeShowComp(PREFIX_SHOW + newMsg.getContactAddr() );
 		}
 		
 	}

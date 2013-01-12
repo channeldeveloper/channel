@@ -346,8 +346,16 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			else if(e.getActionCommand() == POST) { //发送
 				ChannelMessage sendMsg = editMessage();
 				if(sendMsg != null && !ChannelUtil.isEmpty(sendMsg.getBody())) {
-					ChannelService cs = 	ChannelAccesser.getChannelService();
-					cs.put(Constants.ACTION_REPLY, sendMsg);
+					try {
+						ChannelService cs = 	ChannelAccesser.getChannelService();
+						cs.put(Constants.ACTION_REPLY, sendMsg);
+						
+						ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+						desktop.addMessage(sendMsg);
+					}
+					catch(Exception ex) {
+						ChannelUtil.showMessageDialog(NewMessageBodyPane.this, "错误", ex);
+					}
 				}
 				
 				//清空文本

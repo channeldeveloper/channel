@@ -127,10 +127,12 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 //				closeIcon.getHeight()
 //		);
 		
-		if(!hasIconConfirmed) {
-			repaint();
-			hasIconConfirmed = true;
-		}
+//		if(!hasIconConfirmed) {
+//			repaint();
+//			hasIconConfirmed = true;
+//		}
+		
+		repaint(); //这里可能随着鼠标移动，会多占用资源。待以后优化
 	}
 
 	/**

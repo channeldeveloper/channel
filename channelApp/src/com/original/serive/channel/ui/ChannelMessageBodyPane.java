@@ -107,13 +107,13 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					new PropertyChangeEvent(this, changePropertyName, oldValue, newValue));
 		}
 	}
-	public void fireMessageChange(ChannelMessage msg) {
+	public void fireMessageChange(ChannelMessage msg, int value) {
 		if (msg.isMail()) {
-			fireMessageChange(MAIL_COUNT_CHANGE_PROPERTY, 0, 1);
+			fireMessageChange(MAIL_COUNT_CHANGE_PROPERTY, 0, value);
 		} else if (msg.isQQ()) {
-			fireMessageChange(QQ_COUNT_CHANGE_PROPERTY, 0, 1);
+			fireMessageChange(QQ_COUNT_CHANGE_PROPERTY, 0, value);
 		} else if (msg.isWeibo()) {
-			fireMessageChange(WEIBO_COUNT_CHANGE_PROPERTY, 0, 1);
+			fireMessageChange(WEIBO_COUNT_CHANGE_PROPERTY, 0, value);
 		}
 	}
 	
@@ -130,7 +130,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		}
 		
 		messageBodyList.add(0, msg);
-		fireMessageChange(msg);
+		fireMessageChange(msg, 1);
 	}
 	
 
@@ -167,7 +167,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				this.validate();
 			}
 		}
-		fireMessageChange(msg);
+		fireMessageChange(msg, 1);
 	}
 	
 	/**
@@ -175,26 +175,21 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	 * 
 	 * @param msg 消息对象
 	 */
-	public void removeMessage(ChannelMessage msg)
+	public void removeMessage(ChannelMessage msg, boolean toFirst)
 	{
-		for(int i=0; i<this.getComponentCount(); i++)
-		{
-			Component comp = this.getComponent(i);
-			if(comp instanceof Body && ((Body) comp).iMsg.equals(msg))
-			{
-				remove(i);
-				break;
-			}
+		ChannelMessageBodyPane.Body body = new ChannelMessageBodyPane.Body(msg, toFirst);
+		if(toFirst) {
+			body.setBorder(new EmptyBorder(0, 10, 0, 10));
+			
+			this.removeAll();
+			this.add(body);
+			this.validate();
+			
+			messageBodyList.add(msg);
 		}
-		
-		for(Iterator<ChannelMessage> i = messageBodyList.iterator(); i.hasNext();)
-		{
-			if(i.next().equals(msg))
-			{
-				i.remove();
-				break;
-			}
+		else {
 		}
+		fireMessageChange(msg, -1);
 	}
 	
 	/**
@@ -327,49 +322,43 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		//删除
 		public void doDelete() {
 			if (ChannelUtil.confirm(this, "确认删除", "是否删除该消息？")) {
-				if(toFirst) { //如果只显示一条，即顶部显示
-					messageBodyList.remove(messageBodyList.size()-1); //从list中先删除
-					ChannelMessageBodyPane body = (ChannelMessageBodyPane)this.getParent();
-					body.remove(this);
-					body.validate();
-					
-					if(messageBodyList.isEmpty() && container != null) {
+				ChannelMessageBodyPane body = (ChannelMessageBodyPane) this.getParent();
+				body.remove(this);
+				body.validate();
+				
+				if (toFirst) { // 如果只显示一条，即顶部显示
+					messageBodyList.remove(messageBodyList.size() - 1);
+					if (messageBodyList.isEmpty()) {
 						container.remove(body);
-						ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
+						ChannelMessagePane parent = (ChannelMessagePane) container.getParent();
 						parent.remove(container);
-						
-						JPanel root = 	(JPanel)	parent.getParent();
+
+						JPanel root = (JPanel) parent.getParent();
 						root.remove(parent);
 						root.validate();
-					}
-					else {
-						ChannelMessage newMsg = messageBodyList.remove(messageBodyList.size()-1);
-						addMessage(newMsg, true);
-						
-						ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
+					} else {
+						ChannelMessage newMsg = messageBodyList.remove(messageBodyList.size() - 1);
+						removeMessage(newMsg, true);
+
+						ChannelMessagePane parent = (ChannelMessagePane) container.getParent();
 						parent.changeMsgLayoutIfNeed(newMsg);
 						parent.validate();
 					}
-				}
-				else {
-					ChannelMessageBodyPane body = (ChannelMessageBodyPane)this.getParent();
-					body.remove(this);
-					body.validate();
-					
-					ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
-					JPanel root = 	(JPanel)	parent.getParent();
+				} else {
+					ChannelMessagePane parent = (ChannelMessagePane) container.getParent();
+					JPanel root = (JPanel) parent.getParent();
 					root.validate();
-					
+
 					ChannelDesktopPane desktop = ChannelGUI.getDesktop();
-					if(body.getComponentCount() == 0) {
-					ChannelMessage msg = this.iMsg;
-					
-					desktop.removeShowComp(PREFIX_SHOWALL + msg.getContactName());
-					}
-					else {
+					if (body.getComponentCount() == 0) {
+						ChannelMessage msg = this.iMsg;
+
+						desktop.removeShowComp(PREFIX_SHOWALL 	+ msg.getContactName());
+					} else {
 						desktop.validate();
 					}
 					
+					fireMessageChange(iMsg, -1);
 				}
 			}
 		}
@@ -380,6 +369,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			ChannelMessagePane nw =  new ChannelMessagePane(new ShowMessageTopBar(newMsg));
 			nw.showMessage(newMsg);
 			((ShowMessageBodyPane)nw.body).setMessageToGUI(newMsg);
+			((ShowMessageBodyPane)nw.body).setOriginMessageBody(this);
 
 			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
@@ -711,12 +701,17 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 								+ Utilies.parseMail(body.iMsg));
 					}
 					
-					ChannelService cs = 	ChannelAccesser.getChannelService();
-					cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
-					
-					//最后回复消息
-					ChannelDesktopPane desktop = ChannelGUI.getDesktop();
-					desktop.addMessage(newMsg);
+					try {
+						ChannelService cs = 	ChannelAccesser.getChannelService();
+						cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
+
+						//最后回复消息
+						ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+						desktop.addMessage(newMsg);
+					}
+					catch (Exception ex) {
+						ChannelUtil.showMessageDialog(this, "错误", ex);
+					}
 				}
 			}
 		}
