@@ -6,14 +6,10 @@
  */
 package com.original.service.channel;
 
-import java.io.File;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-
-import javax.mail.Part;
 
 import org.bson.types.ObjectId;
 
@@ -27,7 +23,6 @@ import com.google.gson.Gson;
 import com.original.service.channel.protocols.email.model.EMailParser;
 import com.original.service.channel.protocols.im.iqq.QQParser;
 import com.original.service.channel.protocols.sns.weibo.WeiboParser;
-import com.original.service.storage.GridFSUtil;
 
 /**
  * 渠道的信息对象，一个消息分消息的Header，消息的控制部分Control， 消息的内容Content。 Header是消息的标识，标识消息的主体。
@@ -449,50 +444,19 @@ public class ChannelMessage implements Cloneable, Constants{
 		} else {
 			return body;
 		}
-	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public void prepareTempEmbededFiles() {
-		try {
-			List<Attachment> atts = this.getAttachments();
-			if (atts != null && atts.size() > 0) {
-				for (Attachment att : atts) {
-					if (att.getContentType() != null
-							&& att.getContentType().equalsIgnoreCase(
-									Part.INLINE)) {
-						String fileName = att.getFileName();
-						String tempDir = Utilies.getTempDir(att.getFileId(),
-								fileName); // fileID is unique
-
-						File tempFile = new File(new URI(tempDir));
-						if (!tempFile.exists()
-								|| tempFile.length() != att.getSize()) {
-							GridFSUtil.getGridFSUtil().writeFile(
-									(ObjectId) att.getFileId(), tempDir);
-						}
-					}
-				}
-			}
-		} catch (Exception exp) {
-			exp.printStackTrace();
-		}
-	}
+	}	
 
 	public String getCompleteMsg()
 	{
 		return getCompleteMsg(false);
 	}
 	public String getCompleteMsg(boolean showCompleteImage) {
-		prepareTempEmbededFiles();
 		if (isWeibo()) {
 			return WeiboParser.parse(this); // 微博不做任何处理
 		} else if (isQQ()) {
 			return QQParser.parseMessage(this, showCompleteImage);
 		} else {
-			return showCompleteImage ? EMailParser.showComplete(body) : body;
+			return EMailParser.parseMessage(this, showCompleteImage);
 		}
 	}
 
@@ -508,6 +472,15 @@ public class ChannelMessage implements Cloneable, Constants{
 
 		}
 		return msg;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof ChannelMessage) { //这里视messageID唯一
+			return messageID != null
+					&& messageID.equals(((ChannelMessage) obj).getMessageID());
+		}
+		return false;
 	}
 
 	/**

@@ -33,6 +33,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import com.original.service.channel.Attachment;
+import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Utilies;
 import com.original.service.channel.protocols.email.services.MailParseUtil;
 import com.original.service.storage.GridFSUtil;
@@ -590,6 +592,44 @@ public class EMailParser {
 		return image;
 	}
 	
+	public static String parseMessage(ChannelMessage msg, boolean showComplete) {
+		prepareTempEmbededFiles(msg);
+		
+		String content = msg.getBody();
+		if (!showComplete)
+			return content;
+		else
+			return showComplete(content);
+	}
+	
+	//如果消息中的图片本地保存失败，可以获取数据库中保存的图片
+	private static void prepareTempEmbededFiles(ChannelMessage msg) {
+		try {
+			List<Attachment> atts = msg.getAttachments();
+			if (atts != null && atts.size() > 0) {
+				for (Attachment att : atts) {
+					if (att.getContentType() != null
+							&& att.getContentType().equalsIgnoreCase(
+									Part.INLINE)) {
+						String fileName = att.getFileName();
+						String tempDir = Utilies.getTempDir(att.getFileId(),
+								fileName); // fileID is unique
+
+						File tempFile = new File(new URI(tempDir));
+						if (!tempFile.exists()
+								|| tempFile.length() != att.getSize()) {
+							GridFSUtil.getGridFSUtil().writeFile(
+									(ObjectId) att.getFileId(), tempDir);
+						}
+					}
+				}
+			}
+		} catch (Exception exp) {
+			exp.printStackTrace();
+		}
+	}
+	
+	//显示消息的完整内容。目前主要是完整显示图片
     public static String showComplete(String content)
     {
     	 Document doc = Jsoup.parse(content);

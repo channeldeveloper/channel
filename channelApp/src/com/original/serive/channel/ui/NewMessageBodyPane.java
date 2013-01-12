@@ -350,8 +350,16 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 						ChannelService cs = 	ChannelAccesser.getChannelService();
 						cs.put(Constants.ACTION_REPLY, sendMsg);
 						
+						//添加消息
 						ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 						desktop.addMessage(sendMsg);
+						
+						//同时返回
+						if (newMsg != null) {
+							desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName());
+						} else {
+							desktop.removeShowComp(PREFIX_NEW);
+						}
 					}
 					catch(Exception ex) {
 						ChannelUtil.showMessageDialog(NewMessageBodyPane.this, "错误", ex);
