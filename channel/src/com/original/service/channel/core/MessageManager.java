@@ -6,6 +6,7 @@
  */
 package com.original.service.channel.core;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -19,7 +20,7 @@ import com.mongodb.Mongo;
 import com.original.service.channel.ChannelMessage;
 
 /**
- * 渠道消息管理器。
+ * 娓犻亾娑堟伅绠＄悊鍣ㄣ�
  * 
  * 
  * @author cydow
@@ -130,7 +131,50 @@ public class MessageManager {
 		List<ChannelMessage> chmsgs = chmsgQuery.asList();
 		return chmsgs;
 	}
+	private ArrayList<ChannelMessage> EMPTY = new  ArrayList<ChannelMessage>();
+ 
+	/**
+	 * get All Messages
+	 * 
+	 * @return
+	 */
+	public List<ChannelMessage> getMessagesByFlag(String key, Integer value) {
+		if (key == null || value == null)
+		{
+			return EMPTY;
+		}
+		//if value == 0 娌℃湁璁剧疆锛屾槸鍚﹀垽鏂缃负0锛屽鏄惁鍥炲浜嗭紝鏄惁鍒犻櫎浜嗭紵
+		if (value.intValue() == 0)
+		{
+			// 娌℃湁璁剧疆
+			Query<ChannelMessage> query0 = ds.find(ChannelMessage.class).field("flags.key").doesNotExist().order(OrderbyDateField);;
+			//璁捐浜嗕负0
+			Query<ChannelMessage> query = ds.find(ChannelMessage.class).field("flags.key").equal(value).order(OrderbyDateField);;
+			
+			return copyIterator(new IteratorIterator<ChannelMessage>(query0.iterator(), query.iterator()));
+		}
+		else
+		{
+		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class)
+				.field("flags.key").equal(value)
+				.order(OrderbyDateField);
+		List<ChannelMessage> chmsgs = chmsgQuery.asList();
+		return chmsgs;
+		}
+	}
 
+	/**
+	 * 
+	 * @param iter
+	 * @return
+	 */
+	public static <T> List<T> copyIterator(Iterator<T> iter) {
+	    List<T> copy = new ArrayList<T>();
+	    while (iter.hasNext())
+	        copy.add(iter.next());
+	    return copy;
+	}
+	
 	/**
 	 * get messages by one fromAddr value of findFileName.
 	 * @param findFieldName
@@ -161,7 +205,7 @@ public class MessageManager {
 	
 	/////////////////Search///////////////
 	/**
-	 * 单一条件查询
+	 * 鍗曚竴鏉′欢鏌ヨ
 	 * @param field
 	 * @param value
 	 * @param order
@@ -175,7 +219,7 @@ public class MessageManager {
 	}
 	
 	/**
-	 * 多条件查询
+	 * 澶氭潯浠舵煡璇�
 	 * @param fields
 	 * @param values
 	 * @param order
@@ -205,7 +249,7 @@ public class MessageManager {
 	}
 	
 	/**
-	 *  根据 渠道的类型(clazz)来查询。目前有Email\SNS(Weibo)\IM(iQQ)
+	 *  鏍规嵁 娓犻亾鐨勭被鍨�clazz)鏉ユ煡璇�鐩墠鏈塃mail\SNS(Weibo)\IM(iQQ)
 	 * @param channel type
 	 * @return
 	 */
@@ -220,7 +264,7 @@ public class MessageManager {
 	
 	
 	/**
-	 *  根据数据的id获得消息。
+	 *  鏍规嵁鏁版嵁鐨刬d鑾峰緱娑堟伅銆�
 	 * @param ObjectId id
 	 * @return
 	 */
@@ -231,7 +275,7 @@ public class MessageManager {
 	
 	
 	/**
-	 *  根据消息的id获得消息。(应该只有一个Message ID).
+	 *  鏍规嵁娑堟伅鐨刬d鑾峰緱娑堟伅銆�搴旇鍙湁涓�釜Message ID).
 	 * @param ObjectId id
 	 * @return
 	 */
@@ -244,7 +288,7 @@ public class MessageManager {
 	}
 	
 	/**
-	 *  根据状态获取消息.
+	 *  鏍规嵁鐘舵�鑾峰彇娑堟伅.
 	 * @param ObjectId status
 	 * @return
 	 */
@@ -260,7 +304,7 @@ public class MessageManager {
 	/////////////////Filter///////////////
 
 	/**
-	 * 根据Filter获取消息.
+	 * 鏍规嵁Filter鑾峰彇娑堟伅.
 	 * 
 	 * @param ObjectId
 	 *            status
@@ -298,7 +342,7 @@ public class MessageManager {
 				orders.toArray(new String[orders.size()]));
 	}
 	
-	/////////////////全文搜素(Pending)///////////////
+	/////////////////鍏ㄦ枃鎼滅礌(Pending)///////////////
 	
 	/**
 	 * Temporary Full Text Search . (Here should use Full Text Search Engines)
@@ -383,28 +427,28 @@ public class MessageManager {
 		// }
 	}
 
-	// ///////////////全文搜素(Pending)///////////////
+	// ///////////////鍏ㄦ枃鎼滅礌(Pending)///////////////
 	
 	/**
-	 * 检查是否存库内
+	 * 妫�煡鏄惁瀛樺簱鍐�
 	 * @param messageID
 	 * @return
 	 */
 	public boolean isExist(ObjectId objId)
 	{
-		//检查是否存库内		
+		//妫�煡鏄惁瀛樺簱鍐�	
 		ChannelMessage chm = getByID(objId);
 		return chm != null;
 	}
 	
 	/**
-	 * 检查是否存库内
+	 * 妫�煡鏄惁瀛樺簱鍐�
 	 * @param messageID
 	 * @return
 	 */
 	public boolean isExist(String newMsgId)
 	{
-		//检查是否存库内
+		//妫�煡鏄惁瀛樺簱鍐�
 		Iterator<ChannelMessage> ite = getByMessageID(newMsgId);
 		return ite != null && ite.hasNext();
 	}

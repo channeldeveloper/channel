@@ -414,8 +414,15 @@ public final class ChannelService extends AbstractService {
 //		return null;
 //	}
 
+	public static final String ACTION_PUT_SEND="Send";
+	public static final String ACTION_PUT_POST="Post";
+	public static final String ACTION_PUT_COMMENT="Comment";
+	public static final String ACTION_PUT_DRAFT="Draft";
+	
+	@Deprecated	
 	@Override
 	public void put(String action, List<ChannelMessage> msg) {
+		
 		// TODO Auto-generated method stub
 		if (msg == null || msg.size() == 0) {
 			return;
@@ -427,7 +434,6 @@ public final class ChannelService extends AbstractService {
 				sc.put(action, msg);
 			}
 		}
-
 	}
 
 	@Override
@@ -592,9 +598,13 @@ public final class ChannelService extends AbstractService {
 	public void put(String action, ChannelMessage msg) {
 		// TODO Auto-generated method stub
 		if (msg != null) {
-			
 			preSendProcess(action, msg);
-			
+			if (action.equals(ACTION_PUT_DRAFT))
+			{
+				this.msgManager.save(msg);
+				updateMessageFlag(msg, ChannelMessage.FLAG_DRAFT, 1);
+				return;
+			}
 			ChannelAccount cha = msg.getChannelAccount();
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
@@ -672,6 +682,8 @@ public final class ChannelService extends AbstractService {
 //		return null;
 //	}
 
+	
+	
 	/**
 	 * 按照消息数据的ID删除。
 	 * 
