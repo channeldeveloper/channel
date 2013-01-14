@@ -39,7 +39,6 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
-import com.original.service.channel.Constants;
 import com.original.service.channel.protocols.email.model.EMail;
 import com.original.service.channel.protocols.email.model.EMailAttachment;
 import com.original.service.channel.protocols.email.vendor.EMailConfig;
@@ -263,7 +262,10 @@ public class EmailSender{// extends AbstractProcessingResource {
             if (copyAddress.length > 0) {
                 InternetAddress[] address = new InternetAddress[copyAddress.length];
                 for (int i = 0; i < copyAddress.length; i++) {
-                    address[i] = new InternetAddress(copyAddress[i]);
+					String addr = copyAddress[i].trim();
+					if (!addr.isEmpty()) { //注意去掉前后空格
+						address[i] = new InternetAddress(addr);
+					}
                 }
                 mimeMsg.addRecipients(Message.RecipientType.CC, address);
             }
@@ -287,7 +289,10 @@ public class EmailSender{// extends AbstractProcessingResource {
             if (bccAddress.length > 0) {
                 InternetAddress[] address = new InternetAddress[bccAddress.length];
                 for (int i = 0; i < bccAddress.length; i++) {
-                    address[i] = new InternetAddress(bccAddress[i]);
+                	String addr = bccAddress[i].trim();
+					if (!addr.isEmpty()) { //注意去掉前后空格
+						address[i] = new InternetAddress(addr);
+					}
                 }
                 mimeMsg.addRecipients(Message.RecipientType.BCC, address);
             }
@@ -467,14 +472,15 @@ public class EmailSender{// extends AbstractProcessingResource {
     	HashMap<String, String> exts = msg.getExtensions();
     	
     	msg.setSentDate(new Date());
-    	String bccTo = null;
+    	String bccTo = null, ccTo = null;
     	if (exts != null)
     	{
+    		ccTo= exts.get(ChannelMessage.EXT_EMAIL_CC);
     		bccTo = exts.get(ChannelMessage.EXT_EMAIL_BCC);
     	}
     	String content = msg.getBody();
     	String title = msg.getSubject();
-    	this.send(to, null, bccTo, title, content, msg.getAttachments());    	//注意这里的抄送不应该用fromAddr，待以后由用户自己输入，暂时设为null。
+    	this.send(to, ccTo, bccTo, title, content, msg.getAttachments());    	//注意这里的抄送不应该用fromAddr，待以后由用户自己输入，暂时设为null。
     }
     Transport transport;
     /**

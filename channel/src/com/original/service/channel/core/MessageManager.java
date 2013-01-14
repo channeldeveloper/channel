@@ -428,16 +428,16 @@ public class MessageManager {
 		if (value.intValue() == 0)
 		{
 			//find no exits
-			Query<ChannelMessage> query0 = ds.find(ChannelMessage.class).field("flags.key").doesNotExist().order(OrderbyDateField);
+			Query<ChannelMessage> query0 = ds.find(ChannelMessage.class).field("flags."+key).doesNotExist().order(OrderbyDateField);
 			//value == 0
-			Query<ChannelMessage> query = ds.find(ChannelMessage.class).field("flags.key").equal(value).order(OrderbyDateField);
+			Query<ChannelMessage> query = ds.find(ChannelMessage.class).field("flags."+key).equal(value).order(OrderbyDateField);
 			
 			return copyIterator(new IteratorIterator<ChannelMessage>(query0.iterator(), query.iterator()));
 		}
 		else
 		{
 		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class)
-				.field("flags.key").equal(value)
+				.field("flags."+key).equal(value)
 				.order(OrderbyDateField);
 		List<ChannelMessage> chmsgs = chmsgQuery.asList();
 		return chmsgs;

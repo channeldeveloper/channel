@@ -10,6 +10,8 @@ import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
@@ -40,6 +42,7 @@ import com.original.serive.channel.ui.data.FontStyle;
 import com.original.serive.channel.ui.widget.EditorHandler;
 import com.original.serive.channel.ui.widget.FileAttacher;
 import com.original.serive.channel.ui.widget.FontChooser;
+import com.original.serive.channel.ui.widget.ToolTip;
 import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
@@ -232,7 +235,13 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 				msg.setBody(center.getText(true));
 
 			} else if (newMsg.isMail()) {
-				msg.setSubject(center.getSubject());// 主体
+				msg.setSubject(center.getSubject());// 主题
+				msg.setCC(center.getCC()); //抄送
+				
+				if (ChannelUtil.isEmpty(msg.getSubject())) {
+					ChannelUtil.showMessageDialog(null, "警告", "邮件主题不能为空！");
+					return null;
+				}
 				msg.setBody(center.getText(false));
 				msg.setAttachments(center.getAttachments());//附件
 			}
@@ -346,8 +355,24 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			else if(e.getActionCommand() == POST) { //发送
 				ChannelMessage sendMsg = editMessage();
 				if(sendMsg != null && !ChannelUtil.isEmpty(sendMsg.getBody())) {
-					ChannelService cs = 	ChannelAccesser.getChannelService();
-					cs.put(Constants.ACTION_REPLY, sendMsg);
+					try {
+						ChannelService cs = 	ChannelAccesser.getChannelService();
+						cs.put(Constants.ACTION_REPLY, sendMsg);
+						
+						//添加消息
+						ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+						desktop.addMessage(sendMsg);
+						
+						//同时返回
+						if (newMsg != null) {
+							desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName());
+						} else {
+							desktop.removeShowComp(PREFIX_NEW);
+						}
+					}
+					catch(Exception ex) {
+						ChannelUtil.showMessageDialog(NewMessageBodyPane.this, "错误", ex);
+					}
 				}
 				
 				//清空文本
@@ -357,7 +382,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	}
 	
 	//中间编辑面板
-	public class Center extends JPanel implements ActionListener, EventConstants
+	public class Center extends JPanel implements ActionListener, FocusListener, EventConstants
 	{
 		ChannelGridBagLayoutManager layoutMgr =
 				new ChannelGridBagLayoutManager(this);
@@ -379,6 +404,9 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 				btnFile = (JButton) ChannelUtil.createAbstractButton(
 						new AbstractButtonItem(null, ADD_FILE, IconFactory.loadIconByConfig("fileIcon"), null, 
 								IconFactory.loadIconByConfig("fileDisabledIcon"), null));//附件
+		
+		//提示控件
+		private ToolTip toolTip = new ToolTip();
 		
 		//文本面板
 		private JTextPane content = new JTextPane();
@@ -403,6 +431,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			
 			layoutMgr.addComToModel(new JLabel("分享/抄送："));
 			layoutMgr.addComToModel(txtCC, 1, 1, GridBagConstraints.HORIZONTAL);
+			txtCC.addFocusListener(this);
 			layoutMgr.newLine();
 			
 			layoutMgr.addComToModel(new JLabel("主题："));
@@ -522,6 +551,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		 */
 		public void clearAll() {
 			txtCC.setText(null);
+//			txtCC.removeFocusListener(this);
 			txtSubject.setText(null);
 			
 			clearText();
@@ -566,12 +596,26 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 				}
 			}
 			else if(ADD_FILE == e.getActionCommand()) {
-				//目前做测试用
-//				System.out.println(handler.parseHTML(content.getText()));
-//				System.out.println(content.getText());
 				ChannelUtil.showCustomedDialog(btnFile, "添加附件", true, fileAttacher);
 			}
 		}
-	}
 
+		@Override
+		public void focusGained(FocusEvent e) {
+			// TODO 自动生成的方法存根
+			if(e.getComponent() == txtCC) {
+				if (!toolTip.isInvokerShow()) {
+					toolTip.setToolTipText("多个抄送地址，请以英文字符“;”隔开！");
+					toolTip.show(txtCC, 0, txtCC.getY() + 25);
+				} else {
+					toolTip.removeInvoker(txtCC);
+				}
+			}
+		}
+
+		@Override
+		public void focusLost(FocusEvent e) {
+			// TODO 自动生成的方法存根
+		}
+	}
 }

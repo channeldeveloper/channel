@@ -254,6 +254,7 @@ public class ChannelMain {
 		while (true) {
 			Thread.sleep(1000);
 		}
+		
 	}
 
 	static class MyListener implements MessageListner {

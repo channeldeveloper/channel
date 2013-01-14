@@ -100,7 +100,6 @@ public class ChannelMessage implements Cloneable, Constants{
 	public static final String FLAG_DONE = "DONE";//是否处理过 0未，1是 （程序的）
 	public static final String FLAG_TRASHED = "TRASHED";//是否垃圾 0未，1是 isTrash
 	
-	//下面这些目前没有使用到：
 	public static final String FLAG_DRAFT = "DRAFT";//是否草稿 0未，1是
 	public static final String FLAG_FLAGGED = "FLAGGED";//是否旗标 0未，1是
 	public static final String FLAG_RECENT = "RECENT";//是否最新 0未，1是
@@ -359,6 +358,19 @@ public class ChannelMessage implements Cloneable, Constants{
 	 */
 	public void setMessageID(String messageID) {
 		this.messageID = messageID;
+	}
+	
+	/**
+	 * 添加抄送人地址，多个以英文';'隔开
+	 * @param cc
+	 */
+	public void setCC(String cc) {
+		if(cc != null &&  !cc.isEmpty()) {
+			if(extensions == null) {
+				extensions = new HashMap<String, String>();
+				extensions.put(EXT_EMAIL_CC, cc);
+			}
+		}
 	}
 	
 	public String getClazz()

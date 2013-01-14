@@ -98,20 +98,14 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 	 */
 	public void doClose() {
 		ChannelMessageBodyPane body = this.getMessageBody();
-		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 		if(body != null)
 		{
-			ChannelMessageBodyPane.Body child = null;
-			if(body.getComponentCount() == 0) {
+			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+			ChannelMessage msg = body.getChannelMessage();
+			if (msg != null) {
+				desktop.removeShowComp(PREFIX_SHOWALL + msg.getContactName());
+			} else {
 				desktop.showDefaultComp();
-			}
-			else {
-				if(body.getComponent(0) instanceof ChannelMessageBodyPane.Body) {
-					child = (ChannelMessageBodyPane.Body)body.getComponent(0);
-					
-					ChannelMessage newMsg = child.iMsg;
-					desktop.removeShowComp(PREFIX_SHOWALL+newMsg.getContactName());
-				}
 			}
 		}
 	}
@@ -127,10 +121,12 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 //				closeIcon.getHeight()
 //		);
 		
-		if(!hasIconConfirmed) {
-			repaint();
-			hasIconConfirmed = true;
-		}
+//		if(!hasIconConfirmed) {
+//			repaint();
+//			hasIconConfirmed = true;
+//		}
+		
+		repaint(); //这里可能随着鼠标移动，会多占用资源。待以后优化
 	}
 
 	/**

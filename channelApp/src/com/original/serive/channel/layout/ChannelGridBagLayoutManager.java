@@ -8,6 +8,7 @@ import java.awt.Insets;
 import javax.swing.Box;
 import javax.swing.Box.Filler;
 import javax.swing.JComponent;
+import javax.swing.text.JTextComponent;
 
 /**
  * Channel网格包布局管理器
@@ -153,6 +154,9 @@ public class ChannelGridBagLayoutManager
     		if(comp.isVisible() != isVisible && layout.getConstraints(comp).gridy == gridY)
     		{
     			comp.setVisible(isVisible);
+    			if(comp instanceof JTextComponent && !isVisible) {
+    				((JTextComponent) comp).setText(null);
+    			}
     		}
     	}
     }

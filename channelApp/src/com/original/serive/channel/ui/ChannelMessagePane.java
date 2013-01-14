@@ -25,6 +25,7 @@ import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.ui.widget.ToolTip;
 import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelConstants;
+import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
 import com.original.serive.channel.util.IconFactory;
 import com.original.serive.channel.util.LocationIcon;
@@ -49,7 +50,7 @@ public class ChannelMessagePane extends JPanel
 		ChannelMessageBodyPane body = null;
 	//消息状态栏
 		ChannelMessageStatusBar statusBar = null;
-		MessageContainer container = null;
+		MessageContainer container = null, originContainer = null;
 	
 	//联系人头像
 	private ContactHeader header = new ContactHeader(
@@ -62,6 +63,7 @@ public class ChannelMessagePane extends JPanel
 			ContactHeader.HEADSIZE.height);
 	
 	String uid = null; //联系人账号(用户名)，和ChannelMessagePane一一对应。
+	boolean showDirection = true; //是否显示消息方向(即是否改变消息面板的布局方向)，如果为false，则只由receive方向
 	
 	public ChannelMessagePane() {
 		this(new ChannelMessageStatusBar());
@@ -82,7 +84,11 @@ public class ChannelMessagePane extends JPanel
 		
 		//下面添加的子组件
 		layoutMgr.addComToModel(header);
-		layoutMgr.addComToModel(leftArrow);
+		if (showDirection) {
+			layoutMgr.addComToModel(leftArrow);
+		} else {
+			layoutMgr.addCopyRegion(leftArrow);
+		}
 
 		layoutMgr.addComToModel(container);
 
@@ -105,7 +111,11 @@ public class ChannelMessagePane extends JPanel
 		layoutMgr.addComToModel(container);
 		
 		layoutMgr.setInsets(new Insets(0, -2, 0, 4));
-		layoutMgr.addComToModel(rightArrow);
+		if (showDirection) {
+			layoutMgr.addComToModel(rightArrow);
+		} else {
+			layoutMgr.addCopyRegion(rightArrow);
+		}
 		
 		layoutMgr.setInsets(new Insets(0, 0, 0, 4));
 		layoutMgr.addComToModel(header);
@@ -184,14 +194,22 @@ public class ChannelMessagePane extends JPanel
 			body.addMessage(msg, toFirst);
 			header.setContactName(uName);
 
-			if (msg.isReceived()) { // 是接受过来的消息
+			if (showDirection) {
+				if (msg.isReceived()) { // 是接受过来的消息
+					setReceiveMsgLayout();
+				} else if (msg.isSent()) { // 是发送(回复)过去的消息
+					setPostMsgLayout();
+				}
+			} else {
 				setReceiveMsgLayout();
-			} else if (msg.isSent()) { // 是发送(回复)过去的消息
-				setPostMsgLayout();
+				leftArrow.setVisible(false);//不显示箭头
+				rightArrow.setVisible(false);
 			}
 		} else if (uid.equals(uName)) {
 			body.addMessage(msg, toFirst);
-			changeMsgLayoutIfNeed(msg); // 检查是否要改变消息布局方向
+			if(showDirection) {
+				changeMsgLayoutIfNeed(msg); // 检查是否要改变消息布局方向
+			}
 		}
 	}
 	
@@ -222,6 +240,13 @@ public class ChannelMessagePane extends JPanel
 		}
 	}
 	
+	public MessageContainer getOriginContainer() {
+		return originContainer;
+	}
+	public void setOriginContainer(MessageContainer originContainer) {
+		this.originContainer = originContainer;
+	}
+
 	/**
 	 * 消息内容面板，其实就是ChannelMessageBody面板和ChannelMessageStatusBar上下两部分组成
 	 * @author WMS
@@ -364,12 +389,13 @@ public class ChannelMessagePane extends JPanel
 					if(headBounds == null) {
 						headBounds = headIcon.getBounds();
 					}
-							
 					if (headBounds.contains(e.getPoint())) {
 						setCursor(ChannelConstants.HAND_CURSOR);
 					} else if (contactBounds.contains(e.getPoint())) {
-						contactPopupMenu.setToolTipText(contactName);
-						contactPopupMenu.show(ContactHeader.this, e.getX(), e.getY());
+						if (!ChannelUtil.isEmpty(contactName)) {
+							contactPopupMenu.setToolTipText(contactName);
+							contactPopupMenu.show(ContactHeader.this, e.getX(), e.getY());
+						}
 					} else {
 						setCursor(ChannelConstants.DEFAULT_CURSOR);
 					}

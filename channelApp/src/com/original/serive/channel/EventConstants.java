@@ -34,6 +34,7 @@ public interface EventConstants
 	String VIEW_WEIBO = "view weibo";
 	String VIEW_CONTACT = "view contact";
 	String VIEW_UNDO = "view undo";
+	String VIEW_DRAFT = "view draft";
 	String VIEW_TRASH = "view trash";
 	
 	/* 消息状态 */

@@ -93,6 +93,7 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		statusButton.initPopupMenu(new MenuItem[]{
 				new MenuItem("全部", VIEW_ALL_STATUS, true),
 				new MenuItem("未处理", VIEW_UNDO),
+				new MenuItem("草稿箱", VIEW_DRAFT),
 				new MenuItem("垃圾箱", VIEW_TRASH),
 		});
 		add(statusButton);
