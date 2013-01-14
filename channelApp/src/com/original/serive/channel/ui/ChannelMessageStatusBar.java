@@ -133,7 +133,7 @@ public class ChannelMessageStatusBar extends JPanel implements PropertyChangeLis
 		{
 			int newCount = evt.getNewValue() instanceof Integer ? 
 					((Integer)evt.getNewValue()).intValue(): 0;
-					if(newCount != 0) {
+					if(newCount > 0) {
 						mailCount += newCount;
 						mailLabel.setText("邮件：" + mailCount);
 					}
@@ -142,7 +142,7 @@ public class ChannelMessageStatusBar extends JPanel implements PropertyChangeLis
 		{
 			int newCount = evt.getNewValue() instanceof Integer ? 
 					((Integer)evt.getNewValue()).intValue(): 0;
-					if(newCount != 0) {
+					if(newCount > 0) {
 						qqCount += newCount;
 						qqLabel.setText("QQ：" + qqCount);
 					}
@@ -151,7 +151,7 @@ public class ChannelMessageStatusBar extends JPanel implements PropertyChangeLis
 		{
 			int newCount = evt.getNewValue() instanceof Integer ? 
 					((Integer)evt.getNewValue()).intValue(): 0;
-					if(newCount != 0) {
+					if(newCount > 0) {
 						weiboCount += newCount;
 						weiboLabel.setText("微博：" + weiboCount);
 					}

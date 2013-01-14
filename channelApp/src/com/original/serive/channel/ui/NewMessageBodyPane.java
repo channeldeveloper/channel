@@ -346,24 +346,8 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			else if(e.getActionCommand() == POST) { //发送
 				ChannelMessage sendMsg = editMessage();
 				if(sendMsg != null && !ChannelUtil.isEmpty(sendMsg.getBody())) {
-					try {
-						ChannelService cs = 	ChannelAccesser.getChannelService();
-						cs.put(Constants.ACTION_REPLY, sendMsg);
-						
-						//添加消息
-						ChannelDesktopPane desktop = ChannelGUI.getDesktop();
-						desktop.addMessage(sendMsg);
-						
-						//同时返回
-						if (newMsg != null) {
-							desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName());
-						} else {
-							desktop.removeShowComp(PREFIX_NEW);
-						}
-					}
-					catch(Exception ex) {
-						ChannelUtil.showMessageDialog(NewMessageBodyPane.this, "错误", ex);
-					}
+					ChannelService cs = 	ChannelAccesser.getChannelService();
+					cs.put(Constants.ACTION_REPLY, sendMsg);
 				}
 				
 				//清空文本

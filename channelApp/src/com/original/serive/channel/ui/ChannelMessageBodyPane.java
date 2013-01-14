@@ -3,7 +3,6 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Insets;
@@ -14,6 +13,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Vector;
 
 import javax.swing.AbstractButton;
@@ -23,7 +23,6 @@ import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.JViewport;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.SwingPropertyChangeSupport;
 import javax.swing.text.EditorKit;
@@ -108,16 +107,16 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					new PropertyChangeEvent(this, changePropertyName, oldValue, newValue));
 		}
 	}
-	public void fireMessageChange(ChannelMessage msg, int value) {
+	public void fireMessageChange(ChannelMessage msg) {
 		if (msg.isMail()) {
-			fireMessageChange(MAIL_COUNT_CHANGE_PROPERTY, 0, value);
+			fireMessageChange(MAIL_COUNT_CHANGE_PROPERTY, 0, 1);
 		} else if (msg.isQQ()) {
-			fireMessageChange(QQ_COUNT_CHANGE_PROPERTY, 0, value);
+			fireMessageChange(QQ_COUNT_CHANGE_PROPERTY, 0, 1);
 		} else if (msg.isWeibo()) {
-			fireMessageChange(WEIBO_COUNT_CHANGE_PROPERTY, 0, value);
+			fireMessageChange(WEIBO_COUNT_CHANGE_PROPERTY, 0, 1);
 		}
 	}
-
+	
 	/**
 	 * 初始化消息列表，用于{@link ChannelDesktopPane#initMessage(ChannelMessage)}时
 	 * @param msg
@@ -131,7 +130,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		}
 		
 		messageBodyList.add(0, msg);
-		fireMessageChange(msg, 1);
+		fireMessageChange(msg);
 	}
 	
 
@@ -168,74 +167,32 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				this.validate();
 			}
 		}
-		fireMessageChange(msg, 1);
+		fireMessageChange(msg);
 	}
 	
 	/**
-	 * 从当前面板和其消息List中移除消息。
+	 * 从当前面板List中移除消息。注意如果此消息已经持久化存储(如数据库已保存)，也需要删除。
+	 * 
 	 * @param msg 消息对象
 	 */
-	public void removeMessage(ChannelMessage msg, boolean toFirst)
+	public void removeMessage(ChannelMessage msg)
 	{
-		if (toFirst) { // 如果只显示一条，即顶部显示
-			messageBodyList.remove(messageBodyList.size() - 1);
-			if (messageBodyList.isEmpty()) {
-				
-				Container child = this, parent = container;
-				while (!(parent instanceof JViewport)) {
-					parent.remove(child);
-					child = parent;
-					parent = parent.getParent();
-				}
-				parent.validate();
-				
-			} else {
-				ChannelMessage newMsg = messageBodyList.get(messageBodyList.size() - 1);
-				ChannelMessageBodyPane.Body body = new ChannelMessageBodyPane.Body(newMsg, toFirst);
-				body.setBorder(new EmptyBorder(0, 10, 0, 10));
-
-				//显示倒数第2条消息
-					this.removeAll();
-					this.add(body);
-					this.validate();
-
-				ChannelMessagePane parent = (ChannelMessagePane) container.getParent();
-				parent.changeMsgLayoutIfNeed(newMsg);
-				parent.validate();
-				
-				//消息数-1
-				fireMessageChange(newMsg, -1);
+		for(int i=0; i<this.getComponentCount(); i++)
+		{
+			Component comp = this.getComponent(i);
+			if(comp instanceof Body && ((Body) comp).iMsg.equals(msg))
+			{
+				remove(i);
+				break;
 			}
-		} else {
-			Container parent = container;
-			while (!(parent instanceof JViewport)) {
-				parent = parent.getParent();
-			}
-			parent.validate();
-
-			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
-			if (this.getComponentCount() == 0) {
-				desktop.removeShowComp(PREFIX_SHOWALL 	+ msg.getContactName());
-			} else {
-				desktop.validate();
-			}
-			
-			ChannelMessagePane cmp  = (ChannelMessagePane)container.getParent();
-			MessageContainer originContainer = cmp.getOriginContainer();
-			if(originContainer != null) {
-				ChannelMessageBodyPane originBody = originContainer.getMessageBody();
-				ChannelMessage firstMsg = originBody.getChannelMessage();
-				if (firstMsg.equals(msg)) { // 是第一条消息
-					originBody.removeMessage(firstMsg, true); //从面板和消息List中移除
-					
-					//同时检查是否需要改变面板的消息方向
-//					ChannelMessagePane originParent = (ChannelMessagePane) originContainer.getParent();
-//					originParent.changeMsgLayoutIfNeed(firstMsg);
-				} else { // 否则只改变原消息数
-					originBody.getChannelMessages().remove(msg);//只从消息List中移除
-					
-					originBody.fireMessageChange(firstMsg, -1);
-				}
+		}
+		
+		for(Iterator<ChannelMessage> i = messageBodyList.iterator(); i.hasNext();)
+		{
+			if(i.next().equals(msg))
+			{
+				i.remove();
+				break;
 			}
 		}
 	}
@@ -247,7 +204,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	{
 		ChannelMessage newMsg = null;
 		ChannelMessagePane nw = new ChannelMessagePane(new ChannelMessageTopBar());
-		nw.showDirection = false; //不显示消息方向
 		
 		for (ChannelMessage msg : messageBodyList) {
 			if (newMsg == null) {
@@ -255,7 +211,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			}
 			nw.addMessage(msg, false);
 		}
-		nw.setOriginContainer(container);
 
 		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 		desktop.addOtherShowComp(PREFIX_SHOWALL + newMsg.getContactName(), nw);
@@ -267,10 +222,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	 */
 	public ChannelMessage getChannelMessage() {
 		return messageBodyList.isEmpty() ? null : messageBodyList
-				.lastElement();
-	}
-	public Vector<ChannelMessage> getChannelMessages() {
-		return messageBodyList;
+				.firstElement();
 	}
 	
 	//主体部分，即下面3个部分的整合。
@@ -374,16 +326,50 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		
 		//删除
 		public void doDelete() {
-			if (ChannelUtil.confirm(null, "确认删除", "是否删除该消息？")) {
-				ChannelMessageBodyPane body = (ChannelMessageBodyPane) this.getParent();
-				body.remove(this);
-				body.validate();
-				
-				try {
-					channelService.trashMessage(iMsg);
-					removeMessage(iMsg, toFirst);
-				} catch (Exception ex) {
-					ChannelUtil.showMessageDialog(null, "错误", ex);
+			if (ChannelUtil.confirm(this, "确认删除", "是否删除该消息？")) {
+				if(toFirst) { //如果只显示一条，即顶部显示
+					messageBodyList.remove(messageBodyList.size()-1); //从list中先删除
+					ChannelMessageBodyPane body = (ChannelMessageBodyPane)this.getParent();
+					body.remove(this);
+					body.validate();
+					
+					if(messageBodyList.isEmpty() && container != null) {
+						container.remove(body);
+						ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
+						parent.remove(container);
+						
+						JPanel root = 	(JPanel)	parent.getParent();
+						root.remove(parent);
+						root.validate();
+					}
+					else {
+						ChannelMessage newMsg = messageBodyList.remove(messageBodyList.size()-1);
+						addMessage(newMsg, true);
+						
+						ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
+						parent.changeMsgLayoutIfNeed(newMsg);
+						parent.validate();
+					}
+				}
+				else {
+					ChannelMessageBodyPane body = (ChannelMessageBodyPane)this.getParent();
+					body.remove(this);
+					body.validate();
+					
+					ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
+					JPanel root = 	(JPanel)	parent.getParent();
+					root.validate();
+					
+					ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+					if(body.getComponentCount() == 0) {
+					ChannelMessage msg = this.iMsg;
+					
+					desktop.removeShowComp(PREFIX_SHOWALL + msg.getContactName());
+					}
+					else {
+						desktop.validate();
+					}
+					
 				}
 			}
 		}
@@ -394,7 +380,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			ChannelMessagePane nw =  new ChannelMessagePane(new ShowMessageTopBar(newMsg));
 			nw.showMessage(newMsg);
 			((ShowMessageBodyPane)nw.body).setMessageToGUI(newMsg);
-			((ShowMessageBodyPane)nw.body).setOriginMessageBody(this);
 
 			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
@@ -726,17 +711,12 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 								+ Utilies.parseMail(body.iMsg));
 					}
 					
-					try {
-						ChannelService cs = 	ChannelAccesser.getChannelService();
-						cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
-
-						//最后回复消息
-						ChannelDesktopPane desktop = ChannelGUI.getDesktop();
-						desktop.addMessage(newMsg);
-					}
-					catch (Exception ex) {
-						ChannelUtil.showMessageDialog(this, "错误", ex);
-					}
+					ChannelService cs = 	ChannelAccesser.getChannelService();
+					cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
+					
+					//最后回复消息
+					ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+					desktop.addMessage(newMsg);
 				}
 			}
 		}

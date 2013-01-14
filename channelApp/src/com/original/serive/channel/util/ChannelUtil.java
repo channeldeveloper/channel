@@ -594,21 +594,30 @@ MessageBox box = new MessageBox(content);
 	
 	public  static void checkWindowLocation(int x, int y, Window window)
 	{
+		checkComponentLocation(x, y, window);
+	}
+	
+	public static Point checkComponentLocation(int x, int y, Component comp)
+	{
 		if (x < MARGIN_LEFT)
 			x = MARGIN_LEFT;
-		else if (x + window.getWidth() > MARGIN_RIGHT)
-			x = MARGIN_RIGHT - window.getWidth();
+		else if (x + comp.getWidth() > MARGIN_RIGHT)
+			x = MARGIN_RIGHT - comp.getWidth();
 		else if (x > MARGIN_RIGHT)
 			x = MARGIN_RIGHT;
 
 		if (y < MARGIN_TOP)
 			y = MARGIN_TOP;
-		else if (y + window.getHeight() > MARGIN_BOTTOM)
-			y = MARGIN_BOTTOM - window.getHeight();
+		else if (y + comp.getHeight() > MARGIN_BOTTOM)
+			y = MARGIN_BOTTOM - comp.getHeight();
 		else if (y > MARGIN_BOTTOM)
 			y = MARGIN_BOTTOM;
-
-		window.setLocation(x, y);
+		
+		Point p = new Point(x, y);
+		if (comp instanceof Window) {
+			comp.setLocation(p);
+		}
+		return p;
 	}
 	
 	/**

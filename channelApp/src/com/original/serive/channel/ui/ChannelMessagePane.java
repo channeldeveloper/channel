@@ -6,6 +6,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -17,9 +18,11 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.VerticalGridLayout;
+import com.original.serive.channel.ui.widget.ToolTip;
 import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.GraphicsHandler;
@@ -46,7 +49,7 @@ public class ChannelMessagePane extends JPanel
 		ChannelMessageBodyPane body = null;
 	//消息状态栏
 		ChannelMessageStatusBar statusBar = null;
-		MessageContainer container = null, originContainer = null;
+		MessageContainer container = null;
 	
 	//联系人头像
 	private ContactHeader header = new ContactHeader(
@@ -59,7 +62,6 @@ public class ChannelMessagePane extends JPanel
 			ContactHeader.HEADSIZE.height);
 	
 	String uid = null; //联系人账号(用户名)，和ChannelMessagePane一一对应。
-	boolean showDirection = true; //是否显示消息方向(即是否改变消息面板的布局方向)，如果为false，则只由receive方向
 	
 	public ChannelMessagePane() {
 		this(new ChannelMessageStatusBar());
@@ -80,11 +82,7 @@ public class ChannelMessagePane extends JPanel
 		
 		//下面添加的子组件
 		layoutMgr.addComToModel(header);
-		if (showDirection) {
-			layoutMgr.addComToModel(leftArrow);
-		} else {
-			layoutMgr.addCopyRegion(leftArrow);
-		}
+		layoutMgr.addComToModel(leftArrow);
 
 		layoutMgr.addComToModel(container);
 
@@ -107,11 +105,7 @@ public class ChannelMessagePane extends JPanel
 		layoutMgr.addComToModel(container);
 		
 		layoutMgr.setInsets(new Insets(0, -2, 0, 4));
-		if (showDirection) {
-			layoutMgr.addComToModel(rightArrow);
-		} else {
-			layoutMgr.addCopyRegion(rightArrow);
-		}
+		layoutMgr.addComToModel(rightArrow);
 		
 		layoutMgr.setInsets(new Insets(0, 0, 0, 4));
 		layoutMgr.addComToModel(header);
@@ -190,22 +184,14 @@ public class ChannelMessagePane extends JPanel
 			body.addMessage(msg, toFirst);
 			header.setContactName(uName);
 
-			if (showDirection) {
-				if (msg.isReceived()) { // 是接受过来的消息
-					setReceiveMsgLayout();
-				} else if (msg.isSent()) { // 是发送(回复)过去的消息
-					setPostMsgLayout();
-				}
-			} else {
+			if (msg.isReceived()) { // 是接受过来的消息
 				setReceiveMsgLayout();
-				leftArrow.setVisible(false);//不显示箭头
-				rightArrow.setVisible(false);
+			} else if (msg.isSent()) { // 是发送(回复)过去的消息
+				setPostMsgLayout();
 			}
 		} else if (uid.equals(uName)) {
 			body.addMessage(msg, toFirst);
-			if(showDirection) {
-				changeMsgLayoutIfNeed(msg); // 检查是否要改变消息布局方向
-			}
+			changeMsgLayoutIfNeed(msg); // 检查是否要改变消息布局方向
 		}
 	}
 	
@@ -236,13 +222,6 @@ public class ChannelMessagePane extends JPanel
 		}
 	}
 	
-	public MessageContainer getOriginContainer() {
-		return originContainer;
-	}
-	public void setOriginContainer(MessageContainer originContainer) {
-		this.originContainer = originContainer;
-	}
-
 	/**
 	 * 消息内容面板，其实就是ChannelMessageBody面板和ChannelMessageStatusBar上下两部分组成
 	 * @author WMS
@@ -324,30 +303,33 @@ public class ChannelMessagePane extends JPanel
 	 */
 	public static class ContactHeader extends JPanel
 	{
-		private LocationIcon headImageIcon = null;//联系人头像
-		private String contactName = "联系人";//联系人用户名
-		private ChannelPopupMenu popupMenu = new ChannelPopupMenu(this);
-		
-		public static  Dimension SIZE =  new Dimension(78, 100),
+		public static  Dimension SIZE =  new Dimension(80, 100),
 				HEADSIZE = new Dimension(72, 72);
+		
+		private LocationIcon headIcon = null;//联系人头像
+		private String contactName = "联系人";//联系人用户名
+		private JPopupMenu headPopupMenu = new ChannelPopupMenu(this),
+				contactPopupMenu = new ToolTip();
+		private Rectangle headBounds = null,
+				contactBounds = new Rectangle(0, SIZE.height-20, SIZE.width, 16);		
 		
 		public ContactHeader(Icon headImage)
 		{
-			headImageIcon = new LocationIcon(headImage);
+			headIcon = new LocationIcon(headImage);
 			this.contactName = contactName == null ? "" : contactName;
 			setContactHeader();
 		}
 		
 //		public ContactHeader(URL headImageURL)
 //		{
-//			headImageIcon = new LocationIcon(headImageURL);
+//			headIcon = new LocationIcon(headImageURL);
 //			this.contactName = contactName == null ? "" : contactName;
 //			setContactHeader();
 //		}
 //		
 //		public ContactHeader(byte[] headImageBytes)
 //		{
-//			headImageIcon = new LocationIcon(headImageBytes);
+//			headIcon = new LocationIcon(headImageBytes);
 //			this.contactName = contactName == null ? "" : contactName;
 //			
 //			setContactHeader();
@@ -369,20 +351,26 @@ public class ChannelMessagePane extends JPanel
 		 */
 		private void setContactHeader()
 		{
-			if(headImageIcon != null) {
-				Image headImage = headImageIcon.getImage().
+			if(headIcon != null) {
+				Image headImage = headIcon.getImage().
 						getScaledInstance(HEADSIZE.width, HEADSIZE.height, Image.SCALE_SMOOTH);
-				headImageIcon = new LocationIcon(new ImageIcon(headImage));
+				headIcon = new LocationIcon(new ImageIcon(headImage));
 			}
 			setPreferredSize(SIZE);
 			addMouseMotionListener(new MouseMotionAdapter()
 			{
 				public void mouseMoved(MouseEvent e)
 				{
-					if(headImageIcon.getBounds().contains(e.getPoint())) {
-						setCursor(ChannelConstants.HAND_CURSOR);
+					if(headBounds == null) {
+						headBounds = headIcon.getBounds();
 					}
-					else {
+							
+					if (headBounds.contains(e.getPoint())) {
+						setCursor(ChannelConstants.HAND_CURSOR);
+					} else if (contactBounds.contains(e.getPoint())) {
+						contactPopupMenu.setToolTipText(contactName);
+						contactPopupMenu.show(ContactHeader.this, e.getX(), e.getY());
+					} else {
 						setCursor(ChannelConstants.DEFAULT_CURSOR);
 					}
 				}
@@ -391,10 +379,12 @@ public class ChannelMessagePane extends JPanel
 			{
 				public void mouseClicked(MouseEvent e)
 				{
-					if(headImageIcon.getBounds().contains(e.getPoint())) {
-						popupMenu.show(ContactHeader.this, 
-								-(popupMenu.getPreferredSize().width-SIZE.width)/2,
-								SIZE.width);
+					if(headBounds == null) {
+						headBounds = headIcon.getBounds();
+					}
+					if(headBounds.contains(e.getPoint())) {
+						headPopupMenu.show(ContactHeader.this, 
+								-(headPopupMenu.getPreferredSize().width-SIZE.width)/2, SIZE.width);
 					}
 				}
 			});
@@ -402,7 +392,7 @@ public class ChannelMessagePane extends JPanel
 		
 		public LocationIcon getHeadImageIcon()
 		{
-			return headImageIcon;
+			return headIcon;
 		}
 		public String getContactName()
 		{
@@ -427,8 +417,8 @@ public class ChannelMessagePane extends JPanel
 			
 			//绘制用户头像
 			g2d.translate(2, 2);
-			g2d.drawImage(headImageIcon.getImage(), 0, 0, this);
-			headImageIcon.setBounds(0, 0, headImageIcon.getWidth(), headImageIcon.getHeight());
+			g2d.drawImage(headIcon.getImage(), 0, 0, this);
+			headIcon.setBounds(0, 0, headIcon.getWidth(), headIcon.getHeight());
 			
 			//绘制边框
 			g2d.translate(-2, -2);
@@ -439,9 +429,15 @@ public class ChannelMessagePane extends JPanel
 			if(contactName != null) {
 				g2d.translate(0, SIZE.height-4);
 				g2d.setColor(Color.white);
-				g2d.setFont(ChannelConstants.DEFAULT_FONT.deriveFont(16F));
-				g2d.drawString(contactName, 
-						(SIZE.width-g.getFontMetrics().stringWidth(contactName))/2, 0);
+				g2d.setFont(ChannelConstants.DEFAULT_FONT.deriveFont(16F));//一个中文字宽16px；英文8px
+				
+				int fontWidth = g.getFontMetrics().stringWidth(contactName);
+				if (fontWidth >= SIZE.width) {
+					g2d.drawString(contactName, 0, 0);
+				} else {
+					g2d.drawString(contactName, (SIZE.width - g
+							.getFontMetrics().stringWidth(contactName)) / 2, 0);
+				}
 			}
 		}
 	}
