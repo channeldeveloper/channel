@@ -20,7 +20,7 @@ import com.mongodb.Mongo;
 import com.original.service.channel.ChannelMessage;
 
 /**
- * 娓犻亾娑堟伅绠＄悊鍣ㄣ�
+ * 渠道消息管理器。
  * 
  * 
  * @author cydow
@@ -30,7 +30,8 @@ import com.original.service.channel.ChannelMessage;
  */
 
 public class MessageManager {
-	
+
+	private ArrayList<ChannelMessage> EMPTY = new  ArrayList<ChannelMessage>();
 	private Mongo mongo;
 	private Morphia morphia;
 	private Datastore ds;
@@ -64,7 +65,7 @@ public class MessageManager {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * 
 	 * @param chMsgs
@@ -92,9 +93,9 @@ public class MessageManager {
 
 		return chmsgs;
 	}
-	
+
 	public List<ChannelMessage> getMessages(Filter filter) {
-		
+
 		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class);
 		if(filter != null && filter.getField() != null) {
 			chmsgQuery = chmsgQuery.filter(filter.getField(), filter.getValue());
@@ -106,19 +107,19 @@ public class MessageManager {
 
 		return chmsgs;
 	}
-	
+
 	/**
 	 * get All Messages
 	 * 
 	 * @return
 	 */
 	public ChannelMessage getMessage(ObjectId id) {
-		
+
 		 return ds.get(ChannelMessage.class, id);
 	}
-	
 
-	
+
+
 	/**
 	 * get All Messages
 	 * 
@@ -131,50 +132,7 @@ public class MessageManager {
 		List<ChannelMessage> chmsgs = chmsgQuery.asList();
 		return chmsgs;
 	}
-	private ArrayList<ChannelMessage> EMPTY = new  ArrayList<ChannelMessage>();
- 
-	/**
-	 * get All Messages
-	 * 
-	 * @return
-	 */
-	public List<ChannelMessage> getMessagesByFlag(String key, Integer value) {
-		if (key == null || value == null)
-		{
-			return EMPTY;
-		}
-		//if value == 0 娌℃湁璁剧疆锛屾槸鍚﹀垽鏂缃负0锛屽鏄惁鍥炲浜嗭紝鏄惁鍒犻櫎浜嗭紵
-		if (value.intValue() == 0)
-		{
-			// 娌℃湁璁剧疆
-			Query<ChannelMessage> query0 = ds.find(ChannelMessage.class).field("flags.key").doesNotExist().order(OrderbyDateField);;
-			//璁捐浜嗕负0
-			Query<ChannelMessage> query = ds.find(ChannelMessage.class).field("flags.key").equal(value).order(OrderbyDateField);;
-			
-			return copyIterator(new IteratorIterator<ChannelMessage>(query0.iterator(), query.iterator()));
-		}
-		else
-		{
-		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class)
-				.field("flags.key").equal(value)
-				.order(OrderbyDateField);
-		List<ChannelMessage> chmsgs = chmsgQuery.asList();
-		return chmsgs;
-		}
-	}
 
-	/**
-	 * 
-	 * @param iter
-	 * @return
-	 */
-	public static <T> List<T> copyIterator(Iterator<T> iter) {
-	    List<T> copy = new ArrayList<T>();
-	    while (iter.hasNext())
-	        copy.add(iter.next());
-	    return copy;
-	}
-	
 	/**
 	 * get messages by one fromAddr value of findFileName.
 	 * @param findFieldName
@@ -201,11 +159,11 @@ public class MessageManager {
 		}
 
 	}
-	
-	
+
+
 	/////////////////Search///////////////
 	/**
-	 * 鍗曚竴鏉′欢鏌ヨ
+	 * 单一条件查询
 	 * @param field
 	 * @param value
 	 * @param order
@@ -217,9 +175,9 @@ public class MessageManager {
 				.field(field).endsWith(value).order(order);
 		return q.iterator();
 	}
-	
+
 	/**
-	 * 澶氭潯浠舵煡璇�
+	 * 多条件查询
 	 * @param fields
 	 * @param values
 	 * @param order
@@ -230,26 +188,26 @@ public class MessageManager {
 		Query<ChannelMessage> query = ds.createQuery(ChannelMessage.class);
 		if(fields != null && values != null) {
 			int size = Math.min(fields.length, values.length);
-			
+
 			if(size > 0) {
 				for(int i=0; i<size; i++) {
 					query = query.filter(fields[i], values[i]);
 				}
 			}
 		}
-		
+
 		int size = 0;
 		if(order != null && (size = order.length) > 0) {
 			for(int i=0 ; i<size; i++) {
 				query = query.order(order[i]);
 			}
 		}
-		
+
 		return query.iterator();
 	}
-	
+
 	/**
-	 *  鏍规嵁 娓犻亾鐨勭被鍨�clazz)鏉ユ煡璇�鐩墠鏈塃mail\SNS(Weibo)\IM(iQQ)
+	 *  根据 渠道的类型(clazz)来查询。目前有Email\SNS(Weibo)\IM(iQQ)
 	 * @param channel type
 	 * @return
 	 */
@@ -260,11 +218,11 @@ public class MessageManager {
 		String order = OrderbyDateField;
 		return get(field, value, order);
 	}
-	
-	
-	
+
+
+
 	/**
-	 *  鏍规嵁鏁版嵁鐨刬d鑾峰緱娑堟伅銆�
+	 *  根据数据的id获得消息。
 	 * @param ObjectId id
 	 * @return
 	 */
@@ -272,10 +230,10 @@ public class MessageManager {
 	{
 	     return ds.get(ChannelMessage.class, id);
 	}
-	
-	
+
+
 	/**
-	 *  鏍规嵁娑堟伅鐨刬d鑾峰緱娑堟伅銆�搴旇鍙湁涓�釜Message ID).
+	 *  根据消息的id获得消息。(应该只有一个Message ID).
 	 * @param ObjectId id
 	 * @return
 	 */
@@ -286,9 +244,9 @@ public class MessageManager {
 		String order = OrderbyDateField;
 		return get(field, value, order);
 	}
-	
+
 	/**
-	 *  鏍规嵁鐘舵�鑾峰彇娑堟伅.
+	 *  根据状态获取消息.
 	 * @param ObjectId status
 	 * @return
 	 */
@@ -299,12 +257,12 @@ public class MessageManager {
 		String order = OrderbyDateField;
 		return get(field, value, order);
 	}
-	
+
 	private static final String OrderbyDateField = "-receivedDate";
 	/////////////////Filter///////////////
 
 	/**
-	 * 鏍规嵁Filter鑾峰彇娑堟伅.
+	 * 根据Filter获取消息.
 	 * 
 	 * @param ObjectId
 	 *            status
@@ -320,30 +278,30 @@ public class MessageManager {
 		String order = filter.getOrderField();
 		return get(field, value, order);
 	}
-	
+
 	public Iterator<ChannelMessage> getMessage(Filter... filters) {
 		if(filters == null || filters.length < 1)
 			return getMessage((Filter)null);
 		else if(filters.length == 1) 
 			return getMessage(filters[0]);
-		
+
 		Vector<String> fields = new Vector<String>(),
 				values = new Vector<String>(),
 				orders = new Vector<String>();
-		
+
 		for(Filter filter : filters) {
 			fields.add(filter.getField());
 			values.add(filter.getValue());
 			orders.add(filter.getOrderField());
 		}
-		
+
 		return get(fields.toArray(new String[fields.size()]),
 				values.toArray(new String[values.size()]), 
 				orders.toArray(new String[orders.size()]));
 	}
-	
-	/////////////////鍏ㄦ枃鎼滅礌(Pending)///////////////
-	
+
+	/////////////////全文搜素(Pending)///////////////
+
 	/**
 	 * Temporary Full Text Search . (Here should use Full Text Search Engines)
 	 * 
@@ -352,7 +310,7 @@ public class MessageManager {
 	 * @return
 	 */
 	public Iterator<ChannelMessage> search(String text) {
-		
+
 		// all messages
 		String field = "subject";
 		String value = text;
@@ -365,26 +323,26 @@ public class MessageManager {
 		value = text;
 		q = ds.createQuery(ChannelMessage.class).field(field).contains(value);
 		Iterator<ChannelMessage> ite2 = q.iterator();
-		
-		
+
+
 		// all messages
 		field = "fromAddr";
 		value = text;
 		q = ds.createQuery(ChannelMessage.class).field(field).contains(value);
 		Iterator<ChannelMessage> ite3 = q.iterator();
-		
-		
+
+
 		// all messages
 		field = "toAddr";
 		value = text;
 		q = ds.createQuery(ChannelMessage.class).field(field).contains(value);
 		Iterator<ChannelMessage> ite4 = q.iterator();
-				
+
 		return new IteratorIterator<ChannelMessage>(ite1, ite2, ite3, ite4);
-				
+
 	}
-	
-	
+
+
 	// combine interators into 1 iterator
 
 	private class IteratorIterator<T> implements Iterator<T> {
@@ -427,30 +385,76 @@ public class MessageManager {
 		// }
 	}
 
-	// ///////////////鍏ㄦ枃鎼滅礌(Pending)///////////////
-	
+	// ///////////////全文搜素(Pending)///////////////
+
 	/**
-	 * 妫�煡鏄惁瀛樺簱鍐�
+	 * 检查是否存库内
 	 * @param messageID
 	 * @return
 	 */
 	public boolean isExist(ObjectId objId)
 	{
-		//妫�煡鏄惁瀛樺簱鍐�	
+		//检查是否存库内		
 		ChannelMessage chm = getByID(objId);
 		return chm != null;
 	}
-	
+
 	/**
-	 * 妫�煡鏄惁瀛樺簱鍐�
+	 * 检查是否存库内
 	 * @param messageID
 	 * @return
 	 */
 	public boolean isExist(String newMsgId)
 	{
-		//妫�煡鏄惁瀛樺簱鍐�
+		//检查是否存库内
 		Iterator<ChannelMessage> ite = getByMessageID(newMsgId);
 		return ite != null && ite.hasNext();
 	}
 	
+	
+	
+	 
+	/**
+	 * 通过Flag来查找消息
+	 * 
+	 * @return
+	 */
+	public List<ChannelMessage> getMessagesByFlag(String key, Integer value) {
+		if (key == null || value == null)
+		{
+			return EMPTY;
+		}
+		//if value == 0 not setting;setting ==0
+		if (value.intValue() == 0)
+		{
+			//find no exits
+			Query<ChannelMessage> query0 = ds.find(ChannelMessage.class).field("flags.key").doesNotExist().order(OrderbyDateField);
+			//value == 0
+			Query<ChannelMessage> query = ds.find(ChannelMessage.class).field("flags.key").equal(value).order(OrderbyDateField);
+			
+			return copyIterator(new IteratorIterator<ChannelMessage>(query0.iterator(), query.iterator()));
+		}
+		else
+		{
+		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class)
+				.field("flags.key").equal(value)
+				.order(OrderbyDateField);
+		List<ChannelMessage> chmsgs = chmsgQuery.asList();
+		return chmsgs;
+		}
+	}
+
+	/**
+	 * 
+	 * @param iter
+	 * @return
+	 */
+	private static <T> List<T> copyIterator(Iterator<T> iter) {
+	    List<T> copy = new ArrayList<T>();
+	    while (iter.hasNext())
+	        copy.add(iter.next());
+	    return copy;
+	}
+	
+
 }

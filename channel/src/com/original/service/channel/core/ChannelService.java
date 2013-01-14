@@ -413,11 +413,6 @@ public final class ChannelService extends AbstractService {
 //		// TODO Auto-generated method stub
 //		return null;
 //	}
-
-	public static final String ACTION_PUT_SEND="Send";
-	public static final String ACTION_PUT_POST="Post";
-	public static final String ACTION_PUT_COMMENT="Comment";
-	public static final String ACTION_PUT_DRAFT="Draft";
 	
 	@Deprecated	
 	@Override
@@ -807,10 +802,11 @@ public final class ChannelService extends AbstractService {
 				ChannelMessage.class).set("status", newValue);
 		ds.update(chmsgQuery, ops, true);
 
+		ChannelMessage newMsg = ds.find(ChannelMessage.class).field("id").equal(id).get();
 		// fire event
 		MessageEvent evt = new MessageEvent(this, null,
 				MessageEvent.Type_Updated, null, null,
-				new ChannelMessage[] { msg });
+				new ChannelMessage[] { newMsg });
 		this.fireMessageEvent(evt);
 	}
 
@@ -838,11 +834,12 @@ public final class ChannelService extends AbstractService {
 		UpdateOperations<ChannelMessage> ops = ds.createUpdateOperations(
 				ChannelMessage.class).set("flags." + key, newValue);
 		ds.update(chmsgQuery, ops, true);
+		ChannelMessage newMsg = ds.find(ChannelMessage.class).field("id").equal(id).get();
 
 		// fire event
 		MessageEvent evt = new MessageEvent(this, null,
 				MessageEvent.Type_Updated, null, null,
-				new ChannelMessage[] { msg });
+				new ChannelMessage[] { newMsg });
 		this.fireMessageEvent(evt);
 	}
 
@@ -870,10 +867,11 @@ public final class ChannelService extends AbstractService {
 					ChannelMessage.class).set(key, newAtts.get(key));
 			ds.update(chmsgQuery, ops);
 		}
+		ChannelMessage newMsg = ds.find(ChannelMessage.class).field("id").equal(id).get();
 		// fire event
 		MessageEvent evt = new MessageEvent(this, null,
 				MessageEvent.Type_Updated, null, null,
-				new ChannelMessage[] { msg });
+				new ChannelMessage[] { newMsg });
 		this.fireMessageEvent(evt);
 
 	}
