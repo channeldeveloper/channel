@@ -17,6 +17,11 @@ import com.original.service.people.People;
  */
 public interface Service {
 	
+	public static final String ACTION_PUT_SEND="Send";
+	public static final String ACTION_PUT_POST="Post";
+	public static final String ACTION_PUT_COMMENT="Comment";
+	public static final String ACTION_PUT_DRAFT="Draft";
+	
 	public final static int CREATED = 0x0001;
 	public final static int STARTED = 0x0002;	
 	public final static int SUSPEND = 0x0004;

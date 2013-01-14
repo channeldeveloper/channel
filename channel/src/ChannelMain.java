@@ -17,12 +17,33 @@ import com.original.service.storage.GridFSUtil;
 
 public class ChannelMain {
 
+
+			
+//	//控制 0,1
+//		public static final String FLAG_REPLYED = "REPLYED";//是否回复了 0未，1是
+//		public static final String FLAG_SIGNED  = "SIGNED";	//是否签名  0未，1是
+//		public static final String FLAG_SEEN = "SEEN";//是否看过 0未，1是
+//		public static final String FLAG_DELETED = "DELETED";//是否删除 0未，1是
+//		public static final String FLAG_PROCESSED  = "PROCESSED";	//是否处理  0未，1是（邮件原来的）
+//		public static final String FLAG_DONE = "DONE";//是否处理过 0未，1是 （程序的）
+//		public static final String FLAG_TRASHED = "TRASHED";//是否垃圾 0未，1是 isTrash
+//		
+//		//下面这些目前没有使用到：
+//		public static final String FLAG_DRAFT = "DRAFT";//是否草稿 0未，1是
+//		public static final String FLAG_FLAGGED = "FLAGGED";//是否旗标 0未，1是
+//		public static final String FLAG_RECENT = "RECENT";//是否最新 0未，1是
+//		public static final String FLAG_SAVED = "SAVED";//是否存库了 0未，1是
+//		
+
+	
+	
 	/**
 	 * 
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
 
+		
 		//监听变化
 		MyListener listner = new MyListener();
 		
@@ -33,7 +54,6 @@ public class ChannelMain {
 		csc.addMessageListener(listner);
 		
 		csc.start();
-		
 		//2 获取All信息,已经按照时间排序
 		
 		/*MessageManager msm = csc.getMsgManager();
@@ -81,7 +101,7 @@ public class ChannelMain {
 		//Pending filter finder(full text search) sort delete.s
 		*/
 		////////////////////////////查找 过滤和删除
-		//1 全文搜索
+		// 全文搜索
 		MessageManager msgMg = csc.getMsgManager();
 		Iterator<ChannelMessage> result = msgMg.search("Twitter");
 		while(result.hasNext())
@@ -90,16 +110,14 @@ public class ChannelMain {
 		}
 
 
-		//2 按照类型过滤消息channel clazz
+		// 按照类型过滤消息channel clazz
 		result = msgMg.getByChannelType(ChannelMessage.MAIL);
 		while(result.hasNext())
 		{
 			System.out.println("getByChannelType:"+ result.next());			
 		}
-		//3 按照类型过滤 消息ID 获取消息
-		
-//		
-//		//4. 按照过滤器来过滤by filter(Pending).
+
+//		//3. 按照过滤器来过滤by filter(Pending).
 		try
 		{
 			MessageFilter filter = new MessageFilter("fromAddr", "franzsoong<franzsoong@gmail.com>", "receivedDate");
@@ -114,7 +132,7 @@ public class ChannelMain {
 			exp.printStackTrace();
 		}
 		////////删除////////
-		//1. 删除消息按照 消息ID（消息ID这里有个bug，发送的消息ID都是
+		//. 删除消息按照 消息ID（消息ID这里有个bug，发送的消息ID都是
 
 		try
 		{
@@ -128,7 +146,7 @@ public class ChannelMain {
 			exp.printStackTrace();
 		}
 		
-		//2 按照类型过滤 消息 数据库ID 获取消息
+		//按照clazz过滤获取消息
 		try
 		{
 			ObjectId id = msgMg.getByChannelType(ChannelMessage.MAIL).next().getId();
@@ -141,7 +159,7 @@ public class ChannelMain {
 		{
 			exp.printStackTrace();
 		}
-		//attachments
+		//处理附件attachments
 		List<ChannelMessage> msgs = msgMg.getMessages();
 		
 		System.out.println("message count:" + msgs.size());
@@ -184,22 +202,22 @@ public class ChannelMain {
 		}
 		
 		// 更新status
-
 		ChannelMessage msg = msgMg.getMessages().get(0);
-		csc.updateMessageStatus(msg, "draft");
+		csc.updateMessageStatus(msg, Constants.TYPE_SEND);//
 
+		// 更新flag
 		String mid = "<tencent_6E6A430D4A7A97AC404CDA7D@qq.com>";
 		Iterator<ChannelMessage> chm = msgMg.getByMessageID(mid);
 
 		while (chm.hasNext()) {
 			ChannelMessage m = chm.next();
-			// 更新状态
-			csc.updateMessageFlag(m, "isTrash", 1);
+			
+			csc.updateMessageFlag(m, ChannelMessage.FLAG_TRASHED, 1);
 		}
 
+		//放入垃圾桶和删除
 		mid = "<tencent_2CA85865748F473536CE7435@qq.com>";
 		chm = msgMg.getByMessageID(mid);
-
 		while (chm.hasNext()) {
 			ChannelMessage m = chm.next();
 			ObjectId id = m.getId();
@@ -211,7 +229,26 @@ public class ChannelMain {
 			System.out.println(csc.getMsgManager().getMessage(id));
 		}
 
+		//按照flag查找
+		MessageManager msger = csc.getMsgManager();
+		//不是垃圾
+		List<ChannelMessage> chmsgs = msger.getMessagesByFlag(ChannelMessage.FLAG_TRASHED, 0);
+		for (ChannelMessage ch : chmsgs)
+		{
+			System.out.println(ch);//
+			break;//测试，只取一条
+		}
+		
 
+		//设置为草稿
+		Iterator<ChannelMessage> result1 = csc.getMsgManager().getByChannelType(ChannelMessage.MAIL);
+		while(result1.hasNext())
+		{
+			csc.put(ChannelService.ACTION_PUT_DRAFT, result1.next().clone());
+			break;//测试，只取一条
+		}
+		
+		
 //	
 
 		while (true) {
