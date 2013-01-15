@@ -51,8 +51,8 @@ public class WeiboService extends AbstractService {
 	private ChannelAccount ca;
 	
 	//微博授权AccessToken本地保存文件名
-	public static File SNS_WEIBO_OAUTH = new File(System.getProperty("user.home"), 
-			"channel/sns_weibo_oauth.dat");
+	public static File SNS_WEIBO_OAUTH = new File(System.getProperty("user.dir"), 
+			"sns_weibo_oauth.dat");
 	private static Map<Account, String> accessTokens = new HashMap<Account, String>();
 	private static Properties weiboProp = new Properties();
 	

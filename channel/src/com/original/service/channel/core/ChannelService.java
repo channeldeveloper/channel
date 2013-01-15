@@ -375,15 +375,7 @@ public final class ChannelService extends AbstractService {
 		}
 	}
 	public synchronized void restartService(ChannelAccount ca) throws Exception {
-		Service sc = null;
-		try
-		{
-			sc = createService(ca);
-		}
-		catch(Exception exp)
-		{
-			logger.log(Level.INFO, "Fail to create Service !" + ca);			
-		}
+		Service sc = createService(ca);
 		if (sc != null) {
 			serviceMap.put(ca, sc);
 			failedServiceAccounts.remove(ca);
