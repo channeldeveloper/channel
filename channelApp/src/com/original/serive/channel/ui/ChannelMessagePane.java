@@ -165,8 +165,7 @@ public class ChannelMessagePane extends JPanel
 	{
 		String uName = msg.getContactName();
 		if (uid == null) {// 第一次添加
-			uid = uName;
-			header.setContactName(uName);
+			setUid(uName);
 
 			if (msg.isReceived()) { // 是接受过来的消息
 				setReceiveMsgLayout();
@@ -189,11 +188,9 @@ public class ChannelMessagePane extends JPanel
 	{
 		String uName = msg.getContactName();
 		if (uid == null) { // 第一次添加，需要设置布局
-			uid = uName;
+			setUid(uName);
 
 			body.addMessage(msg, toFirst);
-			header.setContactName(uName);
-
 			if (showDirection) {
 				if (msg.isReceived()) { // 是接受过来的消息
 					setReceiveMsgLayout();
@@ -220,7 +217,7 @@ public class ChannelMessagePane extends JPanel
 	 */
 	public void newMessage(ChannelMessage msg)
 	{
-		header.setContactName(msg == null ? null : msg.getContactName());
+		setUid(msg == null ? null : msg.getContactName());
 		if(statusBar instanceof NewMessageTopBar) {
 			((NewMessageTopBar) statusBar).setMessage(msg);
 		}
@@ -235,7 +232,7 @@ public class ChannelMessagePane extends JPanel
 	{
 		if(msg != null && msg.getMessageID() != null)
 		{
-			header.setContactName(msg.getContactName());
+			setUid(msg.getContactName());
 			setReceiveMsgLayout();
 		}
 	}
@@ -245,6 +242,25 @@ public class ChannelMessagePane extends JPanel
 	}
 	public void setOriginContainer(MessageContainer originContainer) {
 		this.originContainer = originContainer;
+	}
+	
+	/**
+	 * 设置联系人的Uid
+	 * @param uid 用户账号id
+	 */	
+	public void setUid(String uid) {
+		if (this.uid == null || !this.uid.equals(uid)) {
+			this.uid = uid;
+			header.setContactName(uid); // 目前设置联系人用户名即为Uid
+		}
+	}
+
+	/**
+	 * 获取联系人的Uid
+	 * @return
+	 */
+	public String getUid() {
+		return this.uid;
 	}
 
 	/**

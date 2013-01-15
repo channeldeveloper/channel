@@ -26,7 +26,6 @@ import javax.swing.event.MouseInputListener;
 
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.layout.VerticalGridLayout;
-import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
@@ -46,8 +45,8 @@ import com.original.widget.OScrollBar;
 public class ChannelDesktopPane extends JPanel implements MessageListner, AdjustmentListener, MouseInputListener, EventConstants
 {
 	private CardLayout layoutMgr = new CardLayout(); //卡片布局，带有切换功能
-	public static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("width"), 
-			ChannelConfig.getIntValue("desktopHeight"));
+	public static Dimension SIZE = new Dimension(ChannelConstants.CHANNELWIDTH, 
+			ChannelConstants.DESKTOPHEIGHT);
 	public static ImageIcon BACKGROUND = IconFactory.loadIconByConfig("background"), //背景图片
 			TOPICON = IconFactory.loadIconByConfig("top");//置顶图标
 	
@@ -129,8 +128,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 				//如果当前显示界面已经切换到<显示全部>面板，则该面板也要添加最新消息
 				JPanel showComp = (JPanel) currentShowComp();
 				if (showComp != DEFAULT_PANE
-						&& showComp.getComponentCount() > 0
-						&& (showComp = (JPanel) showComp.getComponent(0)) instanceof ChannelMessagePane) {
+						&& showComp instanceof ChannelMessagePane) {
 					msgContainer = (ChannelMessagePane) showComp;
 					msgContainer.addMessage(msg, false);
 				}
@@ -184,7 +182,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	}
 	
 	/**
-	 * 获取当前显示的面板
+	 * 获取当前显示的面板，如果当前面板是滚动面板，则获取其子面板(DEFAULT_PANE除外)
 	 * @return
 	 */
 	public Component currentShowComp() {
@@ -194,6 +192,10 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 			if (comp.isVisible()) {
 				if (comp instanceof JScrollPane) {
 					comp = ((JScrollPane) comp).getViewport().getView();
+					
+					if(comp != DEFAULT_PANE) {//other pane. @see addOtherShowComp()
+						comp = ((JComponent)comp).getComponent(0);
+					}
 				}
 				break;
 			}

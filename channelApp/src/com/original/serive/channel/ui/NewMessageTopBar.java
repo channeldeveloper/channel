@@ -9,6 +9,8 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -26,6 +28,7 @@ import javax.swing.border.EmptyBorder;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.ChannelGridLayout;
+import com.original.serive.channel.ui.ChannelMessagePane.MessageContainer;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
@@ -39,7 +42,7 @@ import com.original.widget.OTextField;
  * @author WMS
  *
  */
-public class NewMessageTopBar extends ChannelMessageTopBar implements ActionListener, EventConstants
+public class NewMessageTopBar extends ChannelMessageTopBar implements ActionListener, FocusListener, EventConstants
 {	
 	AbstractButtonItem newMail = new AbstractButtonItem(null, POST_MAIL, 
 			IconFactory.loadIconByConfig("sendMailIcon"),  IconFactory.loadIconByConfig("sendMailSelectedIcon"), IconFactory.loadIconByConfig("sendMailDisabledIcon"), 
@@ -104,6 +107,7 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 			center.add(lbMsgTo, BorderLayout.CENTER);
 		}
 		else {
+			txtMsgTo.addFocusListener(this);
 			center.add(txtMsgTo, BorderLayout.CENTER);
 		}
 		layoutMgr.addComToModel(center,1,1,GridBagConstraints.HORIZONTAL);
@@ -237,18 +241,41 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 	}
 	
 	/**
-	 * 设置消息发送地址，即联系人的邮箱地址、QQ账号或微博账号等
+	 * 设置消息发送地址，即收件人的邮箱地址、QQ账号或微博账号等
 	 * @param to
 	 */
 	private void setMessageTo(String to)
 	{
-		if(editable) {
+		if (editable) {
 			txtMsgTo.setText(to);
 			setVisible(SELECT_LINKER, true);
-		}
-		else {
+		} else {
 			lbMsgTo.setText(to);
 			setVisible(SELECT_LINKER, false);
+		}
+	}
+	
+	/**
+	 * 获取消息的发送地址，即收件人的邮箱地址、QQ账号或微博账号等
+	 * @return
+	 */
+	public String getMessageTo() {
+		if (editable) {
+			return txtMsgTo.getText();
+		} else {
+			return lbMsgTo.getText();
+		}
+	}
+	
+	/**
+	 * 获取消息的来源地址，即发送人的邮箱地址、QQ账号或微博账号等
+	 * @return
+	 */
+	public String getMessageFrom() {
+		if (editable) {
+			return null;
+		} else {
+			return !newMsg.isSent() ? newMsg.getToAddr() : newMsg.getFromAddr();
 		}
 	}
 	
@@ -273,6 +300,24 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		}
 	}
 	
+	@Override
+	public void focusGained(FocusEvent e) {
+		// TODO 自动生成的方法存根
+		
+	}
+
+	@Override
+	public void focusLost(FocusEvent e) {
+		// TODO 自动生成的方法存根
+		if(txtMsgTo == e.getComponent()) {
+			NewMessageBodyPane body = (NewMessageBodyPane)getMessageBody();
+			MessageContainer container = body.getMessageContainer();
+			ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
+			
+			parent.setUid(ChannelMessage.getContactName(txtMsgTo.getText()));
+		}
+	}
+
 	/**
 	 * 自定义消息按钮组，该按钮组具有排他的功能。
 	 * @author WMS

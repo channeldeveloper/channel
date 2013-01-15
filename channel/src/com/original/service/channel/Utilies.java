@@ -25,7 +25,8 @@ import com.original.service.channel.protocols.email.services.MailParseUtil;
  */
 public class Utilies {
 	
-	public static final String TEMP_DIR = System.getProperty("java.io.tmpdir"); //临时目录
+	public static final String TEMP_DIR = System.getProperty("user.dir") 
+			+ File.separator + "temp"; //临时目录
 	
 	public static final int IMAGE_WIDTH = 300, IMAGE_HEIGHT = 225;//图片的宽、高度(4:3)
 	public static final int MAX_IMAGE_WIDTH = 700, MAX_IMAGE_HEIGHT = 525;//最大图片的宽、高度(4:3)
@@ -42,7 +43,12 @@ public class Utilies {
 		
 //		return new File(TEMP_DIR, fileID
 //				+ (suffix == -1 ? "" : fileName.substring(suffix))).toURI().toString();
-		return new File(TEMP_DIR, fileName).toURI().toString();
+		File tempDir = new File(TEMP_DIR);
+		if (!tempDir.exists()) {
+			tempDir.mkdir();
+		}
+		tempDir = new File(TEMP_DIR, fileName);
+		return tempDir.toURI().toString();
 	}
 	public static String getTempDir(EMailAttachment attach) {
 		return getTempDir(attach.getFileID(), attach.getFileName());

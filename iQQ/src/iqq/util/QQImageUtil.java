@@ -193,7 +193,7 @@ public class QQImageUtil {
         }
         String url = "http://d.web2.qq.com/channel/get_cface2?lcid=" + msg_id + "&guid=" + filename + "&to=" + uin + "&count=5&time=1&clientid=" + ai.getClientid() + "&psessionid=" + ai.getPsessionid();
 
-        String path = QQEnvironment.getMemberDir() + "temp" + File.separator + filename;
+        String path = QQEnvironment.getConfigTempDir() + filename;
         QQEnvironment.mkdir(path);
         try {
             download(url, path);
@@ -225,7 +225,7 @@ public class QQImageUtil {
         //String url = "<img rdata=\"offpic\" src=\"http://d.web2.qq.com/channel/get_offpic2?file_path=" + filepath + "&f_uin=" + uin + "&clientid=" + Auth.getClientid() + "&psessionid=" + Auth.getPsessionid() + "\" id=\"_cface_2\" title=\"图片或自定义表情\">";
         String url = "http://d.web2.qq.com/channel/get_offpic2?file_path=" + filepath + "&f_uin=" + uin + "&clientid=" + ai.getClientid() + "&psessionid=" + ai.getPsessionid();
 
-        String path = QQEnvironment.getMemberDir() + "temp" + File.separator + System.currentTimeMillis();
+        String path = QQEnvironment.getConfigTempDir() + System.currentTimeMillis();
         QQEnvironment.mkdir(path);
         try {
             download(url, path);

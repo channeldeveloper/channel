@@ -15,6 +15,8 @@ import java.beans.PropertyChangeSupport;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -63,6 +65,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			new SwingPropertyChangeSupport(this);
 	
 	private static ChannelService channelService = ChannelAccesser.getChannelService();
+	protected Lock channelLock = new ReentrantLock();
 	
 	public ChannelMessageBodyPane()
 	{
@@ -82,6 +85,27 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	public MessageContainer getMessageContainer()
 	{
 		return this.container;
+	}
+	
+	/**
+	 * 获取当前面板对应的状态栏
+	 * @return
+	 */
+	public ChannelMessageStatusBar getMessageStatusBar() 
+	{
+		ChannelMessageStatusBar statusBar = null;
+		if (container != null) {
+			statusBar = container.getMessageStatusBar();
+		} else {
+			PropertyChangeListener[] listeners = changeSupport.getPropertyChangeListeners();
+			for (int i = 0; i < listeners.length; i++) {
+				if (listeners[i] instanceof ChannelMessageStatusBar) {
+					statusBar = (ChannelMessageStatusBar) listeners[i];
+					break;
+				}
+			}
+		}
+		return statusBar;
 	}
 	
 	/**
@@ -172,10 +196,59 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	}
 	
 	/**
-	 * 从当前面板和其消息List中移除消息。
+	 * 当前面板List中移除消息body面板
 	 * @param msg 消息对象
 	 */
-	public void removeMessage(ChannelMessage msg, boolean toFirst)
+	public void removeMessage(ChannelMessage msg) {
+		Body body = findMessageBody(msg);
+		if(body != null) {
+			removeMessageBody(body, body.toFirst);
+		}
+	}
+	
+	/**
+	 * 从当前面板中移除body面板对象。
+	 * @param body 消息body面板
+	 * @param toFirst 是否添加在顶部(即只显示一条)
+	 */
+	private void removeMessageBody(ChannelMessageBodyPane.Body body, boolean toFirst)
+	{
+		Body old = (Body)this.getComponent(0);
+		if (old == body && !toFirst) {// 是最后一个body
+			old = (Body) this.getComponent(1); // 重新设置倒数第2个body的边框
+			old.setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(0,
+					10, 0, 10), new SingleLineBorder(SingleLineBorder.BOTTOM,
+					new Color(0, 0, 0, 0), true)));
+		}
+		
+		this.remove(body);
+		this.validate();
+		
+		notifyToChangeMessage(body.iMsg, toFirst);
+	}
+	
+	/**
+	 * 由消息对象查找其对应的消息body面板
+	 * @param msg 消息对象
+	 * @return
+	 */
+	public ChannelMessageBodyPane.Body findMessageBody(ChannelMessage msg)
+	{
+		Body child = null;
+		for(int i=0; i<this.getComponentCount(); i++) {
+			child = (Body)this.getComponent(i);
+			if(child.iMsg.equals(msg)) {
+				break;
+			}
+		}
+		return child;
+	}
+	
+	/**
+	 * 通知父面板改变当前消息的显示，以及消息的状态属性等等。用在removeMessageBody()之后
+	 * @param msg 消息对象
+	 */
+	private void notifyToChangeMessage(ChannelMessage msg, boolean toFirst)
 	{
 		if (toFirst) { // 如果只显示一条，即顶部显示
 			messageBodyList.remove(messageBodyList.size() - 1);
@@ -226,7 +299,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				ChannelMessageBodyPane originBody = originContainer.getMessageBody();
 				ChannelMessage firstMsg = originBody.getChannelMessage();
 				if (firstMsg.equals(msg)) { // 是第一条消息
-					originBody.removeMessage(firstMsg, true); //从面板和消息List中移除
+					originBody.notifyToChangeMessage(firstMsg, true); //从面板和消息List中移除
 					
 					//同时检查是否需要改变面板的消息方向
 //					ChannelMessagePane originParent = (ChannelMessagePane) originContainer.getParent();
@@ -383,13 +456,11 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		//删除
 		public void doDelete() {
 			if (ChannelUtil.confirm(null, "确认删除", "是否删除该消息？")) {
-				ChannelMessageBodyPane body = (ChannelMessageBodyPane) this.getParent();
-				body.remove(this);
-				body.validate();
-				
 				try {
-					channelService.trashMessage(iMsg);
-					removeMessage(iMsg, toFirst);
+					channelService.trashMessage(iMsg); //先从数据库里面删除
+					
+					//再从界面删除
+					removeMessageBody(this, toFirst);
 				} catch (Exception ex) {
 					ChannelUtil.showMessageDialog(null, "错误", ex);
 				}

@@ -443,6 +443,37 @@ public class MessageManager {
 		return chmsgs;
 		}
 	}
+	
+	//混合标识查询
+	public List<ChannelMessage> getMessagesByFlags(String[] keys, Integer[] values) {
+		if (keys == null || values == null) {
+			return EMPTY;
+		}
+		int size = Math.min(keys.length, values.length);
+		if (size < 1) {
+			return EMPTY;
+		}
+
+		Query<ChannelMessage> q = ds.createQuery(ChannelMessage.class);
+
+		for (int i = 0; i < size; i++) {
+			Integer value = values[i];
+			String key = keys[i];
+			if (key != null && value != null) {
+
+				if (value.intValue() == 0) {
+					q.or( // 或查询
+					        q.criteria("flags." + key).doesNotExist(),
+							q.criteria("flags." + key).equal(value)
+					);
+				} else {
+					q = q.field("flags." + key).equal(value);
+				}
+			}
+		}
+		q = q.order(OrderbyDateField);
+		return q.asList();
+	}
 
 	/**
 	 * 

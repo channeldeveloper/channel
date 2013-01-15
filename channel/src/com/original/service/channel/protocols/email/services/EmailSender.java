@@ -270,7 +270,7 @@ public class EmailSender{// extends AbstractProcessingResource {
                 mimeMsg.addRecipients(Message.RecipientType.CC, address);
             }
         } catch (Exception e) {
-            log.error(OriLog.logStack(e));
+        	e.printStackTrace();
             return "CC:" + e.getMessage();
         }
         return null;

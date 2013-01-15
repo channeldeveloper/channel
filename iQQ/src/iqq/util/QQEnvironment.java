@@ -55,7 +55,8 @@ public class QQEnvironment {
     }
 
     public static String getConfigTempDir() {
-        String dir = getConfigPath() + File.separator + "temp" + File.separator;
+//        String dir = getConfigPath() + File.separator + "temp" + File.separator;
+    	String dir = System.getProperty("user.dir") + File.separator + "temp" + File.separator;
         File f = new File(dir);
         if (!f.exists()) {
             f.mkdir();

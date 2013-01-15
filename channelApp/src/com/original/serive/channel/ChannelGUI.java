@@ -159,7 +159,9 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 		
 //开始添加信息：
 		MessageManager msm =ChannelAccesser.getMsgManager();
-		List<ChannelMessage> msgs = msm.getMessagesByFlag(ChannelMessage.FLAG_TRASHED, 0);
+		List<ChannelMessage> msgs = msm.getMessagesByFlags(new String[]{ChannelMessage.FLAG_TRASHED, 
+				ChannelMessage.FLAG_DRAFT}, 
+				new Integer[]{0, 0});
 		for (ChannelMessage m : msgs)
 		{			
 			desktop.initMessage(m); //注意不要使用addMessage()，用途不一样

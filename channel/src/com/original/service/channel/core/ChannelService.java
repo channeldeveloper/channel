@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.swing.event.EventListenerList;
 
@@ -31,6 +32,7 @@ import com.original.service.channel.Channel;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
+import com.original.service.channel.Constants.CHANNEL;
 import com.original.service.channel.Service;
 import com.original.service.channel.config.Initializer;
 import com.original.service.channel.event.ChannelEvent;
@@ -593,17 +595,25 @@ public final class ChannelService extends AbstractService {
 	public void put(String action, ChannelMessage msg) {
 		// TODO Auto-generated method stub
 		if (msg != null) {
-			preSendProcess(action, msg);
-			if (action.equals(ACTION_PUT_DRAFT))
-			{
+			
+			if (action == Constants.ACTION_PUT_DRAFT) { //存草稿
+				msg.setDrafted(true);
 				this.msgManager.save(msg);
-				updateMessageFlag(msg, ChannelMessage.FLAG_DRAFT, 1);
 				return;
 			}
+			
 			ChannelAccount cha = msg.getChannelAccount();
+			if(cha == null) { //如果为空，则获取默认账户。一般为新建消息时
+				cha = getDefaultAccount(msg.getClazz());
+			}
+			
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
+				preSendProcess(action, msg);
 				try {
+					if (msg.getFromAddr() == null) {
+						msg.setFromAddr(cha.getAccount().getUser());
+					}
 					sc.put(action, msg); //下发消息，如果出错，则不保存数据库！
 					
 					//1、自己给自己发(特殊情况)，不保存数据库：
@@ -746,6 +756,36 @@ public final class ChannelService extends AbstractService {
 				MessageEvent.Type_Deleted, null, msgs, null);
 		fireMessageEvent(evt);
 	}
+	
+	public ChannelAccount getDefaultAccount(String msgClazz) {
+		if (Constants.MAIL.equals(msgClazz)) {
+			return getDefaultAccount(CHANNEL.MAIL);
+		} else if (Constants.QQ.equals(msgClazz)) {
+			return getDefaultAccount(CHANNEL.QQ);
+		} else if (Constants.WEIBO.equals(msgClazz)) {
+			return getDefaultAccount(CHANNEL.WEIBO);
+		}
+		return null;
+	}
+	
+	public ChannelAccount getDefaultAccount(CHANNEL channel) {
+		Query<ChannelAccount> q = ds.createQuery(ChannelAccount.class);
+		switch (channel) {
+		case MAIL:
+			Pattern pattern = Pattern.compile("^email_.+$");// 以email_打头
+			q.filter("account.channelName", pattern);
+			break;
+
+		case QQ:
+			q.field("account.channelName").equal("im_qq");
+			break;
+
+		case WEIBO:
+			q.field("account.channelName").equal("sns_weibo");
+			break;
+		}
+		return q.get();
+	}
 
 	@Override
 	public ChannelAccount getChannelAccount() {
@@ -761,7 +801,7 @@ public final class ChannelService extends AbstractService {
 	
 	// ///////////////////
 	/**
-	 * 把消息放入到垃圾桶内。如果消息一经在垃圾桶，将删除。
+	 * 把消息放入到垃圾桶内。如果消息已经在垃圾桶或者草稿箱中，将删除。
 	 * 
 	 * @param msg
 	 */
@@ -772,7 +812,10 @@ public final class ChannelService extends AbstractService {
 		}
 		
 		Integer trashFlag = msg.getFlags() != null ? msg.getFlags().get(ChannelMessage.FLAG_TRASHED) : null;
+		Integer draftFlag = msg.getFlags() != null ? msg.getFlags().get(ChannelMessage.FLAG_DRAFT) : null;
 		if (trashFlag != null && trashFlag.intValue() == 1) {// 已经在垃圾箱里面，删除
+			this.deleteMessage(msg.getId());
+		} else if (draftFlag != null && draftFlag.intValue() == 1) {// 草稿，删除
 			this.deleteMessage(msg.getId());
 		} else {
 			this.updateMessageFlag(msg, ChannelMessage.FLAG_TRASHED, 1);

@@ -209,28 +209,26 @@ public class ChannelMessage implements Cloneable, Constants{
 	}
 	
 	public String getContactName() {
-		return getPersonName(getContactAddr());
+		return getContactName(getContactAddr());
 	}
 	public String getContactAddr() {
 		return TYPE_SEND.equals(type) ? toAddr : fromAddr;
 	}
 	
-	/**
-	 * Temp Op
-	 * @param emailAddr
-	 * @return
-	 */
-	public static  String getPersonName(String emailAddr)
+	public static  String getContactName(String toAddr)
 	{
-		if (emailAddr == null) {
+		if (toAddr == null || toAddr.trim().isEmpty()) {
 			return "Unknown";
 		}
 		int index = -1;
-		if ((index = emailAddr.indexOf("<")) == -1) {
-			return emailAddr;
-		} else {
-			return emailAddr.substring(0, index);
+		if ((index = toAddr.indexOf("<")) == -1) {
+			index = toAddr.indexOf("@");
+			if (index == -1) {
+				return toAddr.trim();
+			}
 		}
+		
+		return toAddr.substring(0, index).trim();
 	}
 
 	/**
@@ -368,8 +366,8 @@ public class ChannelMessage implements Cloneable, Constants{
 		if(cc != null &&  !cc.isEmpty()) {
 			if(extensions == null) {
 				extensions = new HashMap<String, String>();
-				extensions.put(EXT_EMAIL_CC, cc);
 			}
+			extensions.put(EXT_EMAIL_CC, cc);
 		}
 	}
 	
@@ -534,6 +532,12 @@ public class ChannelMessage implements Cloneable, Constants{
 		if (flags == null)
 			flags = new HashMap<String, Integer>();
 		flags.put(FLAG_DONE, processed ? new Integer(1) : new Integer(0));
+	}
+	
+	public void setDrafted(boolean drafted) {
+		if (flags == null)
+			flags = new HashMap<String, Integer>();
+		flags.put(FLAG_DRAFT, drafted ? new Integer(1) : new Integer(0));
 	}
 	
 }

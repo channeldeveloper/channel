@@ -127,6 +127,7 @@ public interface Constants {
 	public static final String ACTION_REPLY = "reply";
 	public static final String ACTION_QUICK_REPLY = "quick reply";
 	public static final String ACTION_FORWARD = "forward";
+	public static final String ACTION_PUT_DRAFT="Draft";
 	
 	public static final String ACTION_POST = "post";
 	public static final String ACTION_COMMENT = "comment";

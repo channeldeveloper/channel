@@ -121,6 +121,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		{
 		case WEIBO:
 			ttop.setVisible(SAVE_TO_DRAFT, false);
+			ttop.setVisible(DELETE, false);
 			
 			ccenter.setVisible(0, false); //不显示抄送
 			ccenter.setVisible(1, false); //不显示主题
@@ -130,6 +131,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			break;
 		case QQ:
 			ttop.setVisible(SAVE_TO_DRAFT, false);
+			ttop.setVisible(DELETE, false);
 			
 			ccenter.setVisible(0, false); //不显示抄送
 			ccenter.setVisible(1, false); //不显示主题
@@ -140,6 +142,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			
 		case MAIL: //默认邮件
 			ttop.setVisible(SAVE_TO_DRAFT, true);
+			ttop.setVisible(DELETE, false);
 			
 			ccenter.setVisible(0, false);//默认不显示抄送，只有点击"分享/抄送"的时候才显示
 			ccenter.setOverallStyle(false); //非全局样式
@@ -211,60 +214,134 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	@Override
 	public ChannelMessage getChannelMessage() {
 		// TODO 自动生成的方法存根
+		if (newMsg == null) {
+			newMsg = new ChannelMessage();
+			switch (channel) {
+			case MAIL:
+				newMsg.setClazz(ChannelMessage.MAIL);
+				break;
+			case WEIBO:
+				newMsg.setClazz(ChannelMessage.WEIBO);
+				break;
+			case QQ:
+				newMsg.setClazz(ChannelMessage.QQ);
+				break;
+			}
+		}
 		return this.newMsg;
+	}
+	
+	/**
+	 * 获取消息发送地址。前者为来源地址，后者为发送地址
+	 * @return
+	 */
+	public String[] getMessageAddrs() {
+		NewMessageBodyPane body = isParent ? this : (NewMessageBodyPane)this.getParent();
+		NewMessageTopBar topBar = (NewMessageTopBar) body.getMessageStatusBar();
+		if (topBar != null) {
+			return new String[]{topBar.getMessageFrom(), topBar.getMessageTo()};
+		}
+		return null;
 	}
 
 	/**
 	 * 编辑消息，即收集当前编辑面板的所有消息：包括主体、内容、字体样式等等。
 	 * @return
 	 */
-	public ChannelMessage editMessage() {
-		ChannelMessage msg = null;
-		if(newMsg != null) {
-			msg = newMsg.clone();
+	public ChannelMessage editMessage() {		
+		ChannelMessage msg = (newMsg = getChannelMessage()).clone();
+		
+		msg.setId(null); //注意，这里是关键
+		msg.setSubject(null);
+		msg.setBody(null);
+		msg.setType(ChannelMessage.TYPE_SEND);
+		msg.setSentDate(new Date());
+		msg.setReceivedDate(msg.getSentDate());//设置和发送时间一样
+		msg.setExtensions(null);
+		msg.setFlags(null);
+		
+		if (newMsg.isWeibo()) {
+			msg.setBody(center.getText(true));
 			
-			msg.setId(null); //注意，这里是关键
-			msg.setType(ChannelMessage.TYPE_SEND);
-			msg.setSentDate(new Date());
-			msg.setReceivedDate(msg.getSentDate());//设置和发送时间一样
-			
-			if (newMsg.isWeibo()) {
-				msg.setBody(center.getText(true));
-				
-			} else if (newMsg.isQQ()) {
-				msg.setBody(center.getText(true));
+		} else if (newMsg.isQQ()) {
+			msg.setBody(center.getText(true));
 
-			} else if (newMsg.isMail()) {
-				msg.setSubject(center.getSubject());// 主题
-				msg.setCC(center.getCC()); //抄送
-				
-				if (ChannelUtil.isEmpty(msg.getSubject())) {
-					ChannelUtil.showMessageDialog(null, "警告", "邮件主题不能为空！");
-					return null;
-				}
-				msg.setBody(center.getText(false));
-				msg.setAttachments(center.getAttachments());//附件
-			}
+		} else if (newMsg.isMail()) {
+			msg.setSubject(center.getSubject());// 主题
+			msg.setCC(center.getCC()); //抄送
+			msg.setAttachments(center.getAttachments());//附件
 			
-			if (!newMsg.isSent()) { // 方向不一致，需要交换一下发送和接受人的顺序
-				msg.setToAddr(newMsg.getFromAddr());
-				msg.setFromAddr(newMsg.getToAddr());
-			}
-			
-			//对于QQ、邮件还有字体样式：
-			HashMap<String, String> exts = msg.getExtensions();
-			exts.clear(); //先清空再添加
-			if(newMsg.isQQ()) {
-				FontStyle fs = center.getFontStyle();
-				try {
-					exts.put(Constants.QQ_FONT_STYLE, fs.toJSONString());
-				} catch (JSONException ex) {
-					ex.printStackTrace();
+			msg.setBody(center.getText(false));
+		}
+		
+		String[] msgAddrs = getMessageAddrs(); //获取消息的收发地址
+		if (msgAddrs != null && msgAddrs.length > 1) {
+			msg.setToAddr(msgAddrs[1]);
+			msg.setFromAddr(msgAddrs[0]);
+		}
+		
+		//对于QQ、邮件还有字体样式：
+		HashMap<String, String> exts = msg.getExtensions();
+		if(newMsg.isQQ()) {
+			FontStyle fs = center.getFontStyle();
+			try {
+				if (exts == null) {
+					exts = new HashMap<String, String>();
 				}
+				exts.put(Constants.QQ_FONT_STYLE, fs.toJSONString());
+			} catch (JSONException ex) {
+				ex.printStackTrace();
 			}
 		}
 		
+		center.clearAll();//返回前，清空文本
 		return msg;
+	}
+	
+	/**
+	 * 检查编辑消息的有效性
+	 * @param msg 消息对象
+	 * @return
+	 */
+	public boolean checkVaildMessage(String action, ChannelMessage msg) 
+	{
+		if(msg != null) {			
+			if(msg.getMessageID() == null) {
+//				ChannelUtil.showMessageDialog(null, "错误", "消息ID为空！");
+//				return false;
+				msg.setMessageID("" + System.currentTimeMillis());
+			}
+			
+			if (action == POST) { // 发送
+				// 分类型进行判断：
+				if (msg.isMail()) {// 邮件必须有主题
+					if (ChannelUtil.isEmpty(msg.getSubject(), true)) {
+						ChannelUtil.showMessageDialog(null, "错误", "邮件主题不能为空！");
+						msg = null;
+						return false;
+					}
+				}
+
+				// 检查消息的收、发地址。发送人可以为空(后台可以自动补填)，但是收件人不能为空
+				if (ChannelUtil.isEmpty(msg.getToAddr(), true)) {
+					ChannelUtil.showMessageDialog(null, "错误", "没有填写消息的收件人(To：)地址！");
+					msg = null; 
+					return false;
+				}
+			}
+			
+			if (action == POST || action == SAVE_TO_DRAFT) { //发送或者存草稿
+				if (ChannelUtil.isEmpty(msg.getBody(), true)) {
+					ChannelUtil.showMessageDialog(null, "错误", "消息内容不能为空！");
+					msg = null;
+					return false;
+				}
+			}
+			
+			//检查通过：
+			return true;
+		}
+		return false;
 	}
 
 	//顶部功能按钮面板
@@ -345,39 +422,64 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		public void actionPerformed(ActionEvent e)
 		{
 			if(e.getActionCommand() == CANCEL) {
-				ChannelDesktopPane desktop = ChannelGUI.getDesktop();
-				if (newMsg != null) {
-					desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName());
-				} else {
-					desktop.removeShowComp(PREFIX_NEW);
-				}
+				returnToHistory();
 			}
-			else if(e.getActionCommand() == POST) { //发送
-				ChannelMessage sendMsg = editMessage();
-				if(sendMsg != null && !ChannelUtil.isEmpty(sendMsg.getBody())) {
-					try {
-						ChannelService cs = 	ChannelAccesser.getChannelService();
-						cs.put(Constants.ACTION_REPLY, sendMsg);
-						
-						//添加消息
-						ChannelDesktopPane desktop = ChannelGUI.getDesktop();
-						desktop.addMessage(sendMsg);
-						
-						//同时返回
-						if (newMsg != null) {
-							desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName());
-						} else {
-							desktop.removeShowComp(PREFIX_NEW);
+			else if(e.getActionCommand() == POST || 
+					e.getActionCommand() == SAVE_TO_DRAFT) { //发送或者存草稿
+				
+				boolean isLock = false;
+				try {
+					if (isLock = channelLock.tryLock()) {
+						ChannelMessage sendMsg = editMessage();
+						if (checkVaildMessage(e.getActionCommand(), sendMsg)) {
+							try {
+								ChannelService cs = ChannelAccesser.getChannelService();
+								if (e.getActionCommand() == POST) {
+									cs.put(Constants.ACTION_REPLY, sendMsg); //回复
+									
+									ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+									desktop.addMessage(sendMsg);
+								} else if (e.getActionCommand() == SAVE_TO_DRAFT) {
+									cs.put(Constants.ACTION_PUT_DRAFT, sendMsg); //存草稿
+								}
+								
+								returnToHistory();
+							} catch (Exception ex) {
+								ChannelUtil.showMessageDialog(NewMessageBodyPane.this, "错误", ex);
+							}
 						}
 					}
-					catch(Exception ex) {
+				} finally {
+					if (isLock) {
+						channelLock.unlock();
+					}
+				}
+			} 
+			else if (e.getActionCommand() == DELETE) {// 删除，这里就是删除草稿
+				if (ChannelUtil.confirm(null, "确认删除", "是否删除该草稿？")) {
+					ChannelMessage msg = (newMsg = getChannelMessage()).clone();
+					msg.setDrafted(true);
+
+					try {
+						ChannelService cs = ChannelAccesser.getChannelService();
+						cs.trashMessage(msg);
+
+						returnToHistory();
+					} catch (Exception ex) {
 						ChannelUtil.showMessageDialog(NewMessageBodyPane.this, "错误", ex);
 					}
 				}
-				
-				//清空文本
-				center.clearAll();
 			}
+		}
+	}
+	
+	//返回上一面板，即历史面板
+	private void returnToHistory() {
+		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+		if (newMsg != null && newMsg.getMessageID() != null) {
+			desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName());
+		} else {
+			desktop.removeShowComp(PREFIX_NEW);
 		}
 	}
 	
