@@ -13,6 +13,9 @@ import java.awt.Rectangle;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -26,11 +29,16 @@ import javax.swing.event.MouseInputListener;
 
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.layout.VerticalGridLayout;
+import com.original.serive.channel.server.ChannelAccesser;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.core.ChannelService;
+import com.original.service.channel.core.Filter;
+import com.original.service.channel.core.MessageFilter;
+import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
 import com.original.widget.OScrollBar;
@@ -42,7 +50,7 @@ import com.original.widget.OScrollBar;
  * @author WMS
  *
  */
-public class ChannelDesktopPane extends JPanel implements MessageListner, AdjustmentListener, MouseInputListener, EventConstants
+public class ChannelDesktopPane extends JPanel implements MessageListner, AdjustmentListener, MouseInputListener, PropertyChangeListener, EventConstants
 {
 	private CardLayout layoutMgr = new CardLayout(); //卡片布局，带有切换功能
 	public static Dimension SIZE = new Dimension(ChannelConstants.CHANNELWIDTH, 
@@ -50,7 +58,10 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	public static ImageIcon BACKGROUND = IconFactory.loadIconByConfig("background"), //背景图片
 			TOPICON = IconFactory.loadIconByConfig("top");//置顶图标
 	
-	public static JPanel DEFAULT_PANE = new JPanel(); //桌面默认显示的面板，消息列表面板，带滚动条
+	private static final String DEFAULT_NAME = "DEFAULT",//默认面板的名称
+			FILTER_NAME = "FILTER";//查找过滤面板的名称
+	public static JPanel DEFAULT_PANE = new JPanel(),//桌面默认显示的面板，消息列表面板，带滚动条
+			FILTER_PANE = null; //查询过滤面板，和默认面板一致
 	public static JScrollBar DEFAULT_SCROLLBAR = 
 			new OScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)); //默认显示面板的滚动条
 	
@@ -66,20 +77,31 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	
 	private Rectangle showMoreArea = null, topIconArea = null; //显示更新信息和置顶图标的区域
 	private String showMore = "显示更多信息";
+	//记录上一次选中的类型和状态
+	private String lastSelectedType = VIEW_ALL_TYPE, lastSelectedStatus = VIEW_ALL_STATUS;
 	
 	public ChannelDesktopPane() {
 		setLayout(layoutMgr);
 		DEFAULT_PANE.setLayout(DEFAULT_UP_LAYOUT);
 		DEFAULT_SCROLLBAR.addAdjustmentListener(this);
 		
-		addDefaultShowComp(DEFAULT_PANE);
+		addDefaultShowComp(DEFAULT_NAME, DEFAULT_PANE);
 	}
 	
 	/**
 	 * 初始化桌面消息显示列表，注意和addMessage使用的布局方式不同，用途也不同
 	 * @param msg
 	 */
-	public void initMessage(ChannelMessage msg)
+	public void initMessage(ChannelMessage msg) {
+		initMessage(DEFAULT_PANE, msg);
+	}
+	
+	/**
+	 * 初始化桌面消息显示列表，注意和addMessage使用的布局方式不同，用途也不同
+	 * @param owner 显示消息的面板
+	 * @param msg
+	 */
+	public void initMessage(JPanel owner, ChannelMessage msg)
 	{
 		if(!checkMsgValidity(msg))
 			return;
@@ -89,11 +111,12 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 			if(isLock = channelLock.tryLock()) {
 				ChannelMessagePane msgContainer = null;
 
-				if ((msgContainer = findMessage(msg)) == null) {
+				if ((msgContainer = findMessage(owner, msg)) == null) {
 					msgContainer = new ChannelMessagePane();
 					msgContainer.initMessage(msg);
-					DEFAULT_PANE.add(msgContainer);
-					DEFAULT_PANE.validate();
+					
+					owner.add(msgContainer);
+					owner.validate();
 				} else {
 					msgContainer.initMessage(msg);
 				}
@@ -109,7 +132,16 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 * 添加消息，这里是消息添加的入口，使用时最好由线程调用。
 	 * @param msg
 	 */
-	public void addMessage(ChannelMessage msg)
+	public void addMessage(ChannelMessage msg) {
+		addMessage(DEFAULT_PANE, msg);
+	}
+	
+	/**
+	 * 添加消息，这里是消息添加的入口，使用时最好由线程调用。
+	 * @param msg
+	 * @param owner 添加消息的面板
+	 */
+	public void addMessage(JPanel owner, ChannelMessage msg)
 	{
 		if (!checkMsgValidity(msg))
 			return;
@@ -118,7 +150,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		try {
 			if(isLock = channelLock.tryLock()) {
 				ChannelMessagePane msgContainer = null;
-				if ((msgContainer = findMessage(msg)) == null) {
+				if ((msgContainer = findMessage(owner, msg)) == null) {
 					msgContainer = new ChannelMessagePane();
 				}
 				msgContainer.addMessage(msg, true);
@@ -147,14 +179,14 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 * @param msg 消息对象
 	 * @return
 	 */
-	public ChannelMessagePane findMessage(ChannelMessage msg)
+	public ChannelMessagePane findMessage(JPanel owner, ChannelMessage msg)
 	{
 		if(!checkMsgValidity(msg))
 			return null;
 		
-		for(int i=0; i<DEFAULT_PANE.getComponentCount(); i++)
+		for(int i=0; i<owner.getComponentCount(); i++)
 		{
-			Component comp = DEFAULT_PANE.getComponent(i);
+			Component comp = owner.getComponent(i);
 			if(comp instanceof ChannelMessagePane)
 			{
 				String uid = ((ChannelMessagePane) comp).uid;
@@ -207,14 +239,20 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 * 添加默认显示的面板
 	 * @param comp
 	 */
-	private void addDefaultShowComp(JComponent comp)
+	private void addDefaultShowComp(String name, JComponent comp)
 	{
 		comp.setOpaque(false);
 		JScrollPane jsp = new JScrollPane(comp,
 				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		
-		jsp.setVerticalScrollBar(DEFAULT_SCROLLBAR);
+
+		if (comp != DEFAULT_PANE) {
+			JScrollBar scrollBar = new OScrollBar(JScrollBar.VERTICAL, new Color(225, 240, 240));
+			scrollBar.addAdjustmentListener(this);
+			jsp.setVerticalScrollBar(scrollBar);
+		} else {
+			jsp.setVerticalScrollBar(DEFAULT_SCROLLBAR);
+		}
 		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 55, 5));
 		
 		//设置滚动面板透明
@@ -222,14 +260,14 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		jsp.setOpaque(false);
 		jsp.getViewport().setOpaque(false);
 		
-		jsp.setName("DEFAULT");
+		jsp.setName(name);
 		jsp.addMouseListener(this);
 		jsp.addMouseMotionListener(this);
-		add("DEFAULT", jsp);
+		add(name, jsp);
 		
 		//记录当前显示的组件和上一次显示的组件
 		this.putClientProperty(LAST_SHOW_COMPONENT, null);
-		this.putClientProperty(CURRENT_SHOW_COMPONENT, "DEFAULT");
+		this.putClientProperty(CURRENT_SHOW_COMPONENT, name);
 		
 		jsp.putClientProperty(LAST_SHOW_COMPONENT, this.getClientProperty(LAST_SHOW_COMPONENT));
 	}
@@ -273,7 +311,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 */
 	public void showDefaultComp()
 	{
-		showComp("DEFAULT");
+		showComp(DEFAULT_NAME);
 	}
 	
 	/**
@@ -283,10 +321,10 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	public void showComp(String name)
 	{
 		if (name == null) {
-			name = "DEFAULT";
+			name = DEFAULT_NAME;
 		}
 		
-		if (!"DEFAULT".equals(name)) {
+		if (!DEFAULT_NAME.equals(name)) {
 			setScrollBarVisible(false);// 其他面板不显示滚动条
 		} else {
 			Boolean showStatus = (Boolean) getClientProperty(SCROLLBAR_SHOW_STATUS);
@@ -319,7 +357,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	public void removeShowComp(String name)
 	{
 		int index = -1;
-		if(name == null || "DEFAULT".equals(name)
+		if(name == null || DEFAULT_NAME.equals(name)
 				|| (index = indexOfShowComp(name)) == -1)
 			return;
 		
@@ -335,6 +373,20 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		this.putClientProperty(CURRENT_SHOW_COMPONENT, history);
 		this.putClientProperty(LAST_SHOW_COMPONENT, lastShowComp == null ? null :
 			lastShowComp.getClientProperty(LAST_SHOW_COMPONENT));
+	}
+	
+	private JPanel getFilterPane() {
+		if (FILTER_PANE == null) {
+			FILTER_PANE = new JPanel();
+			FILTER_PANE.setLayout(DEFAULT_UP_LAYOUT);
+			addDefaultShowComp(FILTER_NAME, FILTER_PANE);
+		} else {
+			FILTER_PANE.removeAll();
+			FILTER_PANE.validate();
+			this.validate();
+			this.repaint();
+		}
+		return FILTER_PANE;
 	}
 
 	@Override
@@ -424,6 +476,20 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		}
 	}
 	
+	/**
+	 * 显示更多的消息
+	 */
+	private void showMoreMessage() {
+		System.out.println("show more message!");
+	}
+
+	/**
+	 * 滚动条置顶
+	 */
+	private void backToTop() {
+		DEFAULT_SCROLLBAR.setValue(0);
+	}
+	
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		// TODO 自动生成的方法存根
@@ -465,14 +531,60 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	@Override
 	public void mouseDragged(MouseEvent e) { }
 	
-	//显示更多的消息列表
-	private void showMoreMessage() {
-		System.out.println("show more message!");
-	}
-	
-	//滚动条置顶
-	private void backToTop() {
-		DEFAULT_SCROLLBAR.setValue(0);
+//查找和过滤	
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		if(evt.getPropertyName() != STATUS_CHANGE_PROPERTY
+				&& evt.getPropertyName() != TYPE_CHANGE_PROPERTY) {
+			return;
+		}
+		if (evt.getPropertyName() == STATUS_CHANGE_PROPERTY) {
+			lastSelectedStatus = (String) evt.getNewValue();
+		} else if (evt.getPropertyName() == TYPE_CHANGE_PROPERTY) {
+			lastSelectedType = (String) evt.getNewValue();
+		}
+		
+		if(lastSelectedStatus == VIEW_ALL_STATUS
+				&& lastSelectedType == VIEW_ALL_TYPE) {
+			showDefaultComp();
+			return;
+		}
+		
+		Filter[] filters = null;
+		String[] keys = null; Integer[] values = null;
+		
+		if(lastSelectedType != VIEW_ALL_TYPE) {
+			filters = new Filter[]{new MessageFilter("clazz", 
+					lastSelectedType == VIEW_WEIBO ? ChannelMessage.WEIBO : 
+						(lastSelectedType == VIEW_QQ ? ChannelMessage.QQ : ChannelMessage.MAIL),
+					null)};
+		}
+		if(lastSelectedStatus != VIEW_ALL_STATUS) {
+			keys = new String[]{lastSelectedStatus == VIEW_DRAFT ? ChannelMessage.FLAG_DRAFT :
+				(lastSelectedStatus == VIEW_TRASH ? ChannelMessage.FLAG_TRASHED: ChannelMessage.FLAG_SEEN)};
+			
+			values = new Integer[]{lastSelectedStatus == VIEW_DRAFT ? 1:
+				(lastSelectedStatus == VIEW_TRASH ? 1: 0)};
+		}
+		
+		ChannelService cs = ChannelAccesser.getChannelService();
+		MessageManager mm = cs.getMsgManager();
+		JPanel filterPane = getFilterPane();
+		
+		List<ChannelMessage> filterMsgs = mm.getMessagesByAll(filters, keys, values);
+		
+		if (!filterMsgs.isEmpty()) {
+			for (ChannelMessage msg : filterMsgs) {
+				System.out.println(msg.getFlags());
+				initMessage(filterPane, msg);
+			}
+		} else {
+			this.validate();
+			this.repaint();
+		}
+			
+		
+		showComp(FILTER_NAME);
 	}
 
 	@Override

@@ -566,12 +566,14 @@ public class ChannelMessage implements Cloneable, Constants{
 	public void setProcessed(boolean processed) {
 		if (flags == null)
 			flags = new HashMap<String, Integer>();
+		flags.put(FLAG_SEEN, new Integer(1));
 		flags.put(FLAG_DONE, processed ? new Integer(1) : new Integer(0));
 	}
 	
 	public void setDrafted(boolean drafted) {
 		if (flags == null)
 			flags = new HashMap<String, Integer>();
+		flags.put(FLAG_SEEN, new Integer(1));
 		flags.put(FLAG_DRAFT, drafted ? new Integer(1) : new Integer(0));
 	}
 	

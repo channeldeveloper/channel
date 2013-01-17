@@ -21,7 +21,12 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 
+import javax.swing.ButtonGroup;
+import javax.swing.ButtonModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -31,6 +36,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
+import javax.swing.event.SwingPropertyChangeSupport;
 import javax.swing.plaf.basic.BasicMenuItemUI;
 
 import com.original.serive.channel.ChannelGUI;
@@ -65,6 +72,14 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 					btnSetting = ChannelUtil.createAbstractButton(
 							new AbstractButtonItem(null, SETTING, IconFactory.loadIconByConfig("settingIcon")));
 	
+	private PropertyChangeSupport changeSupport =
+			new SwingPropertyChangeSupport(this);
+	
+	private ChannelButton typeButton = new ChannelButton("类型", IconFactory.loadIconByConfig("viewdownIcon")),
+			 statusButton = new ChannelButton("状态", IconFactory.loadIconByConfig("viewdownIcon"));
+	private String selectedType = VIEW_ALL_TYPE, 
+			selectedStatus = VIEW_ALL_STATUS; //当前类型状态和类型
+	
 	public ChannelToolBar() {
 				constructToolBar();
 	}
@@ -77,7 +92,6 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		setPreferredSize(SIZE); 
 		
 		//添加类型按钮
-		ChannelButton typeButton = new ChannelButton("类型", IconFactory.loadIconByConfig("viewdownIcon"));
 		typeButton.setBounds(73+7, 10, 90,25);
 		typeButton.initPopupMenu(new MenuItem[]{
 				new MenuItem("全部", VIEW_ALL_TYPE, true),
@@ -88,7 +102,6 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		add(typeButton);
 		
 		//添加状态按钮
-		ChannelButton statusButton = new ChannelButton("状态", IconFactory.loadIconByConfig("viewdownIcon"));
 		statusButton.setBounds(73+102, 10, 90,25);
 		statusButton.initPopupMenu(new MenuItem[]{
 				new MenuItem("全部", VIEW_ALL_STATUS, true),
@@ -113,6 +126,38 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		btnSetting.setBounds(73+900, 10, 40, 26);
 		add(btnSetting);
 		
+	}
+	
+	/**
+	 * 添加消息属性发生改变事件监听器
+	 */
+	public void addMessageChangeListener(PropertyChangeListener listener)
+	{
+		if(listener != null)
+			changeSupport.addPropertyChangeListener(listener);
+	}
+	
+	/**
+	 * 通知消息属性发生改变，给所有的事件监听器
+	 * @param changePropertyName 消息改变属性名称，属性名称都在{@link EventConstants}常量中
+	 * @param oldValue 旧值
+	 * @param newValue 新值
+	 */
+	private void fireMessageChange(String changePropertyName, Object oldValue, Object newValue) {
+		if(newValue != null && oldValue != null && !newValue.equals(oldValue)) {
+			if (changePropertyName == TYPE_CHANGE_PROPERTY) {
+				selectedType = (String) newValue;
+			} else if (changePropertyName == STATUS_CHANGE_PROPERTY) {
+				selectedStatus = (String) newValue;
+			}
+			
+			PropertyChangeListener[] listeners = changeSupport.getPropertyChangeListeners();
+			for(int i=0; i<listeners.length; i++)
+			{
+				listeners[i].propertyChange(
+						new PropertyChangeEvent(this, changePropertyName, oldValue, newValue));
+			}
+		}
 	}
 	
 	//一些控制按钮的触发事件
@@ -147,16 +192,22 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		//清除选区
 		g2d.setClip(null);
 		GraphicsHandler.suspendRendering(g2d);
+	}	
+	
+	//获取选中的类型
+	public String getSelectedType() {
+		return selectedType;
 	}
-	
-	
-	
+
+	//获取选中的状态
+	public String getSelectedStatus() {
+		return selectedStatus;
+	}
+
 	/**
 	 * Channel按钮，可以通用。注意按钮的高度固定，宽度随文字的长度和大小而定。
-	 * @author WMS
-	 *
 	 */
-	public static class ChannelButton extends JButton
+	public class ChannelButton extends JButton
 	{
 		ChannelPopupMenu popmenu = new ChannelPopupMenu(this) ;
 		public ChannelButton(String text)
@@ -188,11 +239,16 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		{
 			if(items != null && items.length > 0)
 			{
-				for(MenuItem item : items)
+				for(int i= 0; i< items.length; i++)
 				{
-					popmenu.add(popmenu.createMenuItem(item));
-					if(item.isAddSeparator()) {
+					JMenuItem mi = popmenu.createMenuItem(items[i]);
+					popmenu.add(mi);
+					if(items[i].isAddSeparator()) {
 						popmenu.addSeparator();
+					}
+					
+					if(i == 0) {//设置默认第一个选中
+						mi.setSelected(true);
 					}
 				}
 			}
@@ -256,72 +312,56 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 	
 	/**
 	 * Channel文本框，可以通用。其中可以设置边角图标，支持鼠标事件。
-	 * @author WMS
-	 *
 	 */
-	public static class ChannelTextField extends JTextField
+	public class ChannelTextField extends JTextField
 	{		
 		private LocationIcon cornerIcon = null;
-		public ChannelTextField()
-		{
+		public ChannelTextField() {
 			this(null);
 		}
-		
-		public ChannelTextField (String text)
-		{
+
+		public ChannelTextField(String text) {
 			this(text, 20, null);
 		}
 		
-		public ChannelTextField (String text, int columns, LocationIcon icon)
-		{
+		public ChannelTextField(String text, int columns, LocationIcon icon) {
 			super(text, columns);
-			if(icon != null) {
+			if (icon != null) {
 				setMargin(new Insets(0, 2, 0, icon.getIconWidth()));
 				setOpaque(false);
-				setBackground(new Color(0, 0, 0, 0));//如果上面透明无效，这是唯一的解决方法
+				setBackground(new Color(0, 0, 0, 0));// 如果上面透明无效，这是唯一的解决方法
 				initEventListener();
-				
+
 				this.cornerIcon = icon;
 			}
 		}
 		
 		//搜索文本框的一些响应事件
-		private void initEventListener() 
-		{
-			//回车事件
-			addKeyListener(new KeyAdapter()
-			{
-				public void keyReleased(KeyEvent e)
-				{
-					if(e.getKeyCode() == KeyEvent.VK_ENTER)
-					{
+		private void initEventListener() {
+			// 回车事件
+			addKeyListener(new KeyAdapter() {
+				public void keyReleased(KeyEvent e) {
+					if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 						doClick();
 					}
 				}
 			});
-			
-			//鼠标移动事件
-			addMouseMotionListener(new MouseMotionAdapter()
-			{
-				public void mouseMoved(MouseEvent e)
-				{
-					if (cornerIcon.getBounds().contains(e.getPoint()))
-					{
+
+			// 鼠标移动事件
+			addMouseMotionListener(new MouseMotionAdapter() {
+				public void mouseMoved(MouseEvent e) {
+					if (cornerIcon.getBounds().contains(e.getPoint())) {
 						setCursor(ChannelConstants.HAND_CURSOR);
-					} else
-					{
+					} else {
 						setCursor(ChannelConstants.TEXT_CURSOR);
 					}
-				}	
+				}
 			});
-			
-			//鼠标点击事件
-			addMouseListener(new MouseAdapter()
-			{
-				public void mouseClicked(MouseEvent e)
-				{
-					if(cornerIcon.getBounds().contains(e.getPoint()))
-					{
+
+			// 鼠标点击事件
+			addMouseListener(new MouseAdapter() {
+				public void mouseClicked(MouseEvent e) {
+					if (cornerIcon.getBounds().contains(e.getPoint())) {
 						doClick();
 					}
 				}
@@ -371,23 +411,24 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 				}
 		}
 		
-		//点击小图标触发事件
-		protected void doClick()
-		{
-			
+		//搜索功能
+		protected void doClick() {
+
 		}
 	}
 	
 	/**
 	 * Channel弹出框，可以通用
-	 * @author WMS
-	 *
 	 */
-	public static class ChannelPopupMenu extends JPopupMenu implements ActionListener
+	public class ChannelPopupMenu extends JPopupMenu implements ActionListener
 	{
 		private JButton owner;
 		private Color selectedBackground = new Color(46,156,202),
 				background = new Color(249, 249, 249);
+		private Icon selectedIcon = IconFactory.loadIconByConfig("yesIcon"),
+				disSelectedIcon = IconFactory.loadIconByConfig("emptyIcon");
+		private ButtonGroup bgp = new ButtonGroup();
+		
 		public ChannelPopupMenu(JButton owner) {
 			this.owner = owner;
 		}
@@ -395,12 +436,28 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		public JMenuItem createMenuItem(MenuItem menuItem)
 		{
 			menuItem.setSize(owner.getBounds().width-2*2, 30);
-			JMenuItem item = ChannelUtil.createMenuItem(menuItem);
+			final JMenuItem item = ChannelUtil.createMenuItem(menuItem);
 			
 			item.setUI(new ChannelMenuItemUI(selectedBackground, Color.white));
+			item.setIcon(disSelectedIcon);
 			item.setOpaque(false);
 			item.setHorizontalAlignment(JMenuItem.LEFT);
 			item.addActionListener(this);
+			
+			final ButtonModel model = new JToggleButton.ToggleButtonModel() {
+				public void setSelected(boolean b) {
+					super.setSelected(b);
+					if (b) {
+						item.setIcon(selectedIcon);
+					} else {
+						item.setIcon(disSelectedIcon);
+					}
+				}
+			};
+			item.setModel(model);
+			bgp.add(item);// why changes actionCommand to text?
+			
+			item.setActionCommand(menuItem.getActionCommand());
 			return item;
 		}
 		
@@ -430,10 +487,19 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		//菜单项点击触发事件
 		public void actionPerformed(ActionEvent e)
 		{
-			System.out.println(e.getActionCommand());
+			JMenuItem mi = (JMenuItem) e.getSource();
+			ChannelPopupMenu menu = (ChannelPopupMenu)mi.getParent();
+			if (mi.isSelected()) {
+				JButton owner = menu.getOwner();
+				if (owner == typeButton) {
+					fireMessageChange(TYPE_CHANGE_PROPERTY, selectedType, mi.getActionCommand());
+				} else if (owner == statusButton) {
+					fireMessageChange(STATUS_CHANGE_PROPERTY, selectedStatus, mi.getActionCommand());
+				}
+			}
 		}
 		
-		static class ChannelMenuItemUI extends BasicMenuItemUI
+		class ChannelMenuItemUI extends BasicMenuItemUI
 		{
 			ChannelMenuItemUI(Color bg, Color fg)
 			{
@@ -459,8 +525,6 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 	
 	/**
 	 * Channel用户头像，唯一
-	 * @author WMS
-	 *
 	 */
 	public static class ChannelUserHeadLabel extends JLabel
 	{

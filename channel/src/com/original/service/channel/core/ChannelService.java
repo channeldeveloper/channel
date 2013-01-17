@@ -619,6 +619,7 @@ public final class ChannelService extends AbstractService {
 							return;
 						}
 						msg.setType(ChannelMessage.TYPE_SEND);//强制转换类型
+						msg.setProcessed(true);
 						msgManager.save(msg);
 					}
 					
@@ -634,6 +635,7 @@ public final class ChannelService extends AbstractService {
 						}
 						
 						msg.setType(ChannelMessage.TYPE_SEND);//强制转换类型
+						msg.setProcessed(true);
 						msgManager.save(msg);
 					}
 				}
@@ -847,6 +849,11 @@ public final class ChannelService extends AbstractService {
 				new ChannelMessage[] { newMsg });
 		this.fireMessageEvent(evt);
 	}
+	
+	public void updateMessageFlag(ChannelMessage msg, String key,
+			Object newValue) {
+		updateMessageFlags(msg, new String[]{key}, new Object[]{newValue});
+	}
 
 	/**
 	 * 更新消息控制（。
@@ -855,22 +862,33 @@ public final class ChannelService extends AbstractService {
 	 * @param key
 	 * @param newValue
 	 */
-	public void updateMessageFlag(ChannelMessage msg, String key,
-			Object newValue) {
+	public void updateMessageFlags(ChannelMessage msg, String[] keys,
+			Object[] newValues) {
 
 		// TODO Auto-generated method stub
-		if (newValue == null || msg == null) {
+		if (keys == null || newValues == null || msg == null) {
 			return;
 		}
 		ObjectId id = msg.getId();
 		if (id == null) {
 			return;
 		}
+		
+		int size= Math.min(keys.length, newValues.length);
+		if(size < 1) {
+			return;
+		}
+		
 		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class)
 				.field("id").equal(id);
 
 		UpdateOperations<ChannelMessage> ops = ds.createUpdateOperations(
-				ChannelMessage.class).set("flags." + key, newValue);
+				ChannelMessage.class);
+		
+		for(int i = 0; i<size; i++) {
+			ops = ops.set(keys[i], newValues[i]);
+		}
+		
 		ds.update(chmsgQuery, ops, true);
 		ChannelMessage newMsg = ds.find(ChannelMessage.class).field("id").equal(id).get();
 

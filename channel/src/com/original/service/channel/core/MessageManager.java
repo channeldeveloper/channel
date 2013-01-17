@@ -446,37 +446,51 @@ public class MessageManager {
 	
 	//混合标识查询
 	public List<ChannelMessage> getMessagesByFlags(String[] keys, Integer[] values) {
-		if (keys == null || values == null) {
+		return getMessagesByAll(null, keys, values);
+	}
+	
+	//全部查询(自带条件 和 标识 的查询)，不允许filters和keys都为空的情况。
+	public List<ChannelMessage> getMessagesByAll(Filter[] filters, String[] keys, Integer[] values) {
+		if (filters == null && (keys == null || values == null)) {
 			return EMPTY;
 		}
-		int size = Math.min(keys.length, values.length);
-		if (size < 1) {
-			return EMPTY;
-		}
-
+		
 		Query<ChannelMessage> q = ds.createQuery(ChannelMessage.class);
+		int size = 0;
+		
+		if(filters != null) {
+			size = filters.length;
+			for(int i=0; i<size; i++) {
+				q = q.filter(filters[i].getField(), filters[i].getValue());
+			}
+		}
+		
+		if(keys != null && values != null) {
+			size = Math.min(keys.length, values.length);
 
-		for (int i = 0; i < size; i++) {
-			Integer value = values[i];
-			String key = keys[i];
-			if (key != null && value != null) {
+			for (int i = 0; i < size; i++) {
+				Integer value = values[i];
+				String key = keys[i];
+				if (key != null && value != null) {
 
-				if (value.intValue() == 0) {
-					q.or( // 或查询
-					        q.criteria("flags." + key).doesNotExist(),
-							q.criteria("flags." + key).equal(value)
-					);
-				} else {
-					q = q.field("flags." + key).equal(value);
+					if (value.intValue() == 0) {
+						q.or( // 或查询
+						        q.criteria("flags." + key).doesNotExist(),
+								q.criteria("flags." + key).equal(value)
+						);
+					} else {
+						q = q.field("flags." + key).equal(value);
+					}
 				}
 			}
 		}
+		
 		q = q.order(OrderbyDateField);
 		return q.asList();
 	}
 
 	/**
-	 * 
+	 *  
 	 * @param iter
 	 * @return
 	 */

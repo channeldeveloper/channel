@@ -153,6 +153,7 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 		desktop.setBounds(0,40,ChannelDesktopPane.SIZE.width,
 				ChannelDesktopPane.SIZE.height);		
 		cs.addMessageListener(desktop);
+		toolbar.addMessageChangeListener(desktop);
 		
 		mp.add(desktop, JLayeredPane.DEFAULT_LAYER);
 		setVisible(true);

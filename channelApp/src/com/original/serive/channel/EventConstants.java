@@ -39,6 +39,8 @@ public interface EventConstants
 	String VIEW_UNDO = "view undo";
 	String VIEW_DRAFT = "view draft";
 	String VIEW_TRASH = "view trash";
+	String TYPE_CHANGE_PROPERTY = "type change property",
+			STATUS_CHANGE_PROPERTY = "status change property";
 	
 	/* 消息状态 */
 	String STATUS_UNKNOWN = "unknown";

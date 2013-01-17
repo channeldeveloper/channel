@@ -43,4 +43,12 @@ public class MessageFilter implements Filter {
 	public String getOrderField() {
 		return orderField;
 	}
+
+	@Override
+	public String toString() {
+		// TODO 自动生成的方法存根
+		return "[field=" + field + ", value=" + value + "]";
+	}
+	
+	
 }
