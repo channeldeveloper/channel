@@ -152,10 +152,10 @@ public class ChannelUtil implements ChannelConstants
 			{
 				len += fm.charWidth(text.charAt(i));
 				if(len == cutLength) {
-					return text.substring(0, i) + "...";
+					return text.substring(0, i) + "…";
 				}
 				else if(len > cutLength) {
-					return text.substring(0, i-1) + "...";
+					return text.substring(0, i-1) + "…";
 				}
 			}
 		}

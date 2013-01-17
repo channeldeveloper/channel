@@ -85,7 +85,10 @@ public class ChannelMessage implements Cloneable, Constants{
 	@Embedded
 	private List<Attachment> attachments;	
 	//pending 类(type)
-	private String clazz; 	
+	private String clazz;
+	
+	private transient String action;
+	
 	//常量
 	public static final String EXT_EMAIL_CC = "CC";
 	public static final String EXT_EMAIL_BCC = "BCC";
@@ -370,6 +373,10 @@ public class ChannelMessage implements Cloneable, Constants{
 			extensions.put(EXT_EMAIL_CC, cc);
 		}
 	}
+
+	public String getCC() {
+		return extensions == null ? null : extensions.get(EXT_EMAIL_CC);
+	}
 	
 	public String getClazz()
 	{
@@ -388,6 +395,13 @@ public class ChannelMessage implements Cloneable, Constants{
 		this.clazz = clazz;
 	}
 	
+	public String getAction() {
+		return action;
+	}
+	public void setAction(String action) {
+		this.action = action;
+	}
+
 	public boolean isQQ() {
 		return QQ.equals(getClazz());
 	}
@@ -461,6 +475,9 @@ public class ChannelMessage implements Cloneable, Constants{
 		return getCompleteMsg(false);
 	}
 	public String getCompleteMsg(boolean showCompleteImage) {
+		if (body == null || body.trim().isEmpty())
+			return null;
+		
 		if (isWeibo()) {
 			return WeiboParser.parse(this); // 微博不做任何处理
 		} else if (isQQ()) {
@@ -478,6 +495,24 @@ public class ChannelMessage implements Cloneable, Constants{
 			msg.setFlags(flags == null ? null : (HashMap) flags.clone());
 			msg.setExtensions(extensions == null ? null : (HashMap) extensions.clone());
 			msg.setAttachments(attachments == null ? null	: (List) (((ArrayList) attachments).clone()));
+		} catch (CloneNotSupportedException ex) {
+
+		}
+		return msg;
+	}
+	
+	//简单地克隆
+	public ChannelMessage simplyClone() {
+		ChannelMessage msg = null;
+		try {
+			msg = (ChannelMessage) super.clone();
+			msg.setId(null);
+			msg.setSubject(null);
+			msg.setBody(null);
+
+			msg.setFlags(null);
+			msg.setExtensions(null);
+			msg.setAttachments(null);
 		} catch (CloneNotSupportedException ex) {
 
 		}

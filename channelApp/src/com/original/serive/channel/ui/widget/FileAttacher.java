@@ -7,8 +7,10 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -23,6 +25,7 @@ import com.original.serive.channel.ui.data.ComboItem;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.Attachment;
+import com.original.service.channel.Utilies;
 
 /**
  * 附件添加、删除控件
@@ -67,7 +70,7 @@ public class FileAttacher extends JPanel implements ActionListener, EventConstan
 		else if(ADD_ATTACHMENT == e.getActionCommand()) {
 			File addFile = ChannelUtil.showFileChooserDialog(btnAdd, "添加附件", true, attachChooser, null);
 			if(addFile != null) {
-				ComboItem addItem = new ComboItem(addFile.getPath(), addFile.getName());
+				ComboItem addItem = new ComboItem(addFile.toURI().toString(), addFile.getName());
 				attacherBox.insertItemAt(addItem, 0);
 				attacherBox.setSelectedItem(addItem);
 			}
@@ -91,6 +94,21 @@ public class FileAttacher extends JPanel implements ActionListener, EventConstan
 	
 	public ComboItem getSelectedAttachment() {
 		return (ComboItem)attacherBox.getSelectedItem();
+	}
+	
+	public void setAttachments(List<Attachment> attachments) {
+		if (attachments != null && !attachments.isEmpty()) {
+//			ComboItem[] items = new ComboItem[attachments.size()];
+			Vector<ComboItem> items = new Vector<ComboItem>();
+			for (Attachment attach : attachments) {
+				if (Attachment.ATTACHMEMNT.equals(attach.getContentType())) {
+					items.add(new ComboItem(Utilies.getTempDir(
+							attach.getFileId(), attach.getFileName()), attach.getFileName()));
+				}
+			}
+			ComboBoxModel model = new DefaultComboBoxModel(items);
+			attacherBox.setModel(model);
+		}
 	}
 	
 	public List<Attachment> convertToAttachments() {

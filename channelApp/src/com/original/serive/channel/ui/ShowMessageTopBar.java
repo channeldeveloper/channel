@@ -35,13 +35,13 @@ public class ShowMessageTopBar extends ChannelMessageTopBar
 		{
 			if (channelMsg.isQQ())
 			{
-				messageHeader.setIcon(IconFactory.loadIconByConfig("defaultQQIcon"));
+				messageHeader.setIcon(IconFactory.loadIconByConfig("readQQIcon"));
 			} else if (channelMsg.isWeibo())
 			{
-				messageHeader.setIcon(IconFactory.loadIconByConfig("defaultWeiboIcon"));
+				messageHeader.setIcon(IconFactory.loadIconByConfig("readWeiboIcon"));
 			} else if (channelMsg.isMail())
 			{
-				messageHeader.setIcon(IconFactory.loadIconByConfig("defaultMailIcon"));
+				messageHeader.setIcon(IconFactory.loadIconByConfig("readMailIcon"));
 			}
 			
 			messageHeader.setForeground(ChannelConstants.LIGHT_TEXT_COLOR);

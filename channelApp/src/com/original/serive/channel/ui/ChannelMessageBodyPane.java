@@ -17,6 +17,8 @@ import java.util.Date;
 import java.util.Vector;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -656,7 +658,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	//中间面板
 	static class Center extends JEditorPane implements  EventConstants
 	{
-		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-65,  25);
+		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-60,  25);
 		EditorKit editorKit = createDefaultEditorKit();
 		HTMLEditorKit	htmlEditorKit = new HTMLEditorKit();		
 		
@@ -680,14 +682,12 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		public void setText(String text)
 		{
 			if(text == null) return;
+			//清除换行符：\r \n <BR>等
+			text = text.replaceAll("\r|\n|\\<BR\\>|\\<br\\>", "").trim();
 			
-			//查找换行符
-			int lineCharIndex = -1;
-			if( (lineCharIndex = text.indexOf('\r')) != -1) {
-				text = text.substring(0,lineCharIndex);
-			}
-			else if((lineCharIndex = text.indexOf('\n')) != -1) {
-				text = text.substring(0,lineCharIndex);
+			Matcher matcher = Pattern.compile("<img.*?>").matcher(text);
+			while(matcher.find()) {
+				text = text.replace(matcher.group(), "[图片]");//不要使用replaceAll
 			}
 			
 			//如果文本的长度超出面板的宽度，则多余的部分会被截断，以“…”代替。
@@ -782,7 +782,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			}
 			else if(e.getSource() == btnReply) {//回复
 				String replyContent = getReplyContent().trim();
-				if(!ChannelUtil.isEmpty(replyContent)) //检查回复内容是否为空
+				if(!ChannelUtil.isEmpty(replyContent, true)) //检查回复内容是否为空
 				{
 					//首先开闭回复
 					body.doQuickReply(false);
@@ -801,8 +801,8 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					//邮件单独处理：
 					if(newMsg.isMail()) {
 						newMsg.setSubject("Re：" + body.iMsg.getSubject());
-						newMsg.setBody(replyContent + Utilies.getMailSeparatorFlags()
-								+ Utilies.parseMail(body.iMsg));
+						newMsg.setBody(replyContent + Utilies.getSeparatorFlags()
+								+ Utilies.parseMail(body.iMsg, false));
 					}
 					
 					try {

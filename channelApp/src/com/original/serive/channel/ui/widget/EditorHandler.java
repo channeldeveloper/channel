@@ -25,6 +25,7 @@ import javax.swing.text.html.HTMLEditorKit;
 import org.apache.commons.lang.StringEscapeUtils;
 
 import com.original.serive.channel.util.ChannelUtil;
+import com.original.service.channel.Utilies;
 
 /**
  * 文本编辑器通用处理类，如插入图片、表情等等。
@@ -267,16 +268,20 @@ public class EditorHandler {
 	{
 		if (text.contains("<html>")) {
 			text = text.replaceAll("\r?\n *", "\r\n");
-            text = text.substring(text.indexOf("<body>")+8, text.indexOf("\r\n</body>"));
+            text = text.substring(text.indexOf("<body>")+8, text.indexOf("</body>"));
             String start = "<p style=\"margin-top: 0\">\r\n";
             String end = "\r\n</p>";
             text = text.replaceAll(start, "").replaceAll(end, "");
             
+            //去掉字体属性
             start = "<font.*?>";
             end = "</font>";
             text = text.replaceAll(start, "").replaceAll(end, "");
-            
             text = text.replaceAll("<b>|</b>|<u>|</u>|<i>|</i>", "");
+            
+            //取消换行符和div
+            text = text.replaceAll("\r|\n|<div.*?>|</div>", "");
+            text = text.replaceAll("<br>|<br/>", "\n");
             
             //最后转换一下中文编码：
             text = StringEscapeUtils.unescapeHtml(text);

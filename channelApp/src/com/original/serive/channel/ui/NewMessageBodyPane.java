@@ -51,6 +51,7 @@ import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.Constants.CHANNEL;
+import com.original.service.channel.Utilies;
 import com.original.service.channel.core.ChannelService;
 import com.original.widget.OTextField;
 
@@ -101,7 +102,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			child = newChild(channel);
 			
 			if(child != null) {
-				child.newMsg = newMsg;
+				child.setMessage(newMsg);
 				child.channel = channel;
 				((CardLayout)parentLayout).show(this, channel.name());
 			}
@@ -206,8 +207,12 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	 */
 	public void setMessage(ChannelMessage msg)
 	{
-		if(isParent) {
-			this.newMsg = msg;
+		this.newMsg = msg;
+		if (!isParent && msg != null) {
+			center.setCC(msg.getCC());
+			center.setSubject(msg.getSubject());
+			center.setText(msg.getBody());
+			center.setAttachments(msg.getAttachments());
 		}
 	}
 	
@@ -216,6 +221,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		// TODO 自动生成的方法存根
 		if (newMsg == null) {
 			newMsg = new ChannelMessage();
+			newMsg.setAction(Constants.ACTION_NEW);
 			switch (channel) {
 			case MAIL:
 				newMsg.setClazz(ChannelMessage.MAIL);
@@ -249,22 +255,17 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	 * @return
 	 */
 	public ChannelMessage editMessage() {		
-		ChannelMessage msg = (newMsg = getChannelMessage()).clone();
+		ChannelMessage msg = (newMsg = getChannelMessage()).simplyClone();
 		
-		msg.setId(null); //注意，这里是关键
-		msg.setSubject(null);
-		msg.setBody(null);
-		msg.setType(ChannelMessage.TYPE_SEND);
+		msg.setType(ChannelMessage.TYPE_SEND);//强制设为发送类型
 		msg.setSentDate(new Date());
 		msg.setReceivedDate(msg.getSentDate());//设置和发送时间一样
-		msg.setExtensions(null);
-		msg.setFlags(null);
 		
 		if (newMsg.isWeibo()) {
-			msg.setBody(center.getText(true));
+			msg.setBody(center.getNewAddedText(true));
 			
 		} else if (newMsg.isQQ()) {
-			msg.setBody(center.getText(true));
+			msg.setBody(center.getNewAddedText(true));
 
 		} else if (newMsg.isMail()) {
 			msg.setSubject(center.getSubject());// 主题
@@ -289,12 +290,12 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 					exts = new HashMap<String, String>();
 				}
 				exts.put(Constants.QQ_FONT_STYLE, fs.toJSONString());
+				msg.setExtensions(exts);
 			} catch (JSONException ex) {
 				ex.printStackTrace();
 			}
 		}
 		
-		center.clearAll();//返回前，清空文本
 		return msg;
 	}
 	
@@ -342,6 +343,25 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			return true;
 		}
 		return false;
+	}
+	
+	//返回上一面板，即历史面板
+	private void returnToHistory() {
+		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+		if (newMsg != null && newMsg.getMessageID() != null) {
+			if (newMsg.getAction() == Constants.ACTION_REPLY
+					|| newMsg.getAction() == Constants.ACTION_REPOST) {
+				desktop.removeShowComp(PREFIX_SHOWANDNEW + newMsg.getContactName());
+				
+				//下面两种情况，只有一种可能：
+				desktop.removeShowComp(PREFIX_SHOW + newMsg.getContactName());
+				desktop.removeShowComp(PREFIX_SHOWALL + newMsg.getContactName());
+			} else {
+				desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName());
+			}
+		} else {
+			desktop.removeShowComp(PREFIX_NEW);
+		}
 	}
 
 	//顶部功能按钮面板
@@ -437,13 +457,15 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 								if (e.getActionCommand() == POST) {
 									cs.put(Constants.ACTION_REPLY, sendMsg); //回复
 									
+									//添加消息
 									ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 									desktop.addMessage(sendMsg);
 								} else if (e.getActionCommand() == SAVE_TO_DRAFT) {
 									cs.put(Constants.ACTION_PUT_DRAFT, sendMsg); //存草稿
 								}
 								
-								returnToHistory();
+								center.clearAll(); //清空所有文本
+								returnToHistory();//同时返回上一面板
 							} catch (Exception ex) {
 								ChannelUtil.showMessageDialog(NewMessageBodyPane.this, "错误", ex);
 							}
@@ -473,16 +495,6 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		}
 	}
 	
-	//返回上一面板，即历史面板
-	private void returnToHistory() {
-		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
-		if (newMsg != null && newMsg.getMessageID() != null) {
-			desktop.removeShowComp(PREFIX_NEW + newMsg.getContactName());
-		} else {
-			desktop.removeShowComp(PREFIX_NEW);
-		}
-	}
-	
 	//中间编辑面板
 	public class Center extends JPanel implements ActionListener, FocusListener, EventConstants
 	{
@@ -505,7 +517,10 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 								IconFactory.loadIconByConfig("imageDisabledIcon"), null)), //图片
 				btnFile = (JButton) ChannelUtil.createAbstractButton(
 						new AbstractButtonItem(null, ADD_FILE, IconFactory.loadIconByConfig("fileIcon"), null, 
-								IconFactory.loadIconByConfig("fileDisabledIcon"), null));//附件
+								IconFactory.loadIconByConfig("fileDisabledIcon"), null)),//附件
+				btnDebug =  (JButton) ChannelUtil.createAbstractButton(
+						new AbstractButtonItem(null, DEBUG, IconFactory.loadIconByConfig("debugIcon"), null, 
+								IconFactory.loadIconByConfig("debugDisabledIcon"), null));//调试
 		
 		//提示控件
 		private ToolTip toolTip = new ToolTip();
@@ -543,9 +558,11 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			control.add(btnFont); //字体
 			control.add(btnImage);//图像
 			control.add(btnFile);//附件
+//			control.add(btnDebug);//调试
 			btnFont.addActionListener(this);
 			btnImage.addActionListener(this);
 			btnFile.addActionListener(this);
+//			btnDebug.addActionListener(this);
 			layoutMgr.addComToModel(control,1,1,GridBagConstraints.HORIZONTAL);
 			layoutMgr.newLine();
 			
@@ -637,6 +654,21 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			String text = content.getText();
 			return isPlain ? handler.parseHTML(text) : text;
 		}
+		public void setText(String text) {
+			content.setText(text);
+			content.setCaretPosition(0);
+		}
+		
+		/**
+		 * 获取新增的内容，用于回复或转发中新追加的内容
+		 * @param isPlain
+		 * @return
+		 */
+		public String getNewAddedText(boolean isPlain) {
+			String text = content.getText();
+			text = Utilies.getNewAddedBody(text);
+			return isPlain ? handler.parseHTML(text) : text;
+		}
 		
 		/**
 		 * 清除content中的文本，并同时恢复默认样式等
@@ -672,15 +704,30 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		public String getSubject() {
 			return txtSubject.getText();
 		}
+		public void setSubject(String subject) {
+			txtSubject.setText(subject);
+			if(subject != null && !subject.isEmpty()) {
+				setVisible(1, true);//显示主题行
+			}
+		}
 		
 		/**  获取抄送地址 */
 		public String getCC() {
 			return txtCC.getText();
 		}
+		public void setCC(String cc) {
+			txtCC.setText(cc);
+			if(cc != null && !cc.isEmpty()) {
+				setVisible(0, true);//显示抄送行
+			}
+		}
 		
 		/** 获取附件列表 */
 		public List<Attachment> getAttachments() {
 			return fileAttacher.convertToAttachments();
+		}
+		public void setAttachments(List<Attachment> attachments) {
+			fileAttacher.setAttachments(attachments);
 		}
 
 		public void actionPerformed(ActionEvent e)
@@ -699,6 +746,9 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			}
 			else if(ADD_FILE == e.getActionCommand()) {
 				ChannelUtil.showCustomedDialog(btnFile, "添加附件", true, fileAttacher);
+			}
+			else if(DEBUG == e.getActionCommand()) {
+				System.out.println(content.getText());
 			}
 		}
 

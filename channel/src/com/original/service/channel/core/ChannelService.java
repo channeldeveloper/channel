@@ -612,9 +612,12 @@ public final class ChannelService extends AbstractService {
 					if(msg.getToAddr().equals(cha.getAccount().getUser()))
 						return;
 					
-					//2、快速回复，由于发送后，收取不到该消息，故统一需要保存：
+					//2、快速回复，目前设定微博不需要保存，其他都保存：
 					if(action == Constants.ACTION_QUICK_REPLY)
 					{
+						if (msg.isWeibo()) {
+							return;
+						}
 						msg.setType(ChannelMessage.TYPE_SEND);//强制转换类型
 						msgManager.save(msg);
 					}

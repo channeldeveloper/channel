@@ -67,11 +67,14 @@ public class ImagePane extends JPanel implements ChannelConstants
 				
 		Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
 		
+		int width = getWidth(), height = getHeight();
 		if (background != null) {
-			g2d.drawImage(background, 0, 0, this);
+			int imgWidth = background.getWidth(),
+					imgHeight = background.getHeight();
+			
+			g2d.drawImage(background, (width-imgWidth)/2, (height-imgHeight)/2, this);
 		}
 		else {
-			int width = getWidth(), height = getHeight();
 			
 			int fontWidth = g2d.getFontMetrics().stringWidth(initTips),
 					fontHeight = g2d.getFont().getSize();

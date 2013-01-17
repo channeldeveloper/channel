@@ -124,12 +124,14 @@ public interface Constants {
 	public static final String ACTION_SEND = "send";
 	
 
-	public static final String ACTION_REPLY = "reply";
-	public static final String ACTION_QUICK_REPLY = "quick reply";
+	public static final String ACTION_REPLY = "reply";//回复
+	public static final String ACTION_QUICK_REPLY = "quick reply";//快速回复
 	public static final String ACTION_FORWARD = "forward";
 	public static final String ACTION_PUT_DRAFT="Draft";
 	
-	public static final String ACTION_POST = "post";
+	public static final String ACTION_NEW = "new";//新建
+	public static final String ACTION_POST = "post";//发送
+	public static final String ACTION_REPOST = "repost";//转发
 	public static final String ACTION_COMMENT = "comment";
 	
 	public static final String ACTION_CHAT = "chat";

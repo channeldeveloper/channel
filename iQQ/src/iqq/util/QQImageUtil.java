@@ -134,12 +134,14 @@ public class QQImageUtil {
             if (element.getName().equals(HTML.Tag.IMG.toString())) {
                 isExistFace = true;
                 try {
-                    String name = element.getAttributes().getAttribute(HTML.Attribute.NAME).toString();
+                	Object attribute = element.getAttributes().getAttribute(HTML.Attribute.NAME);
+                	if(attribute != null) {
+                    String name = attribute.toString();
                     //String src = element.getAttributes().getAttribute(HTML.Attribute.SRC).toString();
 
                     int offset = element.getStartOffset();
                     htmlDoc.replace(offset, element.getEndOffset() - offset, "~face:" + name + "~", null);
-
+                	}
                 } catch (BadLocationException ex) {
                     Logger.getLogger(QQImageUtil.class.getName()).log(Level.SEVERE, null, ex);
                 }

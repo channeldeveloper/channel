@@ -23,6 +23,8 @@ import javax.swing.event.EventListenerList;
 import org.apache.log4j.Logger;
 
 import weibo4j.model.WeiboException;
+import weibo4j.org.json.JSONException;
+import weibo4j.org.json.JSONObject;
 
 import com.original.service.channel.AbstractService;
 import com.original.service.channel.Account;
@@ -111,7 +113,14 @@ public class WeiboService extends AbstractService {
 		try {
 			weibo4j.Account wa = new weibo4j.Account();
 			wa.setToken(token);
-			wa.getUid();
+			JSONObject json = wa.getUid();
+			if(json != null) {
+				Account acc =account.getAccount();
+				try {
+					acc.setUserId(json.getString("uid"));
+				} catch (JSONException e) {
+				}
+			}
 			//收集表情，注意放在线程中。
 			WeiboParser.collectionEmotions(token);
 		}

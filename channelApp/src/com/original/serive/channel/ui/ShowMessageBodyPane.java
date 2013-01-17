@@ -25,6 +25,7 @@ import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelHyperlinkListener;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
 import com.original.service.channel.Utilies;
 import com.original.service.channel.protocols.im.iqq.QQParser;
 import com.original.service.channel.protocols.sns.weibo.WeiboParser;
@@ -88,7 +89,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 				title.setText(msg.getSubject());
 				//对于邮件类型，再添加一些其他按钮
 				addControlItems(false, 
-						new AbstractButtonItem("转发", POST, null));
+						new AbstractButtonItem("转发", REPOST, null));
 //				addControlItems(true, 
 //						new AbstractButtonItem("设置为垃圾邮件", PUT_INTO_TRASH, null));
 				
@@ -158,14 +159,59 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
-		if(DELETE == e.getActionCommand()) {			
-			if(origin != null) {
+		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+		if (DELETE == e.getActionCommand()) {// 删除
+			if (origin != null) {
 				origin.doDelete();
 			}
-			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
-			desktop.removeShowComp(PREFIX_SHOW + newMsg.getContactAddr() );
+			desktop.removeShowComp(PREFIX_SHOW + newMsg.getContactAddr());
+		} else if (REPLY == e.getActionCommand()) {// 回复
+			ChannelMessage msg = editMessage(REPLY);
+			msg.setAction(Constants.ACTION_REPLY);
+
+			ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(false));
+			cmp.newMessage(msg);
+			desktop.addOtherShowComp(PREFIX_SHOWANDNEW + msg.getContactName(), cmp);
+
+		} else if (REPOST == e.getActionCommand()) { // 转发
+			ChannelMessage msg = editMessage(REPOST);
+			msg.setAction(Constants.ACTION_REPOST);
+
+			ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(true));
+			cmp.newMessage(msg);
+			desktop.addOtherShowComp(PREFIX_SHOWANDNEW + msg.getContactName(), cmp);
 		}
 		
+	}
+	
+	//编辑回复或转发的消息
+	private ChannelMessage editMessage(String action) {
+		ChannelMessage msg = null;
+		if(this.newMsg != null) {
+			msg = this.newMsg.clone();
+			
+			if(action == REPOST) {
+				msg.setFromAddr(null); //转发时，无法确定收件人，由用户自己输入。
+			}
+			
+			if (msg.isMail()) {// 邮件
+				if (action == REPLY) {
+					msg.setSubject("Re：" + msg.getSubject());
+				} else if (action == REPOST) {
+					msg.setSubject("转发：" + msg.getSubject());
+				}
+
+				msg.setBody(Utilies.getMailReplyArea()
+						+ Utilies.getSeparatorFlags()
+						+ Utilies.getBody(content.getText()));
+				
+			} else if (msg.isWeibo() || msg.isQQ()) { // 微博 或 QQ
+				msg.setBody(Utilies.getMailReplyArea()
+						+ Utilies.getSeparatorFlags()
+						+ Utilies.getBody(content.getText()));
+			}
+		}
+		return msg;
 	}
 	
 	/* --------------------- 下面都是由ChannelMessage来处理消息内容 ---------------------*/

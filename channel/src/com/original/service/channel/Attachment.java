@@ -38,6 +38,9 @@ public class Attachment {
 	@Transient
 	private String filePath;//Use to send email from  local file.
 	private String contentType;//attachment inline
+	
+	public static final String INLINE = "inline", //内嵌图片
+			ATTACHMEMNT = "attachment";//附件
 	 
 	 /**
 	 * @return the contentType

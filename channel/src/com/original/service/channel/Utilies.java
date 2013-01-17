@@ -12,11 +12,12 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.original.service.channel.protocols.email.model.EMail;
 import com.original.service.channel.protocols.email.model.EMailAttachment;
 import com.original.service.channel.protocols.email.model.EMailParser;
-import com.original.service.channel.protocols.email.services.MailParseUtil;
 
 /**
  * 渠道的工具类。
@@ -237,7 +238,49 @@ public class Utilies {
 	}
 	
 	public static String parseMail(ChannelMessage msg) {
-		return parseMail(channel2Email(msg));
+		return parseMail(msg, true);
+	}
+	
+	public static String parseMail(ChannelMessage msg, boolean addHTMLFlag) {
+		String content = parseMail(channel2Email(msg));
+		return addHTMLFlag ? addHTMLFlag(content) : content;
+	}
+	
+	public static String addHTMLFlag(String body) {
+		StringBuffer html = new StringBuffer("<html><body>");
+		html.append(body);
+		html.append("</body></html>");
+		return html.toString();
+	}
+	
+	public static String getBody(String html) {
+		if (html == null || html.isEmpty())
+			return html;
+
+		int index0 = html.indexOf("<body>"), index1 = html.indexOf("</body>");
+
+		if (index0 != -1) {
+			if (index1 == -1)
+				index1 = html.length();
+			html = html.substring(index0 + 6, index1);
+		}
+		return html;
+	}
+	
+	public static String getNewAddedBody(String html) {
+		if (html == null || html.isEmpty())
+			return html;
+
+		Matcher matcher = Pattern.compile(getSeparatorRegex()).matcher(html);
+		if (matcher.find()) {
+			html = html.substring(0, matcher.start());
+		}
+		if (html.indexOf("</body>") == -1) // 未正确关闭
+		{
+			html += "\r\n</body>\r\n</html>";
+		}
+		return html;
+		
 	}
 
 	/**
@@ -247,7 +290,7 @@ public class Utilies {
 	public static String parseMail(EMail email) {
 		if (email != null) {
 			//这部分后面会被接内容时会删除
-			StringBuffer header = new StringBuffer("<html><head></head><body><div style=\"font-size: 10px;color:#557fc4;background:#efefef;padding:8px;\">");
+			StringBuffer header = new StringBuffer("<div style=\"font-size: 10px;color:#557fc4;background:#efefef;padding:8px;\">");
 			header.append("发件人：").append(email.getAddresser()).append("<br>");
 			header.append("收件人：").append(email.getReceiver()).append("<br>");
 			if(email.getCc() != null) {
@@ -273,23 +316,34 @@ public class Utilies {
 			if (content.startsWith("<![CDDATA[")) {
 				content = content.substring(10, content.length() - 2);
 			}
-			content = header.append("</div><div style=\"padding:10px 0 10px 0;\">").append(content).toString();
-			content = MailParseUtil.parseContent(content);
+			content = header.append("</div><div style=\"padding:10px 0 10px 0;\">").append(content).append("</div>").toString();
 			return content;
 		}
 		
 		return null;
 	}
 	
-	/**
-	 * 回复邮件(新邮件)和原始邮件的分割线
-	 * @return
-	 */
-	public static String getMailSeparatorFlags() {
+	public static String getSeparatorFlags() {
 		return "<div style=\"font-size: 10px;font-family: Arial Narrow;padding:50px 0 0 0;\">" +
-				"------------------ 原始邮件 ------------------</div>";
+				"-------------------原始内容-------------------</div>";
 	}
 	
+	public static String getSeparatorRegex() {
+		//<div style="padding-left: 0; padding-right: 0; padding-bottom: 0; padding-top: 50px">
+//	      -------------------&#21407;&#22987;&#20869;&#23481;-------------------
+//	      </div>
+		return "<div style=\".*?\">(\r?\n) *-------------------" +
+				"&#21407;&#22987;&#20869;&#23481;-------------------(\r?\n) *</div>";
+		
+		//&#21407;&#22987;&#20869;&#23481; = 原始内容
+	}
 	
-
+	/**
+	 * 回复或转发邮件时的新内容区域，位于getMailSeparatorFlags()上面。用于添加附加内容！
+	 * @return
+	 */
+	public static String getMailReplyArea() {
+		return "<div><br></div><div><br></div>";
+	}
+	
 }

@@ -23,6 +23,7 @@ import com.original.service.channel.AbstractService;
 import com.original.service.channel.Account;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
 import com.original.service.channel.Constants.CHANNEL;
 import com.original.service.channel.Service;
 import com.original.service.channel.core.ChannelException;
@@ -203,9 +204,10 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 
 	@Override
 	public void put(String action, ChannelMessage msg) throws Exception{
-		//QQ目前不需要附件等这些信息
-		msg.setExtensions(null);
-		msg.setAttachments(null);
+//		if(action == Constants.ACTION_QUICK_REPLY) { //QQ目前不需要附件等这些信息
+//			msg.setExtensions(null);
+//			msg.setAttachments(null);
+//		}
 		
 		sender.put(action, msg);
 	}

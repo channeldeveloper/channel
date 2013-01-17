@@ -10,7 +10,9 @@ public interface EventConstants
 	/*  一些常用功能的前缀 */
 	String PREFIX_SHOW = "SHOW_",
 			PREFIX_SHOWALL = "SHOWALL_",
-			PREFIX_NEW = "NEW_";
+			PREFIX_NEW = "NEW_",
+			PREFIX_SHOWANDNEW = "SHOW_NEW_";
+	
 	
 	/* 通用功能 */
 	String QUICK_REPLY = "quick reply"; //快速回复
@@ -19,6 +21,7 @@ public interface EventConstants
 	String DELETE = "delete"; //删除
 	String CANCEL = "cancel";//取消
 	String POST = "post";//发送
+	String REPOST = "repost";//转发
 	
 	/* 邮件专用功能 */
 	String SHOW_COMPLETE = "show complete";//查看完整
@@ -71,7 +74,8 @@ public interface EventConstants
 	/* 文本编辑功能，如添加图片、附件，设置字体等等 */
 	String SET_FONT = "set font",
 			ADD_IMAGE = "add image",
-			ADD_FILE = "add file";
+			ADD_FILE = "add file",
+	DEBUG = "debug";
 	
 	/*  选择联系人 */
 	String SELECT_LINKER = "select linker";

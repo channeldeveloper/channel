@@ -28,6 +28,7 @@ import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.Constants;
 
 /**
  * 消息Channel浮窗，用于点击联系人头像时，自动浮出消息的快捷通道菜单。点击任意一个菜单，
@@ -181,9 +182,12 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 			popMenu.setVisible(false);
 			focusBounds = null;
 			
-			ChannelMessage newMsg = popMenu.getMessage();
-			if(newMsg != null) {
-				ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(false));
+			ChannelMessage msg = popMenu.getMessage();
+			if(msg != null) {
+				ChannelMessage newMsg = msg.simplyClone();
+				newMsg.setAction(Constants.ACTION_NEW);
+				
+				ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(false));				
 				cmp.newMessage(newMsg); 
 				ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 				desktop.addOtherShowComp(PREFIX_NEW+newMsg.getContactName(),  cmp);

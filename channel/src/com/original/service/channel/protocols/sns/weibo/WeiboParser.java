@@ -28,6 +28,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import weibo4j.http.ImageItem;
 import weibo4j.model.Emotion;
 import weibo4j.model.WeiboException;
@@ -80,6 +82,7 @@ public class WeiboParser implements Constants
 	 */
 	private static String parse(String text) {
 		//处理表情
+		text = StringEscapeUtils.unescapeHtml(text);
 		text =parseEmotions(text);
 		//处理@
 		text = text.replaceAll(
@@ -348,7 +351,7 @@ public class WeiboParser implements Constants
 			}
 			
 			if (addAt) {
-				imgItem.setText(parseUTF8("@" + msg.getToAddr() + "：" + content));
+				imgItem.setText(parseUTF8("//@" + msg.getToAddr() + ": " + content));
 			} else {
 				imgItem.setText(parseUTF8(content));
 			}
