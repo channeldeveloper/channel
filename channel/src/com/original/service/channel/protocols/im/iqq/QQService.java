@@ -9,6 +9,8 @@ package com.original.service.channel.protocols.im.iqq;
 
 import iqq.comm.Auth;
 import iqq.comm.Auth.AuthInfo;
+import iqq.model.Category;
+import iqq.model.Member;
 import iqq.service.CategoryService;
 import iqq.service.LoginService;
 import iqq.service.MemberService;
@@ -23,13 +25,11 @@ import com.original.service.channel.AbstractService;
 import com.original.service.channel.Account;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
-import com.original.service.channel.Constants;
 import com.original.service.channel.Constants.CHANNEL;
 import com.original.service.channel.Service;
 import com.original.service.channel.core.ChannelException;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
-import com.original.service.people.People;
 
 /**
  *  iQQ 服务类
@@ -99,17 +99,17 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 //		return null;
 //	}
 
-	@Override
-	public void put(String action, List<ChannelMessage> msg) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void post(String action, List<ChannelMessage> msg) {
-		// TODO Auto-generated method stub
-
-	}
+//	@Override
+//	public void put(String action, List<ChannelMessage> msg) {
+//		// TODO Auto-generated method stub
+//
+//	}
+//
+//	@Override
+//	public void post(String action, List<ChannelMessage> msg) {
+//		// TODO Auto-generated method stub
+//
+//	}
 
 	@Override
 	public void stop() {
@@ -225,8 +225,33 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 	}
 
 	@Override
-	public List<People> getContacts() {
+	public List<Account> getContacts() {
 		// TODO Auto-generated method stub
+		try {
+			//1 profile
+			Member profile = memberService.getMemberInfo(ai, ai.getMember());		
+			//头像
+			profile.setFace(memberService.getFace(ai));
+			//2 friends
+           
+			List<Category> categoryList = categoryService.getFriends(ai);
+			for (Category c : categoryList)
+			{
+				List<Member> ms = c.getMemberList();
+				for (Member m : ms)
+				{
+					//头像
+					m.setFace(memberService.getFace(ai));
+				}
+			}
+			//Pending 
+			//To Service Interface Account(实现接口还是转换）
+			
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return null;
 	}
 

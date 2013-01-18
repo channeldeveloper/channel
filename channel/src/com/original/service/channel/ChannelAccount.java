@@ -7,22 +7,14 @@
 package com.original.service.channel;
 
 import java.io.Serializable;
-import java.util.Iterator;
-import java.util.List;
 
 import org.bson.types.ObjectId;
 
-import com.google.code.morphia.Datastore;
-import com.google.code.morphia.Morphia;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Reference;
-import com.google.code.morphia.query.Query;
 import com.google.gson.Gson;
-import com.mongodb.DB;
-import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
 
 /**
  * 1. 我的渠道账号。即渠道和个人账号的对应表，这个数据要到库内。 目前定义，一个渠道的账号，内存实例化一个渠道。即

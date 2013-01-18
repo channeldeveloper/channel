@@ -9,7 +9,6 @@ import java.util.List;
 import org.bson.types.ObjectId;
 
 import com.original.service.channel.event.MessageListner;
-import com.original.service.people.People;
 
 /**
  * @author Song Xueyong
@@ -31,9 +30,9 @@ public interface Service {
 	
 //	public abstract List<ChannelMessage> get(String action, String query);
 
-	public abstract void put(String action, List<ChannelMessage> msg);
+//	public abstract void put(String action, List<ChannelMessage> msg);
 	
-	public abstract void post(String action, List<ChannelMessage> msg);
+//	public abstract void post(String action, List<ChannelMessage> msg);
 	
 	public abstract void put(String action, ChannelMessage msg) throws Exception;
 	
@@ -117,11 +116,19 @@ public interface Service {
      */
     public ChannelAccount getChannelAccount();
     
+//    /**
+//     * 获得渠道的联系人列表。
+//     * @return
+//     */
+//    @Deprecated
+//    public List<People> getContacts();
+    
     /**
      * 获得渠道的联系人列表。
      * @return
-     */
-    public List<People> getContacts();
+     */    
+    public List<Account> getContacts();
+    
 	
 
 }

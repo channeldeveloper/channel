@@ -6,7 +6,6 @@ import java.util.List;
 import org.bson.types.ObjectId;
 
 import com.original.service.channel.event.MessageListner;
-import com.original.service.people.People;
 
 /**
  * 抽象实现，避免修改接口带来集成实现不同。
@@ -33,17 +32,17 @@ public abstract class AbstractService implements Service{
 //		return null;
 //	}
 
-	@Override
-	public void put(String action, List<ChannelMessage> msg) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void post(String action, List<ChannelMessage> msg) {
-		// TODO Auto-generated method stub
-		
-	}
+//	@Override
+//	public void put(String action, List<ChannelMessage> msg) {
+//		// TODO Auto-generated method stub
+//		
+//	}
+//
+//	@Override
+//	public void post(String action, List<ChannelMessage> msg) {
+//		// TODO Auto-generated method stub
+//		
+//	}
 
 	@Override
 	public void put(String action, ChannelMessage msg) throws Exception {
@@ -93,11 +92,11 @@ public abstract class AbstractService implements Service{
 		return null;
 	}
 
-	@Override
-	public List<People> getContacts() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public List<People> getContacts() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 
 	@Override
 	public void deleteMessage(ObjectId id) {
@@ -135,6 +134,12 @@ public abstract class AbstractService implements Service{
 			HashMap<String, Object> newAtts) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public List<Account> getContacts() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

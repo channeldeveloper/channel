@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -27,6 +29,7 @@ import com.google.code.morphia.query.Query;
 import com.google.code.morphia.query.UpdateOperations;
 import com.mongodb.Mongo;
 import com.original.service.channel.AbstractService;
+import com.original.service.channel.Account;
 import com.original.service.channel.Attachment;
 import com.original.service.channel.Channel;
 import com.original.service.channel.ChannelAccount;
@@ -77,6 +80,7 @@ public final class ChannelService extends AbstractService {
 	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
 	
 	private static ChannelService singleton;
+	private static ThreadManager threadPool;
 	
 	/**
 	 * 
@@ -345,6 +349,20 @@ public final class ChannelService extends AbstractService {
 	}
 	
 	/**
+	 * @return the peopleManager
+	 */
+	public PeopleManager getPeopleManager() {
+		return peopleManager;
+	}
+
+	/**
+	 * @param peopleManager the peopleManager to set
+	 */
+	public void setPeopleManager(PeopleManager peopleManager) {
+		this.peopleManager = peopleManager;
+	}
+
+	/**
 	 * Pending Use Plug-in register to do this.
 	 * 
 	 * @param ca
@@ -408,22 +426,22 @@ public final class ChannelService extends AbstractService {
 //		return null;
 //	}
 	
-	@Deprecated	
-	@Override
-	public void put(String action, List<ChannelMessage> msg) {
-		
-		// TODO Auto-generated method stub
-		if (msg == null || msg.size() == 0) {
-			return;
-		}
-		for (ChannelMessage m : msg) {
-			ChannelAccount cha = m.getChannelAccount();
-			if (cha != null) {
-				Service sc = serviceMap.get(cha);
-				sc.put(action, msg);
-			}
-		}
-	}
+//	@Deprecated	
+//	@Override
+//	public void put(String action, List<ChannelMessage> msg) {
+//		
+//		// TODO Auto-generated method stub
+//		if (msg == null || msg.size() == 0) {
+//			return;
+//		}
+//		for (ChannelMessage m : msg) {
+//			ChannelAccount cha = m.getChannelAccount();
+//			if (cha != null) {
+//				Service sc = serviceMap.get(cha);
+//				sc.put(action, msg);
+//			}
+//		}
+//	}
 
 	@Override
 	public void stop() {
@@ -452,22 +470,22 @@ public final class ChannelService extends AbstractService {
 		}
 
 	}
-
-	@Override
-	public void post(String action, List<ChannelMessage> msg) {
-		// TODO Auto-generated method stub
-		if (msg == null || msg.size() == 0) {
-			return;
-		}
-		for (ChannelMessage m : msg) {
-			ChannelAccount cha = m.getChannelAccount();
-			if (cha != null) {
-				Service sc = serviceMap.get(cha);
-				sc.post(action, msg);
-			}
-		}
-
-	}
+//
+//	@Override
+//	public void post(String action, List<ChannelMessage> msg) {
+//		// TODO Auto-generated method stub
+//		if (msg == null || msg.size() == 0) {
+//			return;
+//		}
+//		for (ChannelMessage m : msg) {
+//			ChannelAccount cha = m.getChannelAccount();
+//			if (cha != null) {
+//				Service sc = serviceMap.get(cha);
+//				sc.post(action, msg);
+//			}
+//		}
+//
+//	}
 
 	/**
 	 * Inner listener
@@ -606,7 +624,10 @@ public final class ChannelService extends AbstractService {
 					if (msg.getFromAddr() == null) {
 						msg.setFromAddr(cha.getAccount().getUser());
 					}
-					sc.put(action, msg); //下发消息，如果出错，则不保存数据库！
+					PutTask task = new PutTask(sc, action, msg);
+//					sc.put(action, msg); //下发消息，如果出错，则不保存数据库！
+					Future monitor = this.threadPool.submit(task);
+					//Pending. whether or not to deal monitor?
 					
 					//1、自己给自己发(特殊情况)，不保存数据库：
 					if(msg.getToAddr().equals(cha.getAccount().getUser()))
@@ -790,11 +811,7 @@ public final class ChannelService extends AbstractService {
 		return null;
 	}
 
-	@Override
-	public List<People> getContacts() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+
 	
 	// ///////////////////
 	/**
@@ -933,4 +950,66 @@ public final class ChannelService extends AbstractService {
 	}
 	
 	// /////////////////////////////
+	
+	private class PutTask  implements Callable
+	{
+		
+		String action;
+		ChannelMessage msg;
+		Service oneChannel;
+		PutTask(Service oneChannel, String action, ChannelMessage msg)
+		{		
+			this.oneChannel = oneChannel;
+			this.action = action;
+			this.msg = msg;
+		}
+
+		@Override
+		public Object call() {
+			// TODO Auto-generated method stub
+			try{
+				oneChannel.put(action, msg);			
+			}
+			catch(Exception exp)
+			{
+				exp.printStackTrace();
+			}
+			return msg;
+		}
+		
+	}
+	
+	private class MonitorRunable  implements Runnable
+	{
+		Future monitor;
+		MonitorRunable(Future monitor)
+		{	
+			this.monitor = monitor;
+		}
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			while (monitor.isDone())
+			{
+				//fire Event to outer listner, the message deal over.
+				try {
+					Thread.currentThread().join(10000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+		}
+		
+	}
+
+	@Override
+	public List<Account> getContacts() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
 }

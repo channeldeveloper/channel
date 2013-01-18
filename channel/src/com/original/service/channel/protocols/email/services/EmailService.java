@@ -27,14 +27,14 @@ public class EmailService extends AbstractService {
 		return null;
 	}
 
-	@Override
-	public void post(String action, List<ChannelMessage> msg) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void put(String action, List<ChannelMessage> msg) {
-	}
+//	@Override
+//	public void post(String action, List<ChannelMessage> msg) {
+//		// TODO Auto-generated method stub
+//
+//	}
+//
+//	public void put(String action, List<ChannelMessage> msg) {
+//	}
 
 	public void stop() {
 	}

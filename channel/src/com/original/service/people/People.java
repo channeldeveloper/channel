@@ -7,21 +7,14 @@
 package com.original.service.people;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.bson.types.ObjectId;
 
-import com.google.code.morphia.Datastore;
-import com.google.code.morphia.Morphia;
 import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Id;
-import com.google.code.morphia.query.Query;
 import com.google.gson.Gson;
-import com.mongodb.DB;
-import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
 import com.original.service.channel.Account;
 
 /**
@@ -38,6 +31,22 @@ public class People {
 	private String name;	
 	// 代表联系人头像(不同渠道可能使用不同的名称，这里选择1个或者自定义一个）
 	private ObjectId avatar;
+	//缺省的设置，是一个组合搭配，不是固定的一个
+	private Account defaultAccount;
+	/**
+	 * @return the defaultAccount
+	 */
+	public Account getDefaultAccount() {
+		return defaultAccount;
+	}
+
+	/**
+	 * @param defaultAccount the defaultAccount to set
+	 */
+	public void setDefaultAccount(Account defaultAccount) {
+		this.defaultAccount = defaultAccount;
+	}
+
 	//对应的多个渠道
 	@Embedded
 	private List<Account> accounts;

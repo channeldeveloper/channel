@@ -78,6 +78,20 @@ public class ChannelMessage implements Cloneable, Constants{
 	// 内容信息 MessageBody
 	// 主题，邮件主题，微博主题
 	private String subject;
+	/**
+	 * @return the peopleId
+	 */
+	public String getPeopleId() {
+		return peopleId;
+	}
+
+	/**
+	 * @param peopleId the peopleId to set
+	 */
+	public void setPeopleId(String peopleId) {
+		this.peopleId = peopleId;
+	}
+
 	// plaintext, html,xml,json
 	private String contentType;
 	//内容
@@ -88,6 +102,8 @@ public class ChannelMessage implements Cloneable, Constants{
 	private String clazz;
 	
 	private transient String action;
+	//联系人的信息，获取地址(fromAddr 或者发送）从PeopleManager获取Id
+	private String peopleId;
 	
 	//常量
 	public static final String EXT_EMAIL_CC = "CC";

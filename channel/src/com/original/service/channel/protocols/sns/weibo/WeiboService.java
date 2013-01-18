@@ -22,6 +22,9 @@ import javax.swing.event.EventListenerList;
 
 import org.apache.log4j.Logger;
 
+import weibo4j.Friendships;
+import weibo4j.model.User;
+import weibo4j.model.UserWapper;
 import weibo4j.model.WeiboException;
 import weibo4j.org.json.JSONException;
 import weibo4j.org.json.JSONObject;
@@ -36,7 +39,6 @@ import com.original.service.channel.Service;
 import com.original.service.channel.core.ChannelException;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
-import com.original.service.people.People;
 import com.original.util.log.OriLog;
 
 /**
@@ -196,17 +198,17 @@ public class WeiboService extends AbstractService {
 //		return null;
 //	}
 
-	@Override
-	public void put(String action, List<ChannelMessage> msg) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void post(String action, List<ChannelMessage> msg) {
-		// TODO Auto-generated method stub
-
-	}
+//	@Override
+//	public void put(String action, List<ChannelMessage> msg) {
+//		// TODO Auto-generated method stub
+//
+//	}
+//
+//	@Override
+//	public void post(String action, List<ChannelMessage> msg) {
+//		// TODO Auto-generated method stub
+//
+//	}
 	
 	/**
 	 * 下发一条微博，注意区别发送(回复)类型：快速回复是纯文本，而回复是HTML。
@@ -323,9 +325,27 @@ public class WeiboService extends AbstractService {
 		return null;
 	}
 
+    /**
+     * 获得渠道的联系人列表。
+     * @return
+     */    
 	@Override
-	public List<People> getContacts() {
-		// TODO Auto-generated method stub
+	public List<Account> getContacts() {
+
+		//1 Pending Song How to get Self Profile
+		User profile = null;
+		
+		//2 Followed
+		try {
+			UserWapper userWapper = fm.getFriendsByID(profile.getId());
+			List<User>  users = userWapper.getUsers();
+		} catch (WeiboException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//Pending 
+		//3 To Service Interface Account(实现接口还是转换）
 		return null;
 	}
+	private Friendships fm = new Friendships();
 }
