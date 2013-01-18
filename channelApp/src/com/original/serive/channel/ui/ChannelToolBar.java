@@ -13,8 +13,6 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -144,7 +142,7 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 	 * @param newValue 新值
 	 */
 	private void fireMessageChange(String changePropertyName, Object oldValue, Object newValue) {
-		if(newValue != null && oldValue != null && !newValue.equals(oldValue)) {
+		if(newValue != null && !newValue.equals(oldValue)) {
 			if (changePropertyName == TYPE_CHANGE_PROPERTY) {
 				selectedType = (String) newValue;
 			} else if (changePropertyName == STATUS_CHANGE_PROPERTY) {
@@ -339,13 +337,13 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		//搜索文本框的一些响应事件
 		private void initEventListener() {
 			// 回车事件
-			addKeyListener(new KeyAdapter() {
-				public void keyReleased(KeyEvent e) {
-					if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-						doClick();
-					}
-				}
-			});
+//			addKeyListener(new KeyAdapter() {
+//				public void keyReleased(KeyEvent e) {
+//					if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+//						doClick();
+//					}
+//				}
+//			});
 
 			// 鼠标移动事件
 			addMouseMotionListener(new MouseMotionAdapter() {
@@ -413,7 +411,11 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		
 		//搜索功能
 		protected void doClick() {
-
+			String text = this.getText();
+			if (!ChannelUtil.isEmpty(text, true)) {
+				this.setText(null); // 必须清空文本
+				fireMessageChange(SEARCHTEXT_CHANGE_PROPERTY, null, text);
+			}
 		}
 	}
 	

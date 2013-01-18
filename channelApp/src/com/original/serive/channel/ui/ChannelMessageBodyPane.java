@@ -252,6 +252,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	 */
 	private void notifyToChangeMessage(ChannelMessage msg, boolean toFirst)
 	{
+		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 		if (toFirst) { // 如果只显示一条，即顶部显示
 			messageBodyList.remove(messageBodyList.size() - 1);
 			if (messageBodyList.isEmpty()) {
@@ -288,7 +289,6 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			}
 			parent.validate();
 
-			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 			if (this.getComponentCount() == 0) {
 				desktop.removeShowComp(PREFIX_SHOWALL 	+ msg.getContactName());
 			} else {
@@ -313,6 +313,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				}
 			}
 		}
+		desktop.repaint();//刷新桌面
 	}
 	
 	/**
@@ -450,6 +451,24 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			}
 		}
 		
+		//编辑
+		public void doEdit() {
+			ChannelMessage msg = iMsg.clone();
+			
+			ChannelMessagePane cmp = null;
+			if (msg.isRepost()) {// 是转发
+				msg.setAction(Constants.ACTION_REPOST);
+				cmp = new ChannelMessagePane(new NewMessageTopBar(true));
+			} else {// 默认回复
+				msg.setAction(Constants.ACTION_REPLY);
+				cmp = new ChannelMessagePane(new NewMessageTopBar(false));
+			}
+			cmp.newMessage(msg);
+			
+			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+			desktop.addOtherShowComp(PREFIX_SHOWANDNEW + msg.getContactName(), cmp);
+		}
+		
 		//保存
 		public void doSave() {
 			
@@ -493,9 +512,10 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		private JButton btnReply = createCtrlButton("快速回复", QUICK_REPLY),
 				btnSave = createCtrlButton("保存", SAVE),
 				btnDel = createCtrlButton("删除", DELETE),
+				btnEdit = createCtrlButton("编辑", EDIT),
 				btnShowAll = createCtrlButton("完整信息", SHOW_COMPLETE);
 		
-		public Top() { setOpaque(false);btnShowAll.setVisible(false);}
+		public Top() { setOpaque(false); }
 		
 		/**
 		 * 设置消息头部内容，同时显示在标签中
@@ -530,17 +550,13 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			else if (msg.isWeibo())	icon = "Weibo" + icon;
 			else if (msg.isMail())	icon = "Mail" + icon;
 
-			if (statusConstant == STATUS_UNKNOWN) {// 未知状态，则需要解析msg
+			if (statusConstant == STATUS_UNKNOWN) {// 未知状态，则需要解析msg。用于初始添加时。
 				if (msg.hasProcessed()) {
 					statusConstant = STATUS_POST;
 				} else if (msg.hasRead()) {
 					statusConstant = STATUS_READ;
 				} else {
 					statusConstant = STATUS_UNREAD;
-				}
-				
-				if (msg.isSent()) {
-					statusConstant = STATUS_POST;
 				}
 			}
 			
@@ -585,19 +601,44 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 				messageHeader.setBounds(0, 10, dim.width, dim.height);
 				add(messageHeader);
 				
-				if(!msg.isSent()) { //已经回复了，就不再有回复功能
-					btnReply.setBounds(SIZE.width-(60*2+85), 10, 85, 28);
-					add(btnReply);
-				}
-				
-				btnShowAll.setBounds(SIZE.width-(60*2+85), 10, 85, 28);
+				btnReply.setBounds(SIZE.width - (60 * 2 + 85), 10, 85, 28);//1
+				add(btnReply);
+				btnShowAll.setBounds(SIZE.width - (60 * 2 + 85), 10, 85, 28);//2
 				add(btnShowAll);
+				btnEdit.setBounds(SIZE.width - (60 * 2 + 85), 10, 85, 28);//3
+				add(btnEdit);
 				
 				btnSave.setBounds(SIZE.width-60*2, 10, 60, 28);
 				add(btnSave);
 				
 				btnDel.setBounds(SIZE.width-60, 10, 60, 28);
 				add(btnDel);
+				
+				//下面设置一些按钮的可见性：
+				btnEdit.setVisible(false);//1、编辑按钮只有在草稿箱中的信息显示时，才可见
+				
+				if (msg.hasProcessed()) { //2、快速回复和完整信息，不能同时出现
+					btnReply.setVisible(false);
+				} else {
+					btnShowAll.setVisible(false);
+				}
+				
+				if (msg.hasTrashed()) {//3、已在垃圾箱中
+					btnReply.setVisible(false);
+					btnSave.setVisible(false);
+					
+					btnShowAll.setVisible(true);
+					btnShowAll.setBounds(SIZE.width-60-85, 10, 85, 28);
+				}
+				
+				if(msg.hasDrafted()) {//4、已在草稿箱中
+					btnReply.setVisible(false);
+					btnSave.setVisible(false);
+					btnShowAll.setVisible(false);
+					
+					btnEdit.setVisible(true);
+					btnEdit.setBounds(SIZE.width-60*2, 10, 60, 28);
+				}
 			}
 		}
 		
@@ -645,6 +686,9 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			}
 			else if(SAVE == e.getActionCommand())  { //保存
 				body.doSave();
+			}
+			else if(EDIT == e.getActionCommand()) { //编辑
+				body.doEdit();
 			}
 			else if(DELETE == e.getActionCommand()) { //删除
 				body.doDelete();

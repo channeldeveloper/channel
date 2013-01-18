@@ -1,6 +1,7 @@
 package com.original.serive.channel.ui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -8,6 +9,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -106,6 +108,10 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 				parseWeibo(msg);
 			}
 			
+			if (msg.hasProcessed()) {// 已经回复，不再显示回复按钮
+				setControlItemVisible(REPLY, false);
+			}
+			
 			this.newMsg = msg;
 		}
 	}
@@ -130,6 +136,26 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 			new AbstractButtonItem("保存", SAVE, null),
 			new AbstractButtonItem("删除", DELETE, null),
 		});
+	}
+	
+	/**
+	 * 设置控制按钮显示或隐藏
+	 * @param actionCommand 按钮名称
+	 * @param isVisible 是否可见。如果为true，则可见；否则隐藏。
+	 */
+	public void setControlItemVisible(String actionCommand, boolean isVisible)
+	{
+		for(int i=0; i<ctrlGroup.getComponentCount(); i++)
+		{
+			Component comp = ctrlGroup.getComponent(i);
+			if(comp instanceof AbstractButton
+					&& ((AbstractButton) comp).getActionCommand() == actionCommand)
+			{
+				if(comp.isVisible() != isVisible)
+					comp.setVisible(isVisible);
+				return;
+			}
+		}
 	}
 	
 	/**

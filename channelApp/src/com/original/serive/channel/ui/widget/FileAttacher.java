@@ -123,6 +123,7 @@ public class FileAttacher extends JPanel implements ActionListener, EventConstan
 			attachment.setFileName((String) item.getName());
 			attachment.setFilePath((String) item.getId());
 			attachment.setSize(0);// 暂时不设置大小
+			attachment.setContentType(Attachment.ATTACHMEMNT);
 
 			int suffix = attachment.getFileName() == null ? -1 : attachment.getFileName().lastIndexOf(".");
 			attachment.setType(suffix == -1 ? "未知文件" : attachment.getFileName().substring(suffix + 1) + "文件");

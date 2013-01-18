@@ -249,6 +249,19 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		}
 		return null;
 	}
+	
+	/**
+	 * 发送地址是否可编辑。默认回复时是不可编辑；转发时可编辑
+	 * @return
+	 */
+	public boolean isMessageAddrEditable() {
+		NewMessageBodyPane body = isParent ? this : (NewMessageBodyPane)this.getParent();
+		NewMessageTopBar topBar = (NewMessageTopBar) body.getMessageStatusBar();
+		if (topBar != null) {
+			return topBar.isEditable();
+		}
+		return false;
+	}
 
 	/**
 	 * 编辑消息，即收集当前编辑面板的所有消息：包括主体、内容、字体样式等等。
@@ -461,6 +474,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 									ChannelDesktopPane desktop = ChannelGUI.getDesktop();
 									desktop.addMessage(sendMsg);
 								} else if (e.getActionCommand() == SAVE_TO_DRAFT) {
+									sendMsg.setRepost(isMessageAddrEditable());
 									cs.put(Constants.ACTION_PUT_DRAFT, sendMsg); //存草稿
 								}
 								

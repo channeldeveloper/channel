@@ -18,6 +18,7 @@ import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Indexed;
 import com.google.code.morphia.annotations.Reference;
+import com.google.code.morphia.annotations.Transient;
 import com.google.code.morphia.utils.IndexDirection;
 import com.google.gson.Gson;
 import com.original.service.channel.protocols.email.model.EMailParser;
@@ -100,7 +101,7 @@ public class ChannelMessage implements Cloneable, Constants{
 	private List<Attachment> attachments;	
 	//pending 类(type)
 	private String clazz;
-	
+	@Transient
 	private transient String action;
 	//联系人的信息，获取地址(fromAddr 或者发送）从PeopleManager获取Id
 	private String peopleId;
@@ -113,7 +114,7 @@ public class ChannelMessage implements Cloneable, Constants{
 	//控制 0,1
 	public static final String FLAG_REPLYED = "REPLYED";//是否回复了 0未，1是
 	public static final String FLAG_SIGNED  = "SIGNED";	//是否签名  0未，1是
-	public static final String FLAG_SEEN = "SEEN";//是否看过 0未，1是
+	public static final String FLAG_SEEN = "SEEN";//是否看过 0未，1是 -1未知
 	public static final String FLAG_DELETED = "DELETED";//是否删除 0未，1是
 	public static final String FLAG_PROCESSED  = "PROCESSED";	//是否处理  0未，1是（邮件原来的）
 	public static final String FLAG_DONE = "DONE";//是否处理过 0未，1是 （程序的）
@@ -123,6 +124,7 @@ public class ChannelMessage implements Cloneable, Constants{
 	public static final String FLAG_FLAGGED = "FLAGGED";//是否旗标 0未，1是
 	public static final String FLAG_RECENT = "RECENT";//是否最新 0未，1是
 	public static final String FLAG_SAVED = "SAVED";//是否存库了 0未，1是
+	public static final String FLAG_REPOST = "REPOST";//是否是转发(目前用于存草稿时，是回复还是转发) 0或null 回复 1转发
 	
 	/**
 	 * default constructor.
@@ -563,11 +565,10 @@ public class ChannelMessage implements Cloneable, Constants{
 		this.extensions = extensions;
 	}
 	
-	public boolean hasRead() {
+	public boolean hasRead() { //是否已读
 		Integer read = flags == null ? null : flags.get(FLAG_SEEN);
 		return read != null && read.intValue() == 1;
 	}
-
 	public void setRead(boolean read) {
 		if (flags == null)
 			flags = new HashMap<String, Integer>();
@@ -578,19 +579,41 @@ public class ChannelMessage implements Cloneable, Constants{
 		Integer processed = flags == null ? null : flags.get(FLAG_DONE);
 		return processed != null && processed.intValue() == 1;
 	}
-
-	public void setProcessed(boolean processed) {
+	public void setProcessed(boolean processed) { //是否已处理
 		if (flags == null)
 			flags = new HashMap<String, Integer>();
 		flags.put(FLAG_SEEN, new Integer(1));
 		flags.put(FLAG_DONE, processed ? new Integer(1) : new Integer(0));
 	}
 	
-	public void setDrafted(boolean drafted) {
+	public boolean hasDrafted() { //是否在草稿箱中
+		Integer drafted = flags == null ? null : flags.get(FLAG_DRAFT);
+		return drafted != null && drafted.intValue() == 1;
+	}
+	public void setDrafted(boolean drafted) { 
 		if (flags == null)
 			flags = new HashMap<String, Integer>();
-		flags.put(FLAG_SEEN, new Integer(1));
 		flags.put(FLAG_DRAFT, drafted ? new Integer(1) : new Integer(0));
+	}
+	
+	public boolean hasTrashed() { //是否在垃圾箱中
+		Integer trashed = flags == null ? null : flags.get(FLAG_TRASHED);
+		return trashed != null && trashed.intValue() == 1;
+	}
+	public void setTrashed(boolean trashed) {
+		if (flags == null)
+			flags = new HashMap<String, Integer>();
+		flags.put(FLAG_TRASHED, trashed ? new Integer(1) : new Integer(0));
+	}
+	
+	public boolean isRepost() {
+		Integer repost = flags == null ? null : flags.get(FLAG_REPOST);
+		return repost != null && repost.intValue() == 1;
+	}
+	public void setRepost(boolean repost) {
+		if (flags == null)
+			flags = new HashMap<String, Integer>();
+		flags.put(FLAG_REPOST, repost ? new Integer(1) : new Integer(0));
 	}
 	
 }

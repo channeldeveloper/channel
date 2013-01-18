@@ -5,6 +5,7 @@ import com.original.widget.model.ScrollBarModel;
 import com.original.widget.plaf.OScrollBarUI;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import javax.swing.JScrollBar;
@@ -33,7 +34,10 @@ public class OScrollBar extends JScrollBar {
 	Dimension size = new Dimension();
 	private ScrollBarModel model;
     private ScrollChangeListener additionListener;
-
+    
+	private boolean isScrollBarVisible = false; //滚动条是否可见
+	private int scrollBarValue = 0, scrollBarAmount = 0;//滚动条当前值和当前可见长度
+	
     //初始化对象
     public OScrollBar(int orientation, Color trackColor) {
         super(orientation);
@@ -99,4 +103,24 @@ public class OScrollBar extends JScrollBar {
 
     }
 
+	public boolean isScrollBarVisible() {
+		return isScrollBarVisible;
+	}
+	public void setScrollBarVisible(boolean isScrollBarVisible) {
+		this.isScrollBarVisible = isScrollBarVisible;
+	}
+
+	public int getScrollBarValue() {
+		return scrollBarValue;
+	}
+	public void setScrollBarValue(int scrollBarValue) {
+		this.scrollBarValue = scrollBarValue;
+	}
+
+	public int getScrollBarAmount() {
+		return scrollBarAmount;
+	}
+	public void setScrollBarAmount(int scrollBarAmount) {
+		this.scrollBarAmount = scrollBarAmount;
+	}
 }

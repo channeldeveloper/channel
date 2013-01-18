@@ -258,7 +258,7 @@ public class MessageManager {
 		return get(field, value, order);
 	}
 
-	private static final String OrderbyDateField = "-receivedDate";
+	public static final String OrderbyDateField = "-receivedDate";
 	/////////////////Filter///////////////
 
 	/**
@@ -315,31 +315,46 @@ public class MessageManager {
 		String field = "subject";
 		String value = text;
 		Query<ChannelMessage> q = ds.createQuery(ChannelMessage.class)
-				.field(field).contains(value);
+				.field(field).containsIgnoreCase(value);
 		Iterator<ChannelMessage> ite1 = q.iterator();
 
 		// all messages
 		field = "body";
 		value = text;
-		q = ds.createQuery(ChannelMessage.class).field(field).contains(value);
+		q = ds.createQuery(ChannelMessage.class).field(field).containsIgnoreCase(value);
 		Iterator<ChannelMessage> ite2 = q.iterator();
 
 
 		// all messages
 		field = "fromAddr";
 		value = text;
-		q = ds.createQuery(ChannelMessage.class).field(field).contains(value);
+		q = ds.createQuery(ChannelMessage.class).field(field).containsIgnoreCase(value);
 		Iterator<ChannelMessage> ite3 = q.iterator();
 
 
 		// all messages
 		field = "toAddr";
 		value = text;
-		q = ds.createQuery(ChannelMessage.class).field(field).contains(value);
+		q = ds.createQuery(ChannelMessage.class).field(field).containsIgnoreCase(value);
 		Iterator<ChannelMessage> ite4 = q.iterator();
 
 		return new IteratorIterator<ChannelMessage>(ite1, ite2, ite3, ite4);
 
+	}
+	
+	public List<ChannelMessage> quickSearch(String text) {
+		if(text == null || text.trim().isEmpty())
+			return EMPTY;
+
+		Query<ChannelMessage> q = ds.createQuery(ChannelMessage.class);
+		q.or(
+				q.criteria("subject").containsIgnoreCase(text),
+				q.criteria("body").containsIgnoreCase(text),
+				q.criteria("fromAddr").containsIgnoreCase(text),
+				q.criteria("toAddr").containsIgnoreCase(text)
+		);
+		System.out.println("sql=" + q);
+		return q.asList();
 	}
 
 
@@ -449,9 +464,19 @@ public class MessageManager {
 		return getMessagesByAll(null, keys, values);
 	}
 	
-	//全部查询(自带条件 和 标识 的查询)，不允许filters和keys都为空的情况。
 	public List<ChannelMessage> getMessagesByAll(Filter[] filters, String[] keys, Integer[] values) {
-		if (filters == null && (keys == null || values == null)) {
+		return getMessagesByAll(filters, keys, values, null);
+	}
+	
+	public List<ChannelMessage> getMessagesByAll(QueryItem qi) {
+		if (qi != null)
+			return getMessagesByAll(qi.getFilters(), qi.getKeys(), qi.getValues(), qi.getText());
+		return EMPTY;
+	}
+	
+	//全部查询(自带条件 和 标识 的查询)，不允许filters和keys都为空的情况。
+	public List<ChannelMessage> getMessagesByAll(Filter[] filters, String[] keys, Integer[] values, String text) {
+		if (filters == null && (keys == null || values == null) && text == null) {
 			return EMPTY;
 		}
 		
@@ -485,7 +510,18 @@ public class MessageManager {
 			}
 		}
 		
+		if(text != null) { //再次过滤
+			String value = text.trim();
+			q.or(
+					q.criteria("subject").containsIgnoreCase(value),
+					q.criteria("body").containsIgnoreCase(value),
+					q.criteria("fromAddr").containsIgnoreCase(value),
+					q.criteria("toAddr").containsIgnoreCase(value)
+			);
+		}
+		
 		q = q.order(OrderbyDateField);
+		System.out.println("sql=" + q);
 		return q.asList();
 	}
 

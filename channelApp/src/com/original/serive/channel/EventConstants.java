@@ -18,6 +18,7 @@ public interface EventConstants
 	String QUICK_REPLY = "quick reply"; //快速回复
 	String REPLY = "reply";//回复
 	String SAVE = "save"; //保存
+	String EDIT = "edit"; //编辑
 	String DELETE = "delete"; //删除
 	String CANCEL = "cancel";//取消
 	String POST = "post";//发送
@@ -40,7 +41,8 @@ public interface EventConstants
 	String VIEW_DRAFT = "view draft";
 	String VIEW_TRASH = "view trash";
 	String TYPE_CHANGE_PROPERTY = "type change property",
-			STATUS_CHANGE_PROPERTY = "status change property";
+			STATUS_CHANGE_PROPERTY = "status change property",
+			SEARCHTEXT_CHANGE_PROPERTY = "search text change property";
 	
 	/* 消息状态 */
 	String STATUS_UNKNOWN = "unknown";

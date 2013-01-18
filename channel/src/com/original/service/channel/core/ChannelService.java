@@ -606,12 +606,20 @@ public final class ChannelService extends AbstractService {
 		// TODO Auto-generated method stub
 		if (msg != null) {
 			
-			if (action == Constants.ACTION_PUT_DRAFT) { //存草稿
+			 //1、存草稿
+			if (action == Constants.ACTION_PUT_DRAFT) {
+				if (msg.getId() != null) {//删除原有的草稿，可能用户再次保存草稿！
+					System.out.println("delete old message!");
+					this.deleteMessage(msg.getId());
+				}
+
+				msg.setMessageID(getRandomMessageID());//设置一个随机的消息id
 				msg.setDrafted(true);
 				this.msgManager.save(msg);
 				return;
 			}
 			
+			//2、一般情况，即保存和下发消息
 			ChannelAccount cha = msg.getChannelAccount();
 			if(cha == null) { //如果为空，则获取默认账户。一般为新建消息时
 				cha = getDefaultAccount(msg.getClazz());
@@ -619,46 +627,38 @@ public final class ChannelService extends AbstractService {
 			
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
+				//预处理消息的发送id，防止出现id一致，无法保存的情况。(消息id是唯一索引！)
 				preSendProcess(action, msg);
+				
 				try {
 					if (msg.getFromAddr() == null) {
 						msg.setFromAddr(cha.getAccount().getUser());
 					}
+					
+					//@Deprecated 已用下面的线程推送方法取代
+                    //sc.put(action, msg); //下发消息，如果出错，则不保存数据库！
+					
 					PutTask task = new PutTask(sc, action, msg);
-//					sc.put(action, msg); //下发消息，如果出错，则不保存数据库！
 					Future monitor = this.threadPool.submit(task);
-					//Pending. whether or not to deal monitor?
 					
 					//1、自己给自己发(特殊情况)，不保存数据库：
 					if(msg.getToAddr().equals(cha.getAccount().getUser()))
 						return;
 					
-					//2、快速回复，目前设定微博不需要保存，其他都保存：
-					if(action == Constants.ACTION_QUICK_REPLY)
+					//2、快速回复或完整回复，目前设定微博不需要保存，其他都保存：
+					if(action == Constants.ACTION_QUICK_REPLY ||
+							action == Constants.ACTION_REPLY)
 					{
-						if (msg.isWeibo()) {
-							return;
-						}
-						msg.setType(ChannelMessage.TYPE_SEND);//强制转换类型
-						msg.setProcessed(true);
-						msgManager.save(msg);
+						if (msg.isWeibo()) return;						
 					}
-					
-					//3、完整回复，目前设定微博不需要保存，其他都保存：
-					else if (action == Constants.ACTION_REPLY) 
-					{
-						if (msg.isWeibo()) {
-							return;
-						} else if (msg.isMail()) {
-							//return;
-						} else if (msg.isQQ()) {
-							//return;
-						}
-						
-						msg.setType(ChannelMessage.TYPE_SEND);//强制转换类型
-						msg.setProcessed(true);
-						msgManager.save(msg);
+
+					if (msg.getId() != null) { // 删除可能存在的消息的原始草稿信息
+						System.out.println("delete old message!");
+						this.deleteMessage(msg.getId());
 					}
+					msg.setType(ChannelMessage.TYPE_SEND);//强制转换类型
+					msg.setProcessed(true);
+					msgManager.save(msg);
 				}
 				catch(Exception ex) {
 					ex.printStackTrace();
@@ -694,6 +694,12 @@ public final class ChannelService extends AbstractService {
 			UUID idOne = UUID.randomUUID();
 			msg.setMessageID(msgId +'$' + idOne);//add separator '$' for some use.
 		}
+	}
+	private String getRandomMessageID()
+	{
+		long millis = System.currentTimeMillis();
+		UUID idOne = UUID.randomUUID();
+		return millis + "$" + idOne;
 	}
 	// //////////search filter order by MessageManager////////
 
@@ -903,7 +909,7 @@ public final class ChannelService extends AbstractService {
 				ChannelMessage.class);
 		
 		for(int i = 0; i<size; i++) {
-			ops = ops.set(keys[i], newValues[i]);
+			ops = ops.set("flags." + keys[i], newValues[i]);
 		}
 		
 		ds.update(chmsgQuery, ops, true);

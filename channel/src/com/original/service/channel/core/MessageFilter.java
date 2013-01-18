@@ -20,10 +20,14 @@ public class MessageFilter implements Filter {
 	private String orderField;
 	
 	/**
+	 * 消息查找的过滤。默认按时间倒序排
+	 */
+	public MessageFilter(String field, String value) {
+		this(field, value, MessageManager.OrderbyDateField);
+	}
+	
+	/**
 	 * 消息查找的过滤。
-	 * @param field
-	 * @param value
-	 * @param orderField
 	 */
 	public MessageFilter(String field, String value, String orderField)
 	{

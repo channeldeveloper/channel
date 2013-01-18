@@ -233,7 +233,7 @@ public class ChannelMessagePane extends JPanel
 		if(msg != null && msg.getMessageID() != null)
 		{
 			setUid(msg.getContactName());
-			setReceiveMsgLayout();
+			changeMsgLayoutIfNeed(msg);
 		}
 	}
 	

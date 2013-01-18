@@ -6,7 +6,11 @@
  */
 package com.original.service.channel;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -282,6 +286,19 @@ public class Utilies {
 		return html;
 		
 	}
+	
+	public static void main(String[] args) throws Exception {
+		BufferedReader br = new BufferedReader(new InputStreamReader(
+				new FileInputStream("c:/html.txt")));
+		char[] buffer = new char[1024];
+		int read  = -1;
+		StringBuffer sb = new StringBuffer();
+		while((read = br.read(buffer)) != -1) {
+			sb.append(buffer, 0, read);
+		}
+		br.close();
+		System.out.println(getNewAddedBody(sb.toString()));
+	}
 
 	/**
 	 * 处理邮件内容，即显示邮件的完整内容
@@ -332,8 +349,8 @@ public class Utilies {
 		//<div style="padding-left: 0; padding-right: 0; padding-bottom: 0; padding-top: 50px">
 //	      -------------------&#21407;&#22987;&#20869;&#23481;-------------------
 //	      </div>
-		return "<div style=\".*?\">(\r?\n) *-------------------" +
-				"&#21407;&#22987;&#20869;&#23481;-------------------(\r?\n) *</div>";
+		return "<div style=\".*?\">([\\s\\S]*)-------------------" +
+				"&#21407;&#22987;&#20869;&#23481;-------------------([\\s\\S]*)</div>";
 		
 		//&#21407;&#22987;&#20869;&#23481; = 原始内容
 	}
