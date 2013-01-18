@@ -23,6 +23,7 @@ import javax.swing.event.EventListenerList;
 import org.apache.log4j.Logger;
 
 import weibo4j.Friendships;
+import weibo4j.Users;
 import weibo4j.model.User;
 import weibo4j.model.UserWapper;
 import weibo4j.model.WeiboException;
@@ -53,6 +54,7 @@ public class WeiboService extends AbstractService {
 	private WeiboSender sender;
 	private WeiboReceiver receiver;
 	private ChannelAccount ca;
+
 	
 	//微博授权AccessToken本地保存文件名
 	public static File SNS_WEIBO_OAUTH = new File(System.getProperty("user.dir"), 
@@ -71,11 +73,10 @@ public class WeiboService extends AbstractService {
 		}
 	}
 	
-	public WeiboService(String uid, ChannelAccount ca) throws ChannelException{
+	public WeiboService(String cydowId, ChannelAccount ca) throws ChannelException{
 		this.ca = ca;
-		sender = new WeiboSender(uid, ca);
-		receiver = new WeiboReceiver(ca, this);
-		
+		sender = new WeiboSender(cydowId, ca);
+		receiver = new WeiboReceiver(ca, this);		
 		init();
 	}
 	
@@ -331,13 +332,26 @@ public class WeiboService extends AbstractService {
      */    
 	@Override
 	public List<Account> getContacts() {
-
-		//1 Pending Song How to get Self Profile
-		User profile = null;
+		//User
+		String uid = this.ca.getAccount().getUserId();
+		//没有初始化
+		if (uid == null)
+		{
+			return null;
+		}
+		Users um = new Users();
+		try {
+			User profile = um.showUserById(uid);
+		} catch (WeiboException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
+		//1 Pending Song How to get Self Profile
+			
 		//2 Followed
 		try {
-			UserWapper userWapper = fm.getFriendsByID(profile.getId());
+			UserWapper userWapper = fm.getFriendsByID(uid);
 			List<User>  users = userWapper.getUsers();
 		} catch (WeiboException e) {
 			// TODO Auto-generated catch block
