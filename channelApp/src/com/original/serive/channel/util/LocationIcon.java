@@ -51,6 +51,11 @@ public class LocationIcon implements Icon
 		}
 	}
 
+	public void setIcon(Icon icon)
+	{
+		this.icon = icon;
+	}
+	
 	public int getIconWidth()
 	{
 		return width;

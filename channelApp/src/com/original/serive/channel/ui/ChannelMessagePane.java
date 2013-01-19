@@ -1,5 +1,7 @@
 ﻿package com.original.serive.channel.ui;
 
+import iqq.util.QQEnvironment;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -13,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Area;
 import java.awt.geom.RoundRectangle2D;
+import java.io.IOException;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -20,6 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
+import com.mongodb.gridfs.GridFSDBFile;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.ui.widget.ToolTip;
@@ -30,6 +34,9 @@ import com.original.serive.channel.util.GraphicsHandler;
 import com.original.serive.channel.util.IconFactory;
 import com.original.serive.channel.util.LocationIcon;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.channel.core.ChannelService;
+import com.original.service.people.People;
+import com.original.service.storage.GridFSUtil;
 
 /**
  * Channel消息面板，由
@@ -164,6 +171,30 @@ public class ChannelMessagePane extends JPanel
 	public void initMessage(ChannelMessage msg) 
 	{
 		String uName = msg.getContactName();
+		
+		People pm =ChannelService.getInstance().getPeopleManager().getPeopleByMessage(msg) ;		
+		if (pm != null)
+		{		
+			String chn = msg.getChannelAccount().getChannel().getName();
+			if (chn != null && pm.getAccountMap().get(chn).getAvatar() != null)
+			{			
+				try {
+					GridFSDBFile dbfile = GridFSUtil.getGridFSUtil().getFile(pm.getAccountMap().get(chn).getAvatar());
+					String fn = dbfile.getFilename();
+					String path = QQEnvironment.getConfigTempDir() + fn;
+					dbfile.writeTo(path);
+					ImageIcon image = new ImageIcon(path);
+					Image headImage = image.getImage().
+							getScaledInstance(72, 72, Image.SCALE_SMOOTH);
+					header.getHeadImageIcon().setIcon(new ImageIcon(headImage));
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} //output to new file
+			}			
+		}
+		
+		
 		if (uid == null) {// 第一次添加
 			setUid(uName);
 
