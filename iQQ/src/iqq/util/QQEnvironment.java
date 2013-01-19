@@ -16,7 +16,7 @@ import java.io.File;
 public class QQEnvironment {
 
     public static String getConfigPath() {
-        String userHome = System.getProperty("user.home");
+        String userHome = System.getProperty("user.dir");
         String configPath = userHome + File.separator + ".iQQ" + File.separator;
         File f = new File(configPath);
         if (!f.exists()) {

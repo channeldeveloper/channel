@@ -109,7 +109,7 @@ public class LoginService {
             //enVerifyCode = JOptionPane.showInputDialog(null, "验证码：", "请输入验证码：");
             Icon icon = getCaptcha(enVerifyCode, account);
             if (icon != null) {
-                vCode = (String) JOptionPane.showInputDialog(null, "验证码：", "请输入验证码：", JOptionPane.QUESTION_MESSAGE, icon, null, null);
+                vCode = (String) JOptionPane.showInputDialog(null, "QQ 验证码：", "请输入QQ 验证码：", JOptionPane.QUESTION_MESSAGE, icon, null, null);
                 if (vCode == null || vCode.trim().equals("")) {
 //                    ErrorMessage.show("验证码输入有误!");
 //                    return false;
