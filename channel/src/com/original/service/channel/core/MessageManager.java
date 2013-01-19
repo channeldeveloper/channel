@@ -421,6 +421,10 @@ public class MessageManager {
 	 */
 	public boolean isExist(String newMsgId)
 	{
+		if (newMsgId == null)
+		{
+			return false;
+		}
 		//检查是否存库内
 		Iterator<ChannelMessage> ite = getByMessageID(newMsgId);
 		return ite != null && ite.hasNext();
