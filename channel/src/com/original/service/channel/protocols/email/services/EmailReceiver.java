@@ -198,6 +198,9 @@ public class EmailReceiver {
 				emailService.fireMessageEvent(evt);
 				// 解析完毕，内存缓存。
 				cacheMsg.put(newMsgId, Boolean.TRUE);
+				
+				//保存联系人
+				emailService.parsePeople(cmsg[0],true);
 
 			} catch (Exception e) {
 				e.printStackTrace();

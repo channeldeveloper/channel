@@ -6,7 +6,9 @@
  */
 package com.original.service.channel.core;
 
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -80,13 +82,13 @@ public final class ChannelService extends AbstractService {
 	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
 	
 	private static ChannelService singleton;
-	private static ThreadManager threadPool;
+//	private static ThreadManager threadPool;
 	
 	/**
 	 * 
 	 * @return
 	 */
-	public static ChannelService getInstance()
+	public synchronized static ChannelService getInstance()
 	{
 		if (singleton == null)
 		{
@@ -514,13 +516,18 @@ public final class ChannelService extends AbstractService {
 			// TODO Auto-generated method stub
 			if(evnt.getType() == MessageEvent.Type_Added) {
 				ChannelMessage[] chmsgs = evnt.getAdded();
-				// 保存联系人
-				peopleManager.savePeople(chmsgs[0]);
-				// 保存信息
-				if(msgManager.save(chmsgs[0]))
+				for (int i = 0; i < chmsgs.length; i++)
 				{
-					fireMessageEvent(evnt); // notify to GUI App to add message only when save successfully!
+					// 保存联系人
+					People contract = peopleManager.savePeople(chmsgs[0]);
+					if (contract != null)
+					{
+						chmsgs[0].setPeopleId(contract.getId());
+					}
+					// 保存信息
+					msgManager.save(chmsgs[0]);
 				}
+				fireMessageEvent(evnt); // notify to GUI App to add message only when save successfully!
 			}
 		}
 	}
@@ -639,7 +646,7 @@ public final class ChannelService extends AbstractService {
                     //sc.put(action, msg); //下发消息，如果出错，则不保存数据库！
 					
 					PutTask task = new PutTask(sc, action, msg);
-					Future monitor = this.threadPool.submit(task);
+					Future monitor = ThreadManager.getInstance().submit(task);
 					
 					//1、自己给自己发(特殊情况)，不保存数据库：
 					if(msg.getToAddr().equals(cha.getAccount().getUser()))
@@ -649,7 +656,10 @@ public final class ChannelService extends AbstractService {
 					if(action == Constants.ACTION_QUICK_REPLY ||
 							action == Constants.ACTION_REPLY)
 					{
-						if (msg.isWeibo()) return;						
+						if (msg.isWeibo()) 
+						{
+							return;						
+						}
 					}
 
 					if (msg.getId() != null) { // 删除可能存在的消息的原始草稿信息
@@ -907,7 +917,7 @@ public final class ChannelService extends AbstractService {
 
 		UpdateOperations<ChannelMessage> ops = ds.createUpdateOperations(
 				ChannelMessage.class);
-		
+		ops.disableValidation();
 		for(int i = 0; i<size; i++) {
 			ops = ops.set("flags." + keys[i], newValues[i]);
 		}
@@ -985,6 +995,12 @@ public final class ChannelService extends AbstractService {
 		
 	}
 	
+	
+	/**
+	 * 
+	 * @author sxy
+	 *
+	 */
 	private class MonitorRunable  implements Runnable
 	{
 		Future monitor;
@@ -1011,10 +1027,26 @@ public final class ChannelService extends AbstractService {
 		
 	}
 
+	/**
+	 * 
+	 */
 	@Override
 	public List<Account> getContacts() {
 		// TODO Auto-generated method stub
-		return null;
+		ArrayList<Account> all = new ArrayList<Account>();
+		Collection<Service> scm = serviceMap.values();		
+		for (Service sc : scm)
+		{			
+			try
+			{
+				all.addAll(sc.getContacts());
+			}
+			catch(Exception exp)
+			{
+				exp.printStackTrace();
+			}			
+		}
+		return all;
 	}
 	
 	

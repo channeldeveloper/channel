@@ -27,7 +27,26 @@ import com.original.service.channel.ChannelMessage;
  * @author sxy
  * 
  */
-public class ThreadManager {
+public final class ThreadManager {
+	
+	private static ThreadManager threadPool;
+	
+	private ThreadManager()
+	{
+		getExecutorService();
+		
+	}
+	/**
+	 * @return the threadPool
+	 */
+	public static ThreadManager getInstance() {
+		if (threadPool == null)
+		{
+			threadPool = new ThreadManager();
+		}
+		return threadPool;
+	}
+
 	
 	private static ExecutorService threadService;
 	private static boolean running = true;
@@ -37,7 +56,7 @@ public class ThreadManager {
      *
      * @return 默认的线程执行服务 - Executors.newCachedThreadPool(getThreadFactory())
      */
-    private static synchronized ExecutorService getExecutorService() {
+    private synchronized ExecutorService getExecutorService() {
     	if (threadService == null)
     	{
     		threadService =  Executors.newFixedThreadPool(10, new ChannelThreadFactory());
@@ -50,7 +69,7 @@ public class ThreadManager {
 	 * @author sxy
 	 *
 	 */
-	private static class ChannelThreadFactory implements ThreadFactory {
+	private class ChannelThreadFactory implements ThreadFactory {
 		int count = 0;
 		String name = "Channel Service Thread ";
 	    public Thread newThread(Runnable r) {
@@ -66,7 +85,7 @@ public class ThreadManager {
 	 /**
      * 停止服务
      */
-    public static synchronized void shutdown() {
+    public  synchronized void shutdown() {
         if (running) {
             try {
                 getExecutorService().shutdown();
@@ -83,7 +102,7 @@ public class ThreadManager {
      * @param r 要运行的线程 线程执行类
      * @return f 该线程的Future返回
      */
-   public static synchronized Future<?> submit(Callable call) {
+   public  synchronized Future<?> submit(Callable call) {
         //getThreadFactory().newThread(r).start();
 		Future<ChannelMessage> f = null;
 		try {
@@ -96,5 +115,25 @@ public class ThreadManager {
 		return f;
         
     }
+   
+   /**
+    * 执行并提交一个线程任务
+    *
+    * @param r 要运行的线程 线程执行类
+    * @return f 该线程的Future返回
+    */
+  public  synchronized Future<?> submit(Runnable run) {
+       //getThreadFactory().newThread(r).start();
+		Future f = null;
+		try {
+			getExecutorService().submit(run);
+		} catch (Exception exp) {
+			exp.printStackTrace();
+		} finally {
+			running = true;
+		}
+		return f;
+       
+   }
 
 }

@@ -14,12 +14,23 @@ import iqq.model.Member;
 import iqq.service.CategoryService;
 import iqq.service.LoginService;
 import iqq.service.MemberService;
+import iqq.util.QQEnvironment;
 
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.event.EventListenerList;
+
+import org.bson.types.ObjectId;
 
 import com.original.service.channel.AbstractService;
 import com.original.service.channel.Account;
@@ -30,6 +41,7 @@ import com.original.service.channel.Service;
 import com.original.service.channel.core.ChannelException;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
+import com.original.service.storage.GridFSUtil;
 
 /**
  *  iQQ 服务类
@@ -224,8 +236,11 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 		return null;
 	}
 
+
+	
 	@Override
 	public List<Account> getContacts() {
+		List<Account> allAccount = new ArrayList<Account>();
 		// TODO Auto-generated method stub
 		try {
 			//1 profile
@@ -235,25 +250,76 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 			//2 friends
            
 			List<Category> categoryList = categoryService.getFriends(ai);
+			
 			for (Category c : categoryList)
 			{
 				List<Member> ms = c.getMemberList();
 				for (Member m : ms)
 				{
 					//头像
-					m.setFace(memberService.getFace(ai));
+					m.setFace(memberService.downloadFace(ai,m));
+					
+					allAccount.add(tranMember2Account(m));					
 				}
 			}
-			//Pending 
-			//To Service Interface Account(实现接口还是转换）
-			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return null;
+		return allAccount;
+	}
+	/**
+	 * 
+	 * @param member
+	 * @return
+	 */
+	private Account tranMember2Account(Member m)
+	{
+		//（基本）账号、名称、头像、状态、渠道
+		//扩展：性别、描述、
+		Account ac = new Account();
+		ac.setUser(m.getUin()+"");				
+		ac.setName(m.getNickname());		
+		saveAvadar(m, ac); 		
+		ac.setStatus(m.getStatus());		
+		ac.setChannelName(ca.getChannel().getName());
+
+		//others
+		
+		ac.setGender(m.getGender());
+		ac.setUserId(m.getAccount());	
+		ac.setDescription(m.getMarkname());
+		return ac;
 	}
 
+	private void saveAvadar(Member m, Account ac) {
+		ImageIcon avadar = m.getFace();		
+        String path = QQEnvironment.getMemberDir()  + m.getUin()  + "face.jpg";
+        File faceFile = new File(path);
+		try {
+			ImageIO.write(toBufferedImage(avadar.getImage()), "jpg", faceFile);
+			ac.setAvatar((ObjectId)GridFSUtil.getGridFSUtil().saveFile(faceFile));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	 private static BufferedImage toBufferedImage(Image img){  
+	       int width = img.getWidth(null);  
+	       int height = img.getHeight(null);  
+	       BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);  
+	       Graphics g = bi.getGraphics();  
+	       g.drawImage(img, 0,0, null);  
+	       g.dispose();  
+	       return bi;  
+	   } 
+	 
+	/////////////////////////////////////
+	 
 	/////////////////////////////////////
 }

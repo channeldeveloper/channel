@@ -1,14 +1,16 @@
 package com.original.service.channel.protocols.email.services;
 
+import java.util.ArrayList;
 import java.util.EventListener;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.swing.event.EventListenerList;
 
 import com.original.service.channel.AbstractService;
+import com.original.service.channel.Account;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
-import com.original.service.channel.Constants;
 import com.original.service.channel.Service;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
@@ -141,6 +143,7 @@ public class EmailService extends AbstractService {
 //			msg.setExtensions(null);
 //		}
 		this.sender.send(msg);
+		this.parsePeople(msg, true);
 	}
 	
 	/*public void PrePutDeal(String action, ChannelMessage msg) {		
@@ -282,5 +285,70 @@ public class EmailService extends AbstractService {
 		
 	}
 
+	/////////////////////////////////////
+	
+
+	
+	/**
+	 * 临时方法。如果google有联系人服务，目前没有时间处理，缓冲所有受到和发出去的联系人,
+	 * 因此第一次调用是空白。不再去查已有消息了。 
+	 */	
+	@Override
+	public List<Account> getContacts() {
+		// TODO Auto-generated method stub
+		return new ArrayList<Account>(contracts.values());
+		
+	}
+	
+	HashMap<String, Account> contracts = new HashMap<String, Account>();
+			
+	
+	/**
+	 * 解析邮件的信息为联系人
+	 * @param chm
+	 */
+	protected void parsePeople(ChannelMessage chm, boolean isSend)
+	{	
+		//如果发送，取发送、抄送、暗送
+		if (isSend)
+		{
+			String toAddr = chm.getToAddr();
+			String ccAddr = chm.getCC();
+			String bccAddr = chm.getExtensions().get(ChannelMessage.EXT_EMAIL_BCC);
+			parseAddr(toAddr);
+			parseAddr(ccAddr);
+			parseAddr(bccAddr);
+		}
+		else
+		{
+			String fromAddr = chm.getFromAddr();
+			parseAddr(fromAddr);
+		}
+	}
+		
+	/**
+	 * 
+	 * @param msgAddr
+	 */
+	private void parseAddr(String msgAddr)
+	{	
+		if (msgAddr != null && msgAddr.lastIndexOf("<") != -1) {
+			int dimi = msgAddr.lastIndexOf("<");
+			String name = msgAddr.substring(0, dimi);
+			String addr = msgAddr.substring(dimi + 1, msgAddr.length() - 1);
+			if (name != null && name.trim().length() > 0 && addr != null && addr.length() > 0)
+			{
+				Account ac = new Account();
+				ac.setName(name);
+				ac.setUser(addr);
+				//如果存在将覆盖，如果不存在就插入
+				this.contracts.put(addr, ac);
+			}
+		}
+	}
+		
+	
+	
+	
 	/////////////////////////////////////
 }

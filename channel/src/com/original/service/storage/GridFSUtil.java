@@ -125,6 +125,17 @@ public final class GridFSUtil {
 	/**
 	 * 
 	 * @param uri
+	 * @param fs
+	 * @return
+	 * @throws Exception
+	 */
+	public Object saveFile(URI uri) throws Exception {
+		return saveFile(uri, getFS());
+	}
+	
+	/**
+	 * 
+	 * @param uri
 	 * @param mongo
 	 * @param db
 	 * @return

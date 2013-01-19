@@ -7,10 +7,19 @@ package com.original.service.channel.protocols.sns.weibo;
  * ORIGINAL PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
+import iqq.util.QQEnvironment;
+
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.EventListener;
 import java.util.HashMap;
@@ -18,9 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.event.EventListenerList;
 
 import org.apache.log4j.Logger;
+import org.bson.types.ObjectId;
 
 import weibo4j.Friendships;
 import weibo4j.Users;
@@ -40,6 +52,7 @@ import com.original.service.channel.Service;
 import com.original.service.channel.core.ChannelException;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
+import com.original.service.storage.GridFSUtil;
 import com.original.util.log.OriLog;
 
 /**
@@ -323,10 +336,11 @@ public class WeiboService extends AbstractService {
 	@Override
 	public ChannelAccount getChannelAccount() {
 		// TODO Auto-generated method stub
-		return null;
+		return ca;
 	}
 
-    /**
+
+	  /**
      * 获得渠道的联系人列表。
      * @return
      */    
@@ -334,6 +348,8 @@ public class WeiboService extends AbstractService {
 	public List<Account> getContacts() {
 		//User
 		String uid = this.ca.getAccount().getUserId();
+		String token = readToken(ca);
+		
 		//没有初始化
 		if (uid == null)
 		{
@@ -341,25 +357,93 @@ public class WeiboService extends AbstractService {
 		}
 		Users um = new Users();
 		try {
+			um.setToken(token);
 			User profile = um.showUserById(uid);
+			System.out.println("profile:" + profile);
 		} catch (WeiboException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
 		//1 Pending Song How to get Self Profile
-			
+		List<Account> allAccount = new ArrayList<Account>();
 		//2 Followed
 		try {
+			Friendships fm = new Friendships();
+			fm.setToken(token);
 			UserWapper userWapper = fm.getFriendsByID(uid);
 			List<User>  users = userWapper.getUsers();
+			for (int  i = 0; i < users.size(); i++)
+			{
+				allAccount.add(tranMember2Account(users.get(i)));
+			}
+			return allAccount;
 		} catch (WeiboException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		//Pending 
 		//3 To Service Interface Account(实现接口还是转换）
-		return null;
+		return allAccount;
 	}
-	private Friendships fm = new Friendships();
+	
+	/**
+	 * 
+	 * @param member
+	 * @return
+	 */
+	private Account tranMember2Account(User u)
+	{
+		//（基本）账号、名称、头像、状态、渠道
+		//扩展：性别、描述、
+		Account ac = new Account();
+		ac.setUser(u.getId());				
+		ac.setName(u.getScreenName());		
+		saveAvadar(ac, u);
+		ac.setStatus(u.getStatusId());		
+		ac.setChannelName(ca.getChannel().getName());
+		//others		
+		ac.setGender(u.getGender());
+		ac.setUserId(u.getId());	
+		ac.setDescription(u.getDescription());
+		return ac;
+	}
+
+	 private static BufferedImage toBufferedImage(Image img){  
+	       int width = img.getWidth(null);  
+	       int height = img.getHeight(null);  
+	       BufferedImage bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);  
+	       Graphics g = bi.getGraphics();  
+	       g.drawImage(img, 0,0, null);  
+	       g.dispose();  
+	       return bi;  
+	   } 
+
+	 private void saveAvadar(Account ac, User user) {
+		 URL profile = user.getProfileImageURL();
+		 try {
+			 if (profile == null) {
+				 profile = new URL(
+						 "http://img.t.sinajs.cn/t4/style/images/face/male_medium.png");
+			 }
+
+			 ImageIcon avadar = new ImageIcon(profile);
+			 String path = QQEnvironment.getMemberDir() + user.getId()
+					 + "priofile.png";
+			 File faceFile = new File(path);
+			 if (!faceFile.exists()) {
+				 System.out.println("No ex");
+			 } else {
+				 System.out.println(" ex");
+			 }
+
+			 ImageIO.write(toBufferedImage(avadar.getImage()), "png", faceFile);
+			 ac.setAvatar((ObjectId) GridFSUtil.getGridFSUtil().saveFile(
+					 faceFile));
+
+		 } catch (Exception e) {
+			 // TODO Auto-generated catch block
+			 e.printStackTrace();
+		 }
+	}
 }

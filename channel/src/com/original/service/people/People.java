@@ -6,8 +6,7 @@
  */
 package com.original.service.people;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 import org.bson.types.ObjectId;
 
@@ -32,25 +31,11 @@ public class People {
 	// 代表联系人头像(不同渠道可能使用不同的名称，这里选择1个或者自定义一个）
 	private ObjectId avatar;
 	//缺省的设置，是一个组合搭配，不是固定的一个
-	private Account defaultAccount;
-	/**
-	 * @return the defaultAccount
-	 */
-	public Account getDefaultAccount() {
-		return defaultAccount;
-	}
-
-	/**
-	 * @param defaultAccount the defaultAccount to set
-	 */
-	public void setDefaultAccount(Account defaultAccount) {
-		this.defaultAccount = defaultAccount;
-	}
-
-	//对应的多个渠道
-	@Embedded
-	private List<Account> accounts;
 	
+	//对应的多个渠道(channel_name , account)
+	@Embedded
+	private HashMap<String, Account> accountMap;
+
 
 	
 	/**
@@ -99,43 +84,23 @@ public class People {
 	public void setAvatar(ObjectId avatar) {
 		this.avatar = avatar;
 	}
-
-
-	
 	/**
-	 * @return the accounts
+	 * @return the accountMap
 	 */
-	public List<Account> getAccounts() {
-		return accounts;
+	public HashMap<String, Account> getAccountMap() {
+		return accountMap;
 	}
 
 	/**
-	 * @param accounts the accounts to set
+	 * @param accountMap the accountMap to set
 	 */
-	public void setAccounts(List<Account> accounts) {
-		this.accounts = accounts;
-	}
-	
-	/**
-	 * @param accounts the accounts to set
-	 */
-	public void addAccount(Account newAccount) {
-		if (accounts == null)
-		{
-			accounts = new ArrayList<Account>();
-		}
-		if (!accounts.contains(newAccount))
-		{
-			accounts.add(newAccount);
-		}
+	public void setAccountMap(HashMap<String, Account> accountMap) {
+		this.accountMap = accountMap;
 	}
 
 	public String toString() {
 		try {
 			Gson gson = new Gson();
-
-			// convert java object to JSON format,
-			// and returned as JSON formatted string
 			String json = gson.toJson(this);
 			return json;
 		} catch (Exception exp) {
