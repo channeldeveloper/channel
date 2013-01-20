@@ -430,12 +430,7 @@ public class WeiboService extends AbstractService {
 			 ImageIcon avadar = new ImageIcon(profile);
 			 String path = QQEnvironment.getMemberDir() + user.getId()
 					 + "priofile.png";
-			 File faceFile = new File(path);
-			 if (!faceFile.exists()) {
-				 System.out.println("No ex");
-			 } else {
-				 System.out.println(" ex");
-			 }
+			 File faceFile = new File(path);	
 
 			 ImageIO.write(toBufferedImage(avadar.getImage()), "png", faceFile);
 			 ac.setAvatar((ObjectId) GridFSUtil.getGridFSUtil().saveFile(

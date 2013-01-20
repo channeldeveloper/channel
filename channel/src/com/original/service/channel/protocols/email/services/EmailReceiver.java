@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -167,6 +168,13 @@ public class EmailReceiver {
 		}
 	}
 	
+    private String getRandomMessageID()
+	{
+		long millis = System.currentTimeMillis();
+		UUID idOne = UUID.randomUUID();
+		return millis + "$" + idOne;
+	}
+    
 	private void parse(Message[] msgs) {
 		if (msgs == null || msgs.length <= 0) {
 			return;
@@ -178,6 +186,10 @@ public class EmailReceiver {
 		for (int i = 0; i < msgs.length; i++) {
 			try {
 				String newMsgId = ((MimeMessage) msgs[i]).getMessageID();
+				if (newMsgId == null)
+				{
+					newMsgId = getRandomMessageID();
+				}
 				boolean existing = cacheMsg.containsKey(newMsgId);
 				// 已经放入池内，并且已经解析完成。
 				//这一步减少数据库的查询工作

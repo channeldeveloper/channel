@@ -1039,7 +1039,9 @@ public final class ChannelService extends AbstractService {
 		{			
 			try
 			{
+				if (sc != null && sc.getContacts() != null ){
 				all.addAll(sc.getContacts());
+				}
 			}
 			catch(Exception exp)
 			{

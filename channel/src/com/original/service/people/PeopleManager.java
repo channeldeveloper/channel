@@ -218,8 +218,13 @@ public class PeopleManager {
 	 * @return
 	 */
 	public People getPeopleByChannel(String chName, String channelAccount) {
-		
-		return ds.find(People.class).field("accountMap." + chName).equal(channelAccount).get();
+		try{
+			return ds.find(People.class).field("accountMap." + chName+".user").equal(channelAccount).get();
+		}
+		catch(Exception exp)
+		{
+			return null;
+		}
 	}
 	
 

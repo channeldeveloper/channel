@@ -7,6 +7,8 @@
 package com.original.service.channel.config;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -58,8 +60,15 @@ public class Initializer {
 			db = mongo.getDB(Constants.Channel_DB_Name);
 		
 			// init profile
+			  
+			  
+			String fileName = System.getProperty("user.dir") + "\\config\\profile.json";
+			File confDir = new File(fileName);
 			String collectionName = Constants.Channel_Collection_Profile;
-			String fileName = "/com/original/service/channel/config/profile.json";
+			if (!confDir.exists())
+			{
+				fileName = "/com/original/service/channel/config/profile.json";
+			}
 			initProfile(db, collectionName, fileName, force);
 			
 			// init channel
@@ -151,8 +160,14 @@ public class Initializer {
 			collection.drop();
 			logger.info("force to init, drop the collection:" + collectionName);
 		}
-		InputStream is = Initializer.class.getResourceAsStream(fileName);
-		BufferedReader br = new BufferedReader(new InputStreamReader(is));
+		BufferedReader br = null;
+		if (fileName.startsWith("/")) {
+			InputStream is = Initializer.class.getResourceAsStream(fileName);
+			br = new BufferedReader(new InputStreamReader(is));
+		} else {
+			br = new BufferedReader(new FileReader(fileName));
+		}	
+		
 		StringBuffer fileText = new StringBuffer();
 		String line;
 		while ((line = br.readLine()) != null) {

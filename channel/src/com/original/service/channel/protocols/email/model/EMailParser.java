@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 import javax.mail.Message;
@@ -350,6 +351,13 @@ public class EMailParser {
     }
     ///////////////////////////////////New Parse///////////////////////////////
 //    parse.saveEMail(msgs[i], account.getUserName(), "inbox", (String) null); old methods
+    
+    private String getRandomMessageID()
+	{
+		long millis = System.currentTimeMillis();
+		UUID idOne = UUID.randomUUID();
+		return millis + "$" + idOne;
+	}
     /**
      * Convert MimeMessage to EMailMessage, then proxy to Message, then save it to MongoDB
      * @param msg
@@ -359,7 +367,15 @@ public class EMailParser {
     public EMail parseMessage(MimeMessage msg, String username, String type, String emailid) throws Exception 
     {
     	   EMail mail = new EMail();
-           mail.set_id(msg.getMessageID());
+    	   if (msg.getMessageID() != null)
+    	   {
+    		   mail.setMsgId(msg.getMessageID());
+    	   }
+    	   else
+    	   {
+    		   mail.setMsgId(getRandomMessageID());
+    	   }
+          
            mail.setSize(msg.getSize());
 
            //save attachment
@@ -491,7 +507,7 @@ public class EMailParser {
         mail.setIsTrash(0);
         mail.setType(type);
         mail.setMailname(username);
-        mail.setMsgId(((MimeMessage) msg).getMessageID());
+//        mail.setMsgId(((MimeMessage) msg).getMessageID());
 
         String from = getFrom(msg);
         //Pending Franzsong All this as People in system
