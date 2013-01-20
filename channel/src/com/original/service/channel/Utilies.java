@@ -51,8 +51,16 @@ public class Utilies {
 		if (!tempDir.exists()) {
 			tempDir.mkdir();
 		}
-		tempDir = new File(TEMP_DIR, fileName);
-		return tempDir.toURI().toString();
+		try
+		{
+			tempDir = new File(TEMP_DIR, fileName);
+			return tempDir.toURI().toString();
+		}
+		catch(Exception exp)
+		{
+			exp.printStackTrace();
+			return "";
+		}
 	}
 	public static String getTempDir(EMailAttachment attach) {
 		return getTempDir(attach.getFileID(), attach.getFileName());

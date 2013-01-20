@@ -703,10 +703,21 @@ public class EmailSender{// extends AbstractProcessingResource {
                     continue;
                 }
                 MimeBodyPart bp = new MimeBodyPart();
-                DataSource source = new FileDataSource(new File(new URI(att.getFilePath())) );
-                bp.setDataHandler(new DataHandler(source));
-                bp.setFileName(MimeUtility.encodeText(source.getName(), "UTF-8", "B"));
-                mp.addBodyPart(bp);
+                if (att.getFilePath().startsWith("file:"))
+                {
+                	DataSource source = new FileDataSource(new File(new URI(att.getFilePath())) );
+                	 bp.setDataHandler(new DataHandler(source));
+                     bp.setFileName(MimeUtility.encodeText(source.getName(), "UTF-8", "B"));
+                     mp.addBodyPart(bp);
+                }
+                else
+                {
+                	DataSource source = new FileDataSource(new File(att.getFilePath()) );
+                	 bp.setDataHandler(new DataHandler(source));
+                     bp.setFileName(MimeUtility.encodeText(source.getName(), "UTF-8", "B"));
+                     mp.addBodyPart(bp);
+                }
+              
             }
         } catch (Exception e) {
             log.error(OriLog.logStack(e));       

@@ -820,6 +820,16 @@ public final class ChannelService extends AbstractService {
 		}
 		return q.get();
 	}
+	
+	/**
+	 * 
+	 * @param userName
+	 * @return
+	 */
+	public ChannelAccount getAccount(String userName) {
+		Query<ChannelAccount> q = ds.createQuery(ChannelAccount.class).field("account.user").endsWithIgnoreCase(userName);
+		return q.get();
+	}
 
 	@Override
 	public ChannelAccount getChannelAccount() {
@@ -1049,6 +1059,16 @@ public final class ChannelService extends AbstractService {
 			}			
 		}
 		return all;
+	}
+	
+	/**
+	 * 
+	 * @param channelName
+	 * @return
+	 */
+	public Service getService(ChannelAccount ca)
+	{
+		return this.serviceMap.get(ca);
 	}
 	
 	

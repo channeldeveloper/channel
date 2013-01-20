@@ -314,10 +314,13 @@ public class EmailService extends AbstractService {
 		{
 			String toAddr = chm.getToAddr();
 			String ccAddr = chm.getCC();
-			String bccAddr = chm.getExtensions().get(ChannelMessage.EXT_EMAIL_BCC);
 			parseAddr(toAddr);
 			parseAddr(ccAddr);
-			parseAddr(bccAddr);
+			if (chm.getExtensions() != null)
+			{
+				String bccAddr = chm.getExtensions().get(ChannelMessage.EXT_EMAIL_BCC);
+				parseAddr(bccAddr);
+			}
 		}
 		else
 		{
