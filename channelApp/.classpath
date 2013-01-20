@@ -8,10 +8,10 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/channel"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/pips"/>
+	<classpathentry kind="lib" path="/pips-main-launch/lib/pips-framework-bsaf-0.1.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OriUDK"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OriWidget"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OriWidgetRes"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/pips-main-launch"/>
-	<classpathentry kind="lib" path="/pips-main-launch/lib/pips-framework-bsaf-0.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

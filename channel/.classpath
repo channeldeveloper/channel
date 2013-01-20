@@ -6,5 +6,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/iQQ"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/weibo4j-oauth2"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/channel"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/pips"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
