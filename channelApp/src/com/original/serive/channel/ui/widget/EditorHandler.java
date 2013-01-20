@@ -25,7 +25,6 @@ import javax.swing.text.html.HTMLEditorKit;
 import org.apache.commons.lang.StringEscapeUtils;
 
 import com.original.serive.channel.util.ChannelUtil;
-import com.original.service.channel.Utilies;
 
 /**
  * 文本编辑器通用处理类，如插入图片、表情等等。

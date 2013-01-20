@@ -11,7 +11,7 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
 import java.util.EventListener;
 
-import com.original.serive.channel.ChannelGUI;
+import com.original.channel.ChannelAppCache;
 import com.original.serive.channel.ui.data.TitleItem;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.GraphicsHandler;
@@ -100,7 +100,7 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 		ChannelMessageBodyPane body = this.getMessageBody();
 		if(body != null)
 		{
-			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+			ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 			ChannelMessage msg = body.getChannelMessage();
 			if (msg != null) {
 				desktop.removeShowComp(PREFIX_SHOWALL + msg.getContactName());

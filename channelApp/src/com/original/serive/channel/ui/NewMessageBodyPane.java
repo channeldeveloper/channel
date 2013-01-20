@@ -19,20 +19,20 @@ import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 
 import atg.taglib.json.util.JSONException;
 
-import com.original.serive.channel.ChannelGUI;
+import com.original.channel.ChannelAppCache;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.border.InnerShadowBorder;
+import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CLabel;
+import com.original.serive.channel.comp.CPanel;
+import com.original.serive.channel.comp.CScrollPanel;
+import com.original.serive.channel.comp.CTextPane;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.ChannelGridLayout;
 import com.original.serive.channel.layout.VerticalGridLayout;
@@ -360,7 +360,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	
 	//返回上一面板，即历史面板
 	private void returnToHistory() {
-		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+		ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 		if (newMsg != null && newMsg.getMessageID() != null) {
 			if (newMsg.getAction() == Constants.ACTION_REPLY
 					|| newMsg.getAction() == Constants.ACTION_REPOST) {
@@ -378,7 +378,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	}
 
 	//顶部功能按钮面板
-	public class Top extends JPanel implements ActionListener, EventConstants
+	public class Top extends CPanel implements ActionListener, EventConstants
 	{
 		public Top() {
 			setLayout(new ChannelGridLayout(2, 0, new Insets(0, 10, 0, 0)));
@@ -424,7 +424,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			if(buttonItems != null && buttonItems.length > 0)
 			{
 				for(AbstractButtonItem buttonItem : buttonItems) {
-					JButton button = ChannelUtil.createAbstractButton(buttonItem);
+					CButton button = ChannelUtil.createAbstractButton(buttonItem);
 					button.addActionListener(this);
 					super.add(button);
 				}
@@ -471,7 +471,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 									cs.put(Constants.ACTION_REPLY, sendMsg); //回复
 									
 									//添加消息
-									ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+									ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 									desktop.addMessage(sendMsg);
 								} else if (e.getActionCommand() == SAVE_TO_DRAFT) {
 									sendMsg.setRepost(isMessageAddrEditable());
@@ -510,7 +510,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 	}
 	
 	//中间编辑面板
-	public class Center extends JPanel implements ActionListener, FocusListener, EventConstants
+	public class Center extends CPanel implements ActionListener, FocusListener, EventConstants
 	{
 		ChannelGridBagLayoutManager layoutMgr =
 				new ChannelGridBagLayoutManager(this);
@@ -522,17 +522,17 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 				txtSubject = new OTextField(); //主题
 		
 		//一些功能按钮
-		private JPanel control = new JPanel(new ChannelGridLayout(5, 0, new Insets(0, 5, 0, 0)));
-		private JButton btnFont =(JButton) ChannelUtil.createAbstractButton(
+		private CPanel control = new CPanel(new ChannelGridLayout(5, 0, new Insets(0, 5, 0, 0)));
+		private CButton btnFont =(CButton) ChannelUtil.createAbstractButton(
 				new AbstractButtonItem(null, SET_FONT, IconFactory.loadIconByConfig("fontIcon"), null, 
 						IconFactory.loadIconByConfig("fontDisabledIcon"), null)), //字体
-				btnImage = (JButton) ChannelUtil.createAbstractButton(
+				btnImage = (CButton) ChannelUtil.createAbstractButton(
 						new AbstractButtonItem(null, ADD_IMAGE, IconFactory.loadIconByConfig("imageIcon"), null, 
 								IconFactory.loadIconByConfig("imageDisabledIcon"), null)), //图片
-				btnFile = (JButton) ChannelUtil.createAbstractButton(
+				btnFile = (CButton) ChannelUtil.createAbstractButton(
 						new AbstractButtonItem(null, ADD_FILE, IconFactory.loadIconByConfig("fileIcon"), null, 
 								IconFactory.loadIconByConfig("fileDisabledIcon"), null)),//附件
-				btnDebug =  (JButton) ChannelUtil.createAbstractButton(
+				btnDebug =  (CButton) ChannelUtil.createAbstractButton(
 						new AbstractButtonItem(null, DEBUG, IconFactory.loadIconByConfig("debugIcon"), null, 
 								IconFactory.loadIconByConfig("debugDisabledIcon"), null));//调试
 		
@@ -540,7 +540,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		private ToolTip toolTip = new ToolTip();
 		
 		//文本面板
-		private JTextPane content = new JTextPane();
+		private CTextPane content = new CTextPane();
 		
 		//按钮对应的对话框
 		private FontChooser fontChooser = new FontChooser(content);
@@ -560,12 +560,12 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			this.setPreferredSize(SIZE); //固定大小，文本面板如果超出该大小，则添加滚动条
 			this.setBorder(new EmptyBorder(0, 10, 0, 10));
 			
-			layoutMgr.addComToModel(new JLabel("分享/抄送："));
+			layoutMgr.addComToModel(new CLabel("分享/抄送："));
 			layoutMgr.addComToModel(txtCC, 1, 1, GridBagConstraints.HORIZONTAL);
 			txtCC.addFocusListener(this);
 			layoutMgr.newLine();
 			
-			layoutMgr.addComToModel(new JLabel("主题："));
+			layoutMgr.addComToModel(new CLabel("主题："));
 			layoutMgr.addComToModel(txtSubject, 1, 1, GridBagConstraints.HORIZONTAL);
 			layoutMgr.newLine(1);
 			
@@ -580,14 +580,14 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			layoutMgr.addComToModel(control,1,1,GridBagConstraints.HORIZONTAL);
 			layoutMgr.newLine();
 			
-			layoutMgr.addComToModel(new JLabel("内容："));
+			layoutMgr.addComToModel(new CLabel("内容："));
 //			content.setEditorKit(new HTMLEditorKit());
 //			content.addHyperlinkListener(new ChannelHyperlinkListener()); //可编辑状态下，不支持超链
 			content.setContentType("text/html; charset=gb2312");
 			content.setOpaque(false);
 			content.setCursor(ChannelConstants.TEXT_CURSOR);
 			content.setBackground(new Color(0, 0, 0, 0)); //设置文本面板透明的唯一方法
-			JScrollPane scrollPane = ChannelUtil.createScrollPane(content, Color.gray);
+			CScrollPanel scrollPane = ChannelUtil.createScrollPane(content, Color.gray);
 	        scrollPane.setBorder(BorderFactory.createCompoundBorder(
 	        		new InnerShadowBorder(), new EmptyBorder(0, 5, 10, 5)));
 	        

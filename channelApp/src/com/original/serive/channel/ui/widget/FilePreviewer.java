@@ -11,10 +11,10 @@ import java.net.MalformedURLException;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
-import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 
+import com.original.serive.channel.comp.CPanel;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
 
@@ -23,7 +23,7 @@ import com.original.serive.channel.util.GraphicsHandler;
  * @author WMS
  * 
  */
-public class FilePreviewer extends JPanel implements PropertyChangeListener {
+public class FilePreviewer extends CPanel implements PropertyChangeListener {
 	private static final long serialVersionUID = -1291104055731523653L;
 	
 	JFileChooser chooser = null;

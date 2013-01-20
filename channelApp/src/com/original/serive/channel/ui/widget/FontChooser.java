@@ -17,11 +17,8 @@ import java.util.Vector;
 import javax.swing.AbstractButton;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
-import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
-import javax.swing.JPanel;
-import javax.swing.JTextPane;
 import javax.swing.JToggleButton;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
@@ -30,6 +27,9 @@ import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.StyledDocument;
 
 import com.original.serive.channel.EventConstants;
+import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CPanel;
+import com.original.serive.channel.comp.CTextPane;
 import com.original.serive.channel.layout.ChannelGridLayout;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.ui.data.FontStyle;
@@ -43,7 +43,7 @@ import com.original.serive.channel.util.IconFactory;
  * @version 1.1
  *
  */
-public class FontChooser extends JPanel implements ActionListener, ItemListener,  CaretListener, EventConstants
+public class FontChooser extends CPanel implements ActionListener, ItemListener,  CaretListener, EventConstants
 {
 	private static GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 	private static DefaultComboBoxModel familiesModel = null,
@@ -67,14 +67,14 @@ public class FontChooser extends JPanel implements ActionListener, ItemListener,
 							IconFactory.loadIconByConfig("underLineSelectedIcon"), null), JToggleButton.class);
 	
 	private JColorChooser colorChooser = new JColorChooser(Color.black);
-			private JButton color =  ChannelUtil.createAbstractButton(
+			private CButton color =  ChannelUtil.createAbstractButton(
 					new AbstractButtonItem(null, CHOOSE_COLOR, IconFactory.loadIconByConfig("fontColorIcon")));
 	
 			//用于记录加粗、斜体、下划线这些按钮的选中状态
 	private Map<String, Icon> icons = new HashMap<String, Icon>(),
 			selectedIcons = new HashMap<String, Icon>();
 			
-	private JTextPane editor = null;
+	private CTextPane editor = null;
 	private FontStyle fs = new FontStyle();
 	
 	static {
@@ -85,7 +85,7 @@ public class FontChooser extends JPanel implements ActionListener, ItemListener,
 		sizesModel = new DefaultComboBoxModel(sizes);
 	}
 	
-	public FontChooser(JTextPane editor) //overall是否是全局样式
+	public FontChooser(CTextPane editor) //overall是否是全局样式
 	{
 		this.editor = editor;
 		fs.setEditor(editor);

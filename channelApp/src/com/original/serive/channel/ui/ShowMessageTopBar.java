@@ -3,9 +3,8 @@ package com.original.serive.channel.ui;
 import java.awt.Dimension;
 import java.text.SimpleDateFormat;
 
-import javax.swing.JLabel;
-
-import com.original.serive.channel.ChannelGUI;
+import com.original.channel.ChannelAppCache;
+import com.original.serive.channel.comp.CLabel;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
@@ -18,7 +17,7 @@ import com.original.service.channel.ChannelMessage;
 public class ShowMessageTopBar extends ChannelMessageTopBar
 {
 	private SimpleDateFormat messageFormat = new SimpleDateFormat("MM月dd日 HH:mm");//消息时间格式
-	private JLabel messageHeader = new JLabel();
+	private CLabel messageHeader = new CLabel();
 	
 	private ChannelMessage channelMsg = null;//当前显示消息对象
 	
@@ -48,7 +47,7 @@ public class ShowMessageTopBar extends ChannelMessageTopBar
 			messageHeader.setFont(ChannelConstants.DEFAULT_FONT);
 			messageHeader.setText(channelMsg.getReceivedDate() == null ? "" : messageFormat.format(channelMsg.getReceivedDate()));
 			messageHeader.setIconTextGap(10);
-			messageHeader.setHorizontalTextPosition(JLabel.RIGHT);
+			messageHeader.setHorizontalTextPosition(CLabel.RIGHT);
 		}
 	}
 
@@ -65,7 +64,7 @@ public class ShowMessageTopBar extends ChannelMessageTopBar
 
 	@Override
 	public void doClose() {
-		ChannelDesktopPane desktop =ChannelGUI.getDesktop();
+		ChannelDesktopPane desktop =ChannelAppCache.getDesktop();
 		if(channelMsg != null) {
 			desktop.removeShowComp(PREFIX_SHOW + channelMsg.getContactName());
 		}

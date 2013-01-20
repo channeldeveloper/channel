@@ -27,19 +27,19 @@ import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.event.SwingPropertyChangeSupport;
 import javax.swing.plaf.basic.BasicMenuItemUI;
 
-import com.original.serive.channel.ChannelGUI;
+import com.original.channel.ChannelAppCache;
 import com.original.serive.channel.EventConstants;
+import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CLabel;
+import com.original.serive.channel.comp.CMenuItem;
+import com.original.serive.channel.comp.CPanel;
+import com.original.serive.channel.comp.CPopupMenu;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.ui.data.MenuItem;
 import com.original.serive.channel.util.ChannelConfig;
@@ -55,17 +55,17 @@ import com.original.serive.channel.util.LocationIcon;
  * @author WMS
  *
  */
-public class ChannelToolBar extends JPanel implements ActionListener, EventConstants
+public class ChannelToolBar extends CPanel implements ActionListener, EventConstants
 {
 	/** 工具栏的固定大小 */
 	public static Dimension SIZE = new Dimension(
 			ChannelConfig.getIntValue("width"),
 			ChannelConfig.getIntValue("toolbarHeight"));
 	
-//	private JButton btnNew = new JButton(IconFactory.loadIconByConfig("newIcon")), //新建联系人发送信息
-//			btnSetting = new JButton(IconFactory.loadIconByConfig("settingIcon"));//设置
+//	private CButton btnNew = new CButton(IconFactory.loadIconByConfig("newIcon")), //新建联系人发送信息
+//			btnSetting = new CButton(IconFactory.loadIconByConfig("settingIcon"));//设置
 	
-	private JButton btnNew = ChannelUtil.createAbstractButton(
+	private CButton btnNew = ChannelUtil.createAbstractButton(
 			new AbstractButtonItem(null, NEW, 	IconFactory.loadIconByConfig("newIcon"))),
 					btnSetting = ChannelUtil.createAbstractButton(
 							new AbstractButtonItem(null, SETTING, IconFactory.loadIconByConfig("settingIcon")));
@@ -164,7 +164,7 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		if(e.getActionCommand() == NEW) {
 			ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(true));
 			cmp.newMessage(null); 
-			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+			ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 			desktop.addOtherShowComp(PREFIX_NEW,  cmp);
 		}
 	}
@@ -205,7 +205,7 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 	/**
 	 * Channel按钮，可以通用。注意按钮的高度固定，宽度随文字的长度和大小而定。
 	 */
-	public class ChannelButton extends JButton
+	public class ChannelButton extends CButton
 	{
 		ChannelPopupMenu popmenu = new ChannelPopupMenu(this) ;
 		public ChannelButton(String text)
@@ -239,7 +239,7 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 			{
 				for(int i= 0; i< items.length; i++)
 				{
-					JMenuItem mi = popmenu.createMenuItem(items[i]);
+					CMenuItem mi = popmenu.createMenuItem(items[i]);
 					popmenu.add(mi);
 					if(items[i].isAddSeparator()) {
 						popmenu.addSeparator();
@@ -422,28 +422,28 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 	/**
 	 * Channel弹出框，可以通用
 	 */
-	public class ChannelPopupMenu extends JPopupMenu implements ActionListener
+	public class ChannelPopupMenu extends CPopupMenu implements ActionListener
 	{
-		private JButton owner;
+		private CButton owner;
 		private Color selectedBackground = new Color(46,156,202),
 				background = new Color(249, 249, 249);
 		private Icon selectedIcon = IconFactory.loadIconByConfig("yesIcon"),
 				disSelectedIcon = IconFactory.loadIconByConfig("emptyIcon");
 		private ButtonGroup bgp = new ButtonGroup();
 		
-		public ChannelPopupMenu(JButton owner) {
+		public ChannelPopupMenu(CButton owner) {
 			this.owner = owner;
 		}
 
-		public JMenuItem createMenuItem(MenuItem menuItem)
+		public CMenuItem createMenuItem(MenuItem menuItem)
 		{
 			menuItem.setSize(owner.getBounds().width-2*2, 30);
-			final JMenuItem item = ChannelUtil.createMenuItem(menuItem);
+			final CMenuItem item = ChannelUtil.createMenuItem(menuItem);
 			
 			item.setUI(new ChannelMenuItemUI(selectedBackground, Color.white));
 			item.setIcon(disSelectedIcon);
 			item.setOpaque(false);
-			item.setHorizontalAlignment(JMenuItem.LEFT);
+			item.setHorizontalAlignment(CMenuItem.LEFT);
 			item.addActionListener(this);
 			
 			final ButtonModel model = new JToggleButton.ToggleButtonModel() {
@@ -463,7 +463,7 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 			return item;
 		}
 		
-		public JButton getOwner()
+		public CButton getOwner()
 		{
 			return owner;
 		}
@@ -489,10 +489,10 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 		//菜单项点击触发事件
 		public void actionPerformed(ActionEvent e)
 		{
-			JMenuItem mi = (JMenuItem) e.getSource();
+			CMenuItem mi = (CMenuItem) e.getSource();
 			ChannelPopupMenu menu = (ChannelPopupMenu)mi.getParent();
 			if (mi.isSelected()) {
-				JButton owner = menu.getOwner();
+				CButton owner = menu.getOwner();
 				if (owner == typeButton) {
 					fireMessageChange(TYPE_CHANGE_PROPERTY, selectedType, mi.getActionCommand());
 				} else if (owner == statusButton) {
@@ -528,7 +528,7 @@ public class ChannelToolBar extends JPanel implements ActionListener, EventConst
 	/**
 	 * Channel用户头像，唯一
 	 */
-	public static class ChannelUserHeadLabel extends JLabel
+	public static class ChannelUserHeadLabel extends CLabel
 	{
 		public ChannelUserHeadLabel() {
 			this(IconFactory.loadIconByConfig("userHeadIcon"));

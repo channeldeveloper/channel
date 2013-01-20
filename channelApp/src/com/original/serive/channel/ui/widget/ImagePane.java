@@ -11,15 +11,15 @@ import java.net.URL;
 
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
-import javax.swing.JPanel;
 import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
 
+import com.original.serive.channel.comp.CPanel;
+import com.original.serive.channel.comp.CScrollPanel;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.GraphicsHandler;
 import com.original.widget.OScrollBar;
 
-public class ImagePane extends JPanel implements ChannelConstants
+public class ImagePane extends CPanel implements ChannelConstants
 {
 	private BufferedImage background = null;
 	private String initTips = "正在加载图片，请稍等……";
@@ -108,8 +108,8 @@ public class ImagePane extends JPanel implements ChannelConstants
 	public JComponent getScrollImagePane() {
 		if(background != null && background.getHeight() > DESKTOPHEIGHT - 30) 
 		{
-			JScrollPane scrollPane = new JScrollPane(this, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+			CScrollPanel scrollPane = new CScrollPanel(this, CScrollPanel.VERTICAL_SCROLLBAR_AS_NEEDED,
+					CScrollPanel.HORIZONTAL_SCROLLBAR_NEVER);
 			
 			// 不显示边框，同时设置背景透明
 			scrollPane.setBorder(null);

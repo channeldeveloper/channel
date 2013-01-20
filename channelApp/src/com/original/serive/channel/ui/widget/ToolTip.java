@@ -6,9 +6,8 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.util.Hashtable;
 
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-
+import com.original.serive.channel.comp.CMenuItem;
+import com.original.serive.channel.comp.CPopupMenu;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
 
@@ -17,12 +16,12 @@ import com.original.serive.channel.util.GraphicsHandler;
  * @author WMS
  *
  */
-public class ToolTip extends JPopupMenu{
+public class ToolTip extends CPopupMenu{
 	public static final String SHOW_STATUS_PROPERTY = "show status"; //invoker的显示状态，如果有其他属性，待可以扩充。
 	private static Hashtable<Component, Hashtable<String, Object>> clientProperties = 
 			new Hashtable<Component, Hashtable<String,Object>>();
 	
-	private JMenuItem menu = new JMenuItem();
+	private CMenuItem menu = new CMenuItem();
 	private Component invoker = null;
 	public ToolTip() {
 		add(menu);

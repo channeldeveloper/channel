@@ -6,9 +6,12 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/iQQ"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/weibo4j-oauth2"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/channel"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/pips"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OriUDK"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OriWidget"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OriWidgetRes"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/channel"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/pips-main-launch"/>
+	<classpathentry kind="lib" path="/pips-main-launch/lib/pips-framework-bsaf-0.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

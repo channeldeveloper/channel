@@ -13,14 +13,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.AbstractButton;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.border.EmptyBorder;
 
-import com.original.serive.channel.ChannelGUI;
+import com.original.channel.ChannelAppCache;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.border.SingleLineBorder;
+import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CPanel;
+import com.original.serive.channel.comp.CPopupMenu;
 import com.original.serive.channel.layout.ChannelGridLayout;
 import com.original.serive.channel.ui.ChannelMessagePane.ContactHeader;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
@@ -39,9 +39,9 @@ import com.original.service.channel.Constants;
  * @author WMS
  *
  */
-public class ChannelPopupMenu extends JPopupMenu implements EventConstants
+public class ChannelPopupMenu extends CPopupMenu implements EventConstants
 {	
-	private JButton channel4QQ = ChannelUtil.createAbstractButton(
+	private CButton channel4QQ = ChannelUtil.createAbstractButton(
 			new AbstractButtonItem(null, CHANNEL_FOR_QQ,
 					IconFactory.loadIconByConfig("qqChannelIcon"), new Dimension(40, 40))),
 			channel4Weibo = ChannelUtil.createAbstractButton(
@@ -147,7 +147,7 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 		GraphicsHandler.suspendRendering(g2d);
 	}
 	
-	static class MenuPane extends JPanel implements ActionListener
+	static class MenuPane extends CPanel implements ActionListener
 	{
 		Rectangle focusBounds = null; //这里自定义选中的区域(即获得焦点的区域)，模仿菜单被选中的效果
 		public MenuPane() {
@@ -189,7 +189,7 @@ public class ChannelPopupMenu extends JPopupMenu implements EventConstants
 				
 				ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(false));				
 				cmp.newMessage(newMsg); 
-				ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+				ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 				desktop.addOtherShowComp(PREFIX_NEW+newMsg.getContactName(),  cmp);
 			}
 		}

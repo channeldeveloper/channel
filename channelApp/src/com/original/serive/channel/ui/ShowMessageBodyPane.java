@@ -10,16 +10,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.AbstractButton;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.html.HTMLEditorKit;
 
-import com.original.serive.channel.ChannelGUI;
+import com.original.channel.ChannelAppCache;
 import com.original.serive.channel.EventConstants;
+import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CLabel;
+import com.original.serive.channel.comp.CPanel;
+import com.original.serive.channel.comp.CScrollPanel;
+import com.original.serive.channel.comp.CTextPane;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.ChannelGridLayout;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
@@ -36,9 +36,9 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 {
 	private ChannelGridBagLayoutManager layoutMgr = null;
 	
-	private JLabel title = new JLabel();
-	private JPanel ctrlGroup = new JPanel(new ChannelGridLayout(2, 0, new Insets(0, 0, 0, 0)));
-	private JTextPane content = new JTextPane();//文本面板
+	private CLabel title = new CLabel();
+	private CPanel ctrlGroup = new CPanel(new ChannelGridLayout(2, 0, new Insets(0, 0, 0, 0)));
+	private CTextPane content = new CTextPane();//文本面板
 	
 	private ChannelMessage newMsg = null;
 	private ChannelMessageBodyPane.Body origin = null;
@@ -67,7 +67,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 		content.setOpaque(false);
 		content.setEditable(false);
 		content.setBackground(new Color(0, 0, 0, 0)); //设置文本面板透明的唯一方法
-		JScrollPane scrollPane = ChannelUtil.createScrollPane(content, Color.gray);
+		CScrollPanel scrollPane = ChannelUtil.createScrollPane(content, Color.gray);
         scrollPane.setBorder(new EmptyBorder(0, 0, 10, 5));
         
         //开始添加控件
@@ -174,7 +174,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 			
 			for(AbstractButtonItem item : items)
 			{
-				JButton button = ChannelUtil.createAbstractButton(item);
+				CButton button = ChannelUtil.createAbstractButton(item);
 				button.addActionListener(this);
 				ctrlGroup.add(button);
 			}
@@ -185,7 +185,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
-		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+		ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 		if (DELETE == e.getActionCommand()) {// 删除
 			if (origin != null) {
 				origin.doDelete();

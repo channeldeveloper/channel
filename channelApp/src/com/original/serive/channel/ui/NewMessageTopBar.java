@@ -18,14 +18,14 @@ import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.Icon;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.border.EmptyBorder;
 
 import com.original.serive.channel.EventConstants;
+import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CLabel;
+import com.original.serive.channel.comp.CPanel;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.ChannelGridLayout;
 import com.original.serive.channel.ui.ChannelMessagePane.MessageContainer;
@@ -54,18 +54,18 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 					IconFactory.loadIconByConfig("sendWeiboIcon"), 	IconFactory.loadIconByConfig("sendWeiboSelectedIcon"), IconFactory.loadIconByConfig("sendWeiboDisabledIcon"), 
 					new Dimension(40, 40));
 			
-	JButton btnCC = ChannelUtil.createAbstractButton(
+	CButton btnCC = ChannelUtil.createAbstractButton(
 			new AbstractButtonItem("分享/抄送", ADD_CC, null));
-	JButton btnLinker = ChannelUtil.createAbstractButton(
+	CButton btnLinker = ChannelUtil.createAbstractButton(
 			new AbstractButtonItem(null, SELECT_LINKER, IconFactory.loadIconByConfig("linkerIcon")));
 	
 	private boolean editable = false; //是否可编辑。如果为true，则联系人地址可以编辑(文本框)；否则只显示(标签)
 	//由editable来决定是用lbMsgTo还是txtMsgTo(中)
-	private JLabel lbMsgTo = new JLabel();
+	private CLabel lbMsgTo = new CLabel();
 	private JTextField txtMsgTo = new OTextField();
 	
 	private MessageButtonGroup mbg = new MessageButtonGroup();//按钮控制组(左)
-	private JPanel control = new  JPanel(); //按钮控制面板，如选择联系人、添加分享/抄送等(右)
+	private CPanel control = new  CPanel(); //按钮控制面板，如选择联系人、添加分享/抄送等(右)
 	
 	private ChannelGridBagLayoutManager layoutMgr = 
 			new ChannelGridBagLayoutManager(this);
@@ -91,17 +91,17 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		//设置布局样式和大小
 		setPreferredSize(new Dimension(SIZE.width, 55));
 		
-		JPanel left = new JPanel(new ChannelGridLayout(0, 0, new Insets(0,0, 0, 0)));
+		CPanel left = new CPanel(new ChannelGridLayout(0, 0, new Insets(0,0, 0, 0)));
 		left.add(mbg.add(newMail));
 		left.add(mbg.add(newQQ));
 		left.add(mbg.add(newWeibo));
 		layoutMgr.addComToModel(left);
 		
-		JPanel center = new JPanel(new BorderLayout(5,0));
+		CPanel center = new CPanel(new BorderLayout(5,0));
 		center.setBorder(new EmptyBorder(10, 0, 0, 0));
-		JLabel lbTo = new JLabel("To：");
+		CLabel lbTo = new CLabel("To：");
 		lbTo.setForeground(ChannelConstants.LIGHT_TEXT_COLOR);
-		lbTo.setVerticalAlignment(JLabel.TOP);
+		lbTo.setVerticalAlignment(CLabel.TOP);
 		center.add(lbTo, BorderLayout.WEST);
 		if(!this.editable) {
 			center.add(lbMsgTo, BorderLayout.CENTER);
@@ -136,7 +136,7 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		
 		btnLinker.addActionListener(this);
 		
-		lbMsgTo.setHorizontalAlignment(JLabel.LEFT);
+		lbMsgTo.setHorizontalAlignment(CLabel.LEFT);
 		lbMsgTo.setForeground(color);
 	}
 
@@ -330,7 +330,7 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 		public AbstractButton add(final AbstractButtonItem item)
 		{
 			if(item != null) {
-				final JButton button = ChannelUtil.createAbstractButton(item);
+				final CButton button = ChannelUtil.createAbstractButton(item);
 				final ButtonModel model  = new JToggleButton.ToggleButtonModel() {
 					public void setSelected(boolean b)
 					{

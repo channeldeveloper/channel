@@ -12,13 +12,13 @@ import java.util.Vector;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 
 import com.original.serive.channel.EventConstants;
+import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CLabel;
+import com.original.serive.channel.comp.CPanel;
 import com.original.serive.channel.layout.ChannelGridLayout;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.ui.data.ComboItem;
@@ -32,12 +32,12 @@ import com.original.service.channel.Utilies;
  * @author WMS
  *
  */
-public class FileAttacher extends JPanel implements ActionListener, EventConstants
+public class FileAttacher extends CPanel implements ActionListener, EventConstants
 {
 	public static Icon attacherDelIcon = IconFactory.loadIconByConfig("fileDelIcon"),
 			attacherAddIcon = IconFactory.loadIconByConfig("fileAddIcon");
 	
-	private JButton btnDel = ChannelUtil.createAbstractButton(
+	private CButton btnDel = ChannelUtil.createAbstractButton(
 			new AbstractButtonItem(null, DEL_ATTACHMENT, attacherDelIcon)),
 			btnAdd = ChannelUtil.createAbstractButton(
 					new AbstractButtonItem(null, ADD_ATTACHMENT, attacherAddIcon));
@@ -48,7 +48,7 @@ public class FileAttacher extends JPanel implements ActionListener, EventConstan
 	public FileAttacher() {
 		setLayout(new ChannelGridLayout(10, 0, new Insets(5, 10, 5, 10)));
 		
-		add(new JLabel("附件："));
+		add(new CLabel("附件："));
 		attacherBox.setPreferredSize(new Dimension(200, 22));
 		add(attacherBox);
 		btnDel.setMargin(new Insets(0, 0, 0, 0));

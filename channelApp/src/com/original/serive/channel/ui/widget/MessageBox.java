@@ -6,12 +6,10 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+import com.original.serive.channel.comp.CScrollPanel;
 import com.original.serive.channel.util.ChannelUtil;
-import com.original.widget.OScrollBar;
 
 /**
  * 消息框，用于弹窗显示。如确认消息、提示消息等等。
@@ -48,7 +46,7 @@ public class MessageBox
 		Container container = boxArea;
 		
 		if (boxArea.getUI().getPreferredSize(boxArea).height > boxMaximumSize.height) {
-			JScrollPane boxPane = ChannelUtil.createScrollPane(boxArea, Color.gray);
+			CScrollPanel boxPane = ChannelUtil.createScrollPane(boxArea, Color.gray);
 
 			//设置相对大小
 			Dimension preferedSize = (Dimension) boxArea.getSize().clone();

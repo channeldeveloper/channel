@@ -36,20 +36,15 @@ import java.security.PrivilegedAction;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JRootPane;
 import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -65,6 +60,11 @@ import chrriis.dj.nativeswing.swtimpl.components.WebBrowserNavigationEvent;
 import chrriis.dj.nativeswing.swtimpl.components.WebBrowserWindowFactory;
 
 import com.original.serive.channel.border.ShadowBorder;
+import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CMenuItem;
+import com.original.serive.channel.comp.CPanel;
+import com.original.serive.channel.comp.CPopupMenu;
+import com.original.serive.channel.comp.CScrollPanel;
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.server.ChannelAccesser;
 import com.original.serive.channel.ui.ChannelMessageTopBar;
@@ -224,9 +224,9 @@ public class ChannelUtil implements ChannelConstants
 	 * @param item 按钮项目
 	 * @return
 	 */
-	public static JButton createAbstractButton(AbstractButtonItem item)
+	public static CButton createAbstractButton(AbstractButtonItem item)
 	{
-		return createAbstractButton(item, JButton.class);
+		return createAbstractButton(item, CButton.class);
 	}
 	public static <T extends AbstractButton> T  createAbstractButton(AbstractButtonItem item, Class<T> clazz)
 	{
@@ -270,9 +270,9 @@ public class ChannelUtil implements ChannelConstants
 	 * @param item 菜单项目
 	 * @return
 	 */
-	public static JMenuItem createMenuItem(MenuItem item) {
+	public static CMenuItem createMenuItem(MenuItem item) {
 		if(item != null) {
-			JMenuItem menuItem = new JMenuItem(item.getText(), item.getIcon());
+			CMenuItem menuItem = new CMenuItem(item.getText(), item.getIcon());
 			menuItem.setActionCommand(item.getActionCommand());
 			if(item.getSize() != null) {
 				menuItem.setPreferredSize(item.getSize());
@@ -508,8 +508,8 @@ MessageBox box = new MessageBox(content);
 			boolean modal) {
 		while ((parent != null) && (!(parent instanceof Frame))
 				&& (!(parent instanceof Dialog))) {
-			if (parent instanceof JPopupMenu) {
-				parent = ((JPopupMenu) parent).getInvoker();
+			if (parent instanceof CPopupMenu) {
+				parent = ((CPopupMenu) parent).getInvoker();
 			}
 			parent = parent.getParent();
 		}
@@ -528,9 +528,9 @@ MessageBox box = new MessageBox(content);
 	/**
 	 * 创建自定义面板，与Channel主程序面板风格一致
 	 */
-	public static JPanel createCustomedPane(final JDialog dialog, final Container child, final String title)
+	public static CPanel createCustomedPane(final JDialog dialog, final Container child, final String title)
 	{
-		JPanel body = new JPanel(new VerticalGridLayout(
+		CPanel body = new CPanel(new VerticalGridLayout(
 				VerticalGridLayout.TOP_TO_BOTTOM,0,0,new Insets(0, 0, 5, 2)));
 		body.setBorder(new ShadowBorder(2, 10, 0.4f, child.getBackground()));
 		
@@ -575,7 +575,7 @@ MessageBox box = new MessageBox(content);
 			String title, boolean modal,final Container child)
 	{
 		JDialog d = createDialog(parent, title, modal);
-		final JPanel body = createCustomedPane(d, child, title);
+		final CPanel body = createCustomedPane(d, child, title);
 		
 		d.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		d.setContentPane(body);
@@ -640,7 +640,7 @@ MessageBox box = new MessageBox(content);
 				public void run() {
 					ip.setBackground(imgURL);
 					if (ip.getBackgroundImage() != null) {
-						JPanel container = (JPanel) dialog.getContentPane();
+						CPanel container = (CPanel) dialog.getContentPane();
 						container.remove(ip);
 						container.add(ip.getScrollImagePane());
 						container.validate();
@@ -665,7 +665,7 @@ MessageBox box = new MessageBox(content);
 		if(chooserPane == null) {
 			chooserPane = new JColorChooser();
 		}
-		JPanel body = new JPanel();
+		CPanel body = new CPanel();
 		body.setBorder(new ShadowBorder());
 		
 		final	JDialog dialog = JColorChooser.createDialog(c, title, modal, chooserPane, null, null);
@@ -914,24 +914,24 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		}
 		
 		dialog.setTextEditor(editor);
-JPanel body = createCustomedPane(dialog, dialog.getDefautFacePanel(), title);
-dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-dialog.setContentPane(body);
-dialog.pack();
-dialog.setLocationRelativeTo(c);
-checkWindowLocation(dialog);
-dialog.setVisible(true);
+	CPanel body = createCustomedPane(dialog, dialog.getDefautFacePanel(), title);
+	dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+	dialog.setContentPane(body);
+	dialog.pack();
+	dialog.setLocationRelativeTo(c);
+	checkWindowLocation(dialog);
+	dialog.setVisible(true);
 	}
 	
 	/**
 	 * 创建带滚动条的面板
 	 */
-	public static JScrollPane createScrollPane(Component c) {
+	public static CScrollPanel createScrollPane(Component c) {
 		return createScrollPane(c, Color.gray);
 	}
-	public static JScrollPane createScrollPane(Component c, Color barColor) {
-		JScrollPane jsp = new JScrollPane(c, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+	public static CScrollPanel createScrollPane(Component c, Color barColor) {
+		CScrollPanel jsp = new CScrollPanel(c, CScrollPanel.VERTICAL_SCROLLBAR_AS_NEEDED,
+				CScrollPanel.HORIZONTAL_SCROLLBAR_NEVER);
 
 		// 不显示边框，同时设置背景透明
 		jsp.setBorder(null);

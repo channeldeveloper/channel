@@ -3,7 +3,6 @@ package com.original.serive.channel.ui.data;
 import java.awt.Color;
 import java.io.Serializable;
 
-import javax.swing.JTextPane;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -11,6 +10,7 @@ import javax.swing.text.StyleConstants;
 import atg.taglib.json.util.JSONException;
 import atg.taglib.json.util.JSONObject;
 
+import com.original.serive.channel.comp.CTextPane;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
 
@@ -40,7 +40,7 @@ public class FontStyle implements Serializable, Cloneable, ChannelConstants
 		StyleConstants.Italic,
 		StyleConstants.Underline};
 	
-	private transient JTextPane editor = null; //文本编辑器
+	private transient CTextPane editor = null; //文本编辑器
 	private boolean overall = false; //是否全局样式，如对于QQ，则是全局样式。即一旦添加某个StyleAttribute，则所有的文本都有该属性
 	private SimpleAttributeSet overallAttribute = null;//全局样式，当overall==true时有效
 	
@@ -114,10 +114,10 @@ public class FontStyle implements Serializable, Cloneable, ChannelConstants
 		}
 	}
 	
-	public JTextPane getEditor() {
+	public CTextPane getEditor() {
 		return editor;
 	}
-	public void setEditor(JTextPane editor) {
+	public void setEditor(CTextPane editor) {
 		this.editor = editor;
 	}
 	

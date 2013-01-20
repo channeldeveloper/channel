@@ -9,11 +9,11 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import com.original.serive.channel.EventConstants;
+import com.original.serive.channel.comp.CLabel;
+import com.original.serive.channel.comp.CPanel;
 import com.original.serive.channel.util.ChannelConfig;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.IconFactory;
@@ -24,7 +24,7 @@ import com.original.serive.channel.util.IconFactory;
  * @author WMS
  *
  */
-public class ChannelMessageStatusBar extends JPanel implements PropertyChangeListener, EventConstants
+public class ChannelMessageStatusBar extends CPanel implements PropertyChangeListener, EventConstants
 {
 	private ChannelMessageBodyPane body;
 	static Dimension SIZE = new Dimension(
@@ -36,12 +36,12 @@ public class ChannelMessageStatusBar extends JPanel implements PropertyChangeLis
 			qqCount = 0,
 			weiboCount = 0;
 	
-	private JLabel mailLabel = new JLabel("邮件：" + mailCount),
-			qqLabel = new JLabel("QQ：" + qqCount),
-			weiboLabel = new JLabel("微博：" + weiboCount);
+	private CLabel mailLabel = new CLabel("邮件：" + mailCount),
+			qqLabel = new CLabel("QQ：" + qqCount),
+			weiboLabel = new CLabel("微博：" + weiboCount);
 	
-	private JLabel showAllLabel = new JLabel("全部记录", 
-			IconFactory.loadIconByConfig("expandAllIcon"), JLabel.RIGHT);
+	private CLabel showAllLabel = new CLabel("全部记录", 
+			IconFactory.loadIconByConfig("expandAllIcon"), CLabel.RIGHT);
 	
 	protected boolean hasNotify = false;
 	
@@ -67,7 +67,7 @@ public class ChannelMessageStatusBar extends JPanel implements PropertyChangeLis
 		//显示全部标签
 		showAllLabel.setForeground(color);
 		showAllLabel.setIconTextGap(5);
-		showAllLabel.setHorizontalTextPosition(JLabel.LEFT);
+		showAllLabel.setHorizontalTextPosition(CLabel.LEFT);
 		showAllLabel.setCursor(ChannelConstants.HAND_CURSOR);
 		showAllLabel.addMouseListener(new MouseAdapter()
 		{
@@ -87,13 +87,13 @@ public class ChannelMessageStatusBar extends JPanel implements PropertyChangeLis
 		setBorder(new EmptyBorder(5,45,0,10));
 		
 		//开始添加控件
-		JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT,10,0));
+		CPanel left = new CPanel(new FlowLayout(FlowLayout.LEFT,10,0));
 		left.add(mailLabel);
 		left.add(qqLabel);
 		left.add(weiboLabel);
 		add(left, BorderLayout.WEST);
 		
-		JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT,10,0));
+		CPanel right = new CPanel(new FlowLayout(FlowLayout.RIGHT,10,0));
 		right.add(showAllLabel);
 		add(right, BorderLayout.EAST);
 		

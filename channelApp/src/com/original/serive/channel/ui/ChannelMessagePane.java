@@ -19,11 +19,11 @@ import java.io.IOException;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 
 import com.mongodb.gridfs.GridFSDBFile;
+import com.original.serive.channel.comp.CLabel;
+import com.original.serive.channel.comp.CPanel;
+import com.original.serive.channel.comp.CPopupMenu;
 import com.original.serive.channel.layout.ChannelGridBagLayoutManager;
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.ui.widget.ToolTip;
@@ -48,7 +48,7 @@ import com.original.service.storage.GridFSUtil;
  * @author WMS
  *
  */
-public class ChannelMessagePane extends JPanel
+public class ChannelMessagePane extends CPanel
 {
 	private ChannelGridBagLayoutManager layoutMgr = 
 			new ChannelGridBagLayoutManager(this);
@@ -64,8 +64,8 @@ public class ChannelMessagePane extends JPanel
 			IconFactory.loadIconByConfig("contactHeadIcon"));
 	
 	//消息箭头，左右两种(左为接受，右为发送)
-	private JLabel leftArrow = new JLabel(IconFactory.loadIconByConfig("leftArrowIcon")),
-			rightArrow = new JLabel(IconFactory.loadIconByConfig("rightArrowIcon"));
+	private CLabel leftArrow = new CLabel(IconFactory.loadIconByConfig("leftArrowIcon")),
+			rightArrow = new CLabel(IconFactory.loadIconByConfig("rightArrowIcon"));
 	private Dimension arrowSize = new Dimension(ChannelConfig.getIntValue("arrowWidth"),
 			ContactHeader.HEADSIZE.height);
 	
@@ -299,7 +299,7 @@ public class ChannelMessagePane extends JPanel
 	 * @author WMS
 	 *
 	 */
-	public  class MessageContainer extends JPanel
+	public  class MessageContainer extends CPanel
 	{
 		Color bgColor = Color.white;//背景颜色，默认白色
 		
@@ -373,14 +373,14 @@ public class ChannelMessagePane extends JPanel
 	 * @author WMS
 	 *
 	 */
-	public static class ContactHeader extends JPanel
+	public static class ContactHeader extends CPanel
 	{
 		public static  Dimension SIZE =  new Dimension(80, 100),
 				HEADSIZE = new Dimension(72, 72);
 		
 		private LocationIcon headIcon = null;//联系人头像
 		private String contactName = "联系人";//联系人用户名
-		private JPopupMenu headPopupMenu = new ChannelPopupMenu(this),
+		private CPopupMenu headPopupMenu = new ChannelPopupMenu(this),
 				contactPopupMenu = new ToolTip();
 		private Rectangle headBounds = null,
 				contactBounds = new Rectangle(0, SIZE.height-20, SIZE.width, 16);		

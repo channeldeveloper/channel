@@ -22,10 +22,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JEditorPane;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JViewport;
 import javax.swing.border.EmptyBorder;
@@ -34,10 +31,13 @@ import javax.swing.text.EditorKit;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 
-import com.original.serive.channel.ChannelGUI;
+import com.original.channel.ChannelAppCache;
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.border.DottedLineBorder;
 import com.original.serive.channel.border.SingleLineBorder;
+import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CLabel;
+import com.original.serive.channel.comp.CPanel;
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.server.ChannelAccesser;
 import com.original.serive.channel.ui.ChannelMessagePane.MessageContainer;
@@ -58,7 +58,7 @@ import com.original.widget.OTextField;
  * @author WMS
  *
  */
-public class ChannelMessageBodyPane extends JPanel implements EventConstants
+public class ChannelMessageBodyPane extends CPanel implements EventConstants
 {
 	private Vector<ChannelMessage> messageBodyList = new Vector<ChannelMessage>();
 	
@@ -252,7 +252,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	 */
 	private void notifyToChangeMessage(ChannelMessage msg, boolean toFirst)
 	{
-		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+		ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 		if (toFirst) { // 如果只显示一条，即顶部显示
 			messageBodyList.remove(messageBodyList.size() - 1);
 			if (messageBodyList.isEmpty()) {
@@ -333,7 +333,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		}
 		nw.setOriginContainer(container);
 
-		ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+		ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 		desktop.addOtherShowComp(PREFIX_SHOWALL + newMsg.getContactName(), nw);
 	}
 	
@@ -358,7 +358,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	}
 	
 	//主体部分，即下面3个部分的整合。
-	public class Body extends JPanel implements EventConstants
+	public class Body extends CPanel implements EventConstants
 	{
 		//上中下3个子控件(面板)
 		Top top = new Top();
@@ -465,7 +465,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			}
 			cmp.newMessage(msg);
 			
-			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+			ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOWANDNEW + msg.getContactName(), cmp);
 		}
 		
@@ -496,20 +496,20 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 			((ShowMessageBodyPane)nw.body).setMessageToGUI(newMsg);
 			((ShowMessageBodyPane)nw.body).setOriginMessageBody(this);
 
-			ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+			ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
 		}
 	}
 	
 	//头部面板
-	static class Top extends JPanel implements ActionListener, EventConstants
+	static class Top extends CPanel implements ActionListener, EventConstants
 	{
 		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-20, 45); 
 		private SimpleDateFormat messageFormat = new SimpleDateFormat("MM月dd日 HH:mm");//消息时间格式
-		private JLabel messageHeader = new JLabel();
+		private CLabel messageHeader = new CLabel();
 		
 		//一些控制按钮
-		private JButton btnReply = createCtrlButton("快速回复", QUICK_REPLY),
+		private CButton btnReply = createCtrlButton("快速回复", QUICK_REPLY),
 				btnSave = createCtrlButton("保存", SAVE),
 				btnDel = createCtrlButton("删除", DELETE),
 				btnEdit = createCtrlButton("编辑", EDIT),
@@ -536,7 +536,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 					messageHeader.setText(msg.getReceivedDate() == null ? "" : messageFormat.format(msg.getReceivedDate()));
 				}
 				messageHeader.setIconTextGap(10);
-				messageHeader.setHorizontalTextPosition(JLabel.RIGHT);
+				messageHeader.setHorizontalTextPosition(CLabel.RIGHT);
 			}
 		}
 		
@@ -648,9 +648,9 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 		 * @param actionCommand 按钮名称(国际化)
 		 * @return
 		 */
-		public JButton createCtrlButton(String text, String actionCommand)
+		public CButton createCtrlButton(String text, String actionCommand)
 		{
-			JButton button = new JButton(text);
+			CButton button = new CButton(text);
 			button.setMargin(new Insets(0, 0, 0, 0));
 			button.setActionCommand(actionCommand);
 			button.addActionListener(this);
@@ -712,6 +712,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 //			setEditorKit(new HTMLEditorKit());//设置样式为HTML编辑样式
 			StyleSheet sheet= htmlEditorKit.getStyleSheet();
 			sheet.addRule("a {text-decoration: none; color: blue; }");
+			this.setFont(ChannelConstants.DEFAULT_FONT);
 			
 			setEditable(false);//不可编辑
 			setOpaque(false);
@@ -772,11 +773,11 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 	}
 	
 	//底部面板，就是一个回复框面板
-	static class Bottom extends JPanel implements ActionListener, EventConstants
+	static class Bottom extends CPanel implements ActionListener, EventConstants
 	{
 		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-60, 30);
 		
-		private JButton btnReply = new JButton("发送"), btnCancel = new JButton("取消");
+		private CButton btnReply = new CButton("发送"), btnCancel = new CButton("取消");
 		private JTextField replyTextField = new OTextField();
 		
 		public Bottom() 
@@ -854,7 +855,7 @@ public class ChannelMessageBodyPane extends JPanel implements EventConstants
 						cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
 
 						//最后回复消息
-						ChannelDesktopPane desktop = ChannelGUI.getDesktop();
+						ChannelDesktopPane desktop = ChannelAppCache.getDesktop();
 						desktop.addMessage(newMsg);
 					}
 					catch (Exception ex) {

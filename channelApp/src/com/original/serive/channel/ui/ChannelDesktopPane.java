@@ -22,14 +22,15 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
-import javax.swing.JPanel;
 import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
 import javax.swing.event.MouseInputListener;
 
 import com.original.serive.channel.EventConstants;
+import com.original.serive.channel.comp.CPanel;
+import com.original.serive.channel.comp.CScrollPanel;
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.server.ChannelAccesser;
+import com.original.serive.channel.ui.widget.CScrollBar;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
@@ -41,7 +42,6 @@ import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.core.QueryItem;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
-import com.original.widget.OScrollBar;
 
 /**
  * Channel用户桌面，该桌面具有切换功能，有默认显示面板(即消息列表面板)，可以切换至其他面板
@@ -50,7 +50,7 @@ import com.original.widget.OScrollBar;
  * @author WMS
  *
  */
-public class ChannelDesktopPane extends JPanel implements MessageListner, AdjustmentListener, MouseInputListener, PropertyChangeListener, EventConstants
+public class ChannelDesktopPane extends CPanel implements MessageListner, AdjustmentListener, MouseInputListener, PropertyChangeListener, EventConstants
 {
 	private CardLayout layoutMgr = new CardLayout(); //卡片布局，带有切换功能
 	public static Dimension SIZE = new Dimension(ChannelConstants.CHANNELWIDTH, 
@@ -60,12 +60,12 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	
 	private static final String DEFAULT_NAME = "DEFAULT",//默认面板的名称
 			FILTER_NAME = "FILTER";//查找过滤面板的名称
-	public static JPanel DEFAULT_PANE = new JPanel(),//桌面默认显示的面板，消息列表面板，带滚动条
+	public static CPanel DEFAULT_PANE = new CPanel(),//桌面默认显示的面板，消息列表面板，带滚动条
 			FILTER_PANE = null; //过滤面板，和默认面板一致
-	public static OScrollBar DEFAULT_SCROLLBAR = 
-			new OScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)), //默认显示面板的滚动条
+	public static CScrollBar DEFAULT_SCROLLBAR = 
+			new CScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)), //默认显示面板的滚动条
 			FILTER_SCROLLBAR = 
-			new OScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)); //过滤面板的滚动条，个默认面板一致
+			new CScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)); //过滤面板的滚动条，个默认面板一致
 	
 	public static LayoutManager DEFAULT_DOWN_LAYOUT = //默认布局方式
 			new VerticalGridLayout(VerticalGridLayout.BOTTOM_TO_TOP, 0, 8, new Insets(0, 0, 0, 0)), 
@@ -105,7 +105,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 * @param owner 显示消息的面板
 	 * @param msg
 	 */
-	public void initMessage(JPanel owner, ChannelMessage msg)
+	public void initMessage(CPanel owner, ChannelMessage msg)
 	{
 		if(!checkMsgValidity(msg))
 			return;
@@ -148,7 +148,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 * @param msg
 	 * @param owner 添加消息的面板
 	 */
-	public void addMessage(JPanel owner, ChannelMessage msg)
+	public void addMessage(CPanel owner, ChannelMessage msg)
 	{
 		if (!checkMsgValidity(msg))
 			return;
@@ -165,7 +165,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 				owner.validate();
 
 				//如果当前显示界面已经切换到<显示全部>面板，则该面板也要添加最新消息
-				JPanel showComp = (JPanel) currentShowComp();
+				CPanel showComp = (CPanel) currentShowComp();
 				if (showComp != DEFAULT_PANE && showComp != FILTER_PANE
 						&& showComp instanceof ChannelMessagePane) {
 					msgContainer = (ChannelMessagePane) showComp;
@@ -186,7 +186,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 * @param msg 消息对象
 	 * @return
 	 */
-	public ChannelMessagePane findMessage(JPanel owner, ChannelMessage msg)
+	public ChannelMessagePane findMessage(CPanel owner, ChannelMessage msg)
 	{
 		if(!checkMsgValidity(msg))
 			return null;
@@ -208,15 +208,18 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	/**
 	 * 这里对消息的有效性进行检查，以后其他面板，如{@link ChannelMessagePane}添加消息时，将不再做检查。
 	 * 
-	 * @param msg 消息报文
+	 * @param msg
+	 *            消息报文
 	 * @return
 	 */
-	public boolean checkMsgValidity(ChannelMessage msg)
-	{
-		//这里目前只检查是否为空，以及标识Id是否为空
-		if(msg == null || msg.getMessageID() == null)
-			throw new IllegalArgumentException("Invalid Message! Cause by it or it's ID is null.");
-		
+	public boolean checkMsgValidity(ChannelMessage msg) {
+		// 这里目前只检查是否为空，以及标识Id是否为空
+		if (msg == null || msg.getMessageID() == null) {
+			return false;
+		}
+		// throw new
+		// IllegalArgumentException("Invalid Message! Cause by it or it's ID is null.");
+
 		return true;
 	}
 	
@@ -229,8 +232,8 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		for (int i = 0; i < getComponentCount(); i++) {
 			comp = getComponent(i);
 			if (comp.isVisible()) {
-				if (comp instanceof JScrollPane) {
-					comp = ((JScrollPane) comp).getViewport().getView();
+				if (comp instanceof CScrollPanel) {
+					comp = ((CScrollPanel) comp).getViewport().getView();
 					
 					if(comp != DEFAULT_PANE && comp != FILTER_PANE) {//other pane. @see addOtherShowComp()
 						comp = ((JComponent)comp).getComponent(0);
@@ -249,9 +252,9 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	private void addDefaultShowComp(String name, JComponent comp)
 	{
 		comp.setOpaque(false);
-		JScrollPane jsp = new JScrollPane(comp,
-				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		CScrollPanel jsp = new CScrollPanel(comp,
+				CScrollPanel.VERTICAL_SCROLLBAR_AS_NEEDED,
+				CScrollPanel.HORIZONTAL_SCROLLBAR_NEVER);
 
 		if (comp == DEFAULT_PANE) {
 			jsp.setVerticalScrollBar(DEFAULT_SCROLLBAR);
@@ -293,11 +296,11 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 			return;
 		}
 		
-		JPanel otherPane = new JPanel(DEFAULT_DOWN_LAYOUT); 
+		CPanel otherPane = new CPanel(DEFAULT_DOWN_LAYOUT); 
 		otherPane.add(comp);
 		otherPane.setOpaque(false);
 		//为载体添加滚动条
-		JScrollPane jsp =  ChannelUtil.createScrollPane(otherPane, new Color(225,240,240));
+		CScrollPanel jsp =  ChannelUtil.createScrollPane(otherPane, new Color(225,240,240));
 		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 55, 5));
 		jsp.setName(name);
 		
@@ -332,7 +335,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		if (!DEFAULT_NAME.equals(name) && !FILTER_NAME.equals(name)) {
 			setScrollBarVisible(null, false);// 其他面板不显示滚动条
 		} else {
-			OScrollBar scrollBar = DEFAULT_NAME.equals(name) ? DEFAULT_SCROLLBAR : FILTER_SCROLLBAR;
+			CScrollBar scrollBar = DEFAULT_NAME.equals(name) ? DEFAULT_SCROLLBAR : FILTER_SCROLLBAR;
 			
 			Boolean showStatus = (Boolean) scrollBar.getClientProperty(SCROLLBAR_SHOW_STATUS);
 			setScrollBarVisible(scrollBar, showStatus == null ? false : showStatus.booleanValue());
@@ -341,7 +344,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		layoutMgr.show(this, name);
 		
 		//记录当前显示的组件和上一次显示的组件
-//		JScrollPane scrollParentComp = getScrollParentComp(currentShowComp);
+//		CScrollPanel scrollParentComp = getScrollParentComp(currentShowComp);
 //		this.putClientProperty(LAST_SHOW_COMPONENT, scrollParentComp.getName());
 //		this.putClientProperty(CURRENT_SHOW_COMPONENT, name);
 		
@@ -357,25 +360,25 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 * @param comp
 	 * @return
 	 */
-	private JScrollPane getScrollParentComp(Component comp)
+	private CScrollPanel getScrollParentComp(Component comp)
 	{
-		if(comp instanceof JScrollPane)
-			return (JScrollPane)comp;
+		if(comp instanceof CScrollPanel)
+			return (CScrollPanel)comp;
 		
 		Component parent = comp.getParent();
-		while (!(parent instanceof JScrollPane)) {
+		while (!(parent instanceof CScrollPanel)) {
 			parent = parent.getParent();
 		}
-		return (JScrollPane) parent;
+		return (CScrollPanel) parent;
 	}
 	
 	/**
 	 * 获取默认的过滤面板
 	 * @return
 	 */
-	private JPanel getDefaultFilter() {
+	private CPanel getDefaultFilter() {
 		if (FILTER_PANE == null) {
-			FILTER_PANE = new JPanel();
+			FILTER_PANE = new CPanel();
 			FILTER_PANE.setLayout(DEFAULT_UP_LAYOUT);
 			FILTER_SCROLLBAR.addAdjustmentListener(this);
 			addDefaultShowComp(FILTER_NAME, FILTER_PANE);
@@ -478,7 +481,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	public void adjustmentValueChanged(AdjustmentEvent e) {
 		// TODO 自动生成的方法存根
 		if(e.getAdjustmentType() == AdjustmentEvent.TRACK) {
-			OScrollBar scrollBar =(OScrollBar) e.getSource();
+			CScrollBar scrollBar =(CScrollBar) e.getSource();
 			
 			//滚动条消失
 			if (scrollBar.isScrollBarVisible() && scrollBar.getValue() == 0
@@ -513,7 +516,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 	 * 设置滚动条是否可见
 	 * @param isVisible 如果为true，则可见；否则不可见
 	 */
-	public void setScrollBarVisible( OScrollBar scrollBar, boolean isVisible) {
+	public void setScrollBarVisible( CScrollBar scrollBar, boolean isVisible) {
 		if (scrollBar != null && scrollBar.isScrollBarVisible() != isVisible) {
 			scrollBar.setScrollBarVisible(isVisible);
 			repaint();
@@ -644,7 +647,7 @@ public class ChannelDesktopPane extends JPanel implements MessageListner, Adjust
 		List<ChannelMessage> filterMsgs = mm.getMessagesByAll(qi);
 		
 		//获取过滤面板
-		JPanel filterPane = getDefaultFilter();
+		CPanel filterPane = getDefaultFilter();
 		if (!filterMsgs.isEmpty()) {
 			for (ChannelMessage msg : filterMsgs) {
 				initMessage(filterPane, msg);
