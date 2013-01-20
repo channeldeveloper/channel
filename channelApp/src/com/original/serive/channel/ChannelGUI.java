@@ -1,4 +1,4 @@
-﻿package com.original.serive.channel;
+package com.original.serive.channel;
 
 import java.awt.Window;
 import java.awt.event.WindowAdapter;
