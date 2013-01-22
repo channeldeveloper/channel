@@ -19,7 +19,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
-import javax.swing.JToggleButton;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.text.Element;
@@ -28,8 +27,10 @@ import javax.swing.text.StyledDocument;
 
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CCombobox;
 import com.original.serive.channel.comp.CPanel;
 import com.original.serive.channel.comp.CTextPane;
+import com.original.serive.channel.comp.CToggleButton;
 import com.original.serive.channel.layout.ChannelGridLayout;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.ui.data.FontStyle;
@@ -48,23 +49,23 @@ public class FontChooser extends CPanel implements ActionListener, ItemListener,
 	private static GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 	private static DefaultComboBoxModel familiesModel = null,
 			sizesModel = null;
-	private JComboBox families = new JComboBox(),
-			sizes = new JComboBox();
+	private JComboBox families = new CCombobox(),
+			sizes = new CCombobox();
 	
-	private JToggleButton bold = ChannelUtil.createAbstractButton(
+	private CToggleButton bold = ChannelUtil.createAbstractButton(
 			new AbstractButtonItem(null, BOLD_STYLE, 
 					IconFactory.loadIconByConfig("boldFontIcon"),
-					IconFactory.loadIconByConfig("boldFontSelectedIcon"), null), JToggleButton.class),
+					IconFactory.loadIconByConfig("boldFontSelectedIcon"), null), CToggleButton.class),
 			
 			italic = ChannelUtil.createAbstractButton(
 					new AbstractButtonItem(null, ITALIC_STYLE, 
 							IconFactory.loadIconByConfig("italicFontIcon"),
-							IconFactory.loadIconByConfig("italicFontSelectedIcon"), null), JToggleButton.class),
+							IconFactory.loadIconByConfig("italicFontSelectedIcon"), null), CToggleButton.class),
 					
 			underline = ChannelUtil.createAbstractButton(
 					new AbstractButtonItem(null, UNDERLINE_STYLE, 
 							IconFactory.loadIconByConfig("underLineFontIcon"),
-							IconFactory.loadIconByConfig("underLineSelectedIcon"), null), JToggleButton.class);
+							IconFactory.loadIconByConfig("underLineSelectedIcon"), null), CToggleButton.class);
 	
 	private JColorChooser colorChooser = new JColorChooser(Color.black);
 			private CButton color =  ChannelUtil.createAbstractButton(

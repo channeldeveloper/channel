@@ -314,7 +314,7 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 			MessageContainer container = body.getMessageContainer();
 			ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
 			
-			parent.setUid(ChannelMessage.getContactName(txtMsgTo.getText()));
+//			parent.setUid(ChannelMessage.getContactName(txtMsgTo.getText()));
 		}
 	}
 

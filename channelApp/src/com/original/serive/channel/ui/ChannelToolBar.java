@@ -27,8 +27,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.event.SwingPropertyChangeSupport;
 import javax.swing.plaf.basic.BasicMenuItemUI;
@@ -40,6 +38,7 @@ import com.original.serive.channel.comp.CLabel;
 import com.original.serive.channel.comp.CMenuItem;
 import com.original.serive.channel.comp.CPanel;
 import com.original.serive.channel.comp.CPopupMenu;
+import com.original.serive.channel.comp.CTextField;
 import com.original.serive.channel.ui.data.AbstractButtonItem;
 import com.original.serive.channel.ui.data.MenuItem;
 import com.original.serive.channel.util.ChannelConfig;
@@ -311,7 +310,7 @@ public class ChannelToolBar extends CPanel implements ActionListener, EventConst
 	/**
 	 * Channel文本框，可以通用。其中可以设置边角图标，支持鼠标事件。
 	 */
-	public class ChannelTextField extends JTextField
+	public class ChannelTextField extends CTextField
 	{		
 		private LocationIcon cornerIcon = null;
 		public ChannelTextField() {
@@ -473,17 +472,17 @@ public class ChannelToolBar extends CPanel implements ActionListener, EventConst
 		{
 			Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
 			
-			int width = owner.getBounds().width,
-					height = getHeight();
-			
-			//绘制3px阴影效果(要想绘制理想的阴影效果，就需要反复调试。目前阴影的厚度控制在3px以上较理想)
-			GraphicsHandler.fillShadow(g2d, 4, width, height, 7);
-			
-			//绘制背景
-			g2d.setColor(background);
-			g2d.fillRoundRect(3, 3, width-2*3-1, height-2*3-1, 5*2, 5*2);
-			
-			g2d.setRenderingHints(GraphicsHandler.DEFAULT_RENDERING_HINT_OFF);
+//			int width = owner.getBounds().width, height = getHeight();
+//			
+//			//绘制3px阴影效果(要想绘制理想的阴影效果，就需要反复调试。目前阴影的厚度控制在3px以上较理想)
+//			GraphicsHandler.fillShadow(g2d, 4, width, height, 7);
+//			
+//			//绘制背景
+//			g2d.setColor(background);
+//			g2d.fillRoundRect(3, 3, width-2*3, height-2*3, 5*2, 5*2);
+//			
+//			g2d.setRenderingHints(GraphicsHandler.DEFAULT_RENDERING_HINT_OFF);
+			super.paintComponent(g2d);
 		}
 
 		//菜单项点击触发事件
@@ -509,19 +508,19 @@ public class ChannelToolBar extends CPanel implements ActionListener, EventConst
 				super.selectionForeground = fg;
 			}
 
-			@Override
-			protected void paintMenuItem(Graphics g, JComponent c,
-					Icon checkIcon, Icon arrowIcon, Color background,
-					Color foreground, int defaultTextIconGap)
-			{
-				Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
-				g2d.translate(2, 0);
-				super.paintMenuItem(g2d, c, checkIcon, arrowIcon, background, foreground,
-						defaultTextIconGap);
-//				g2d.setRenderingHints(GraphicsHandler.DEFAULT_RENDERING_HINT_OFF);
-				g2d.translate(-2, 0);
-				GraphicsHandler.suspendRendering(g2d);
-			}
+//			@Override
+//			protected void paintMenuItem(Graphics g, JComponent c,
+//					Icon checkIcon, Icon arrowIcon, Color background,
+//					Color foreground, int defaultTextIconGap)
+//			{
+//				Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
+//				g2d.translate(2, 0);
+//				super.paintMenuItem(g2d, c, checkIcon, arrowIcon, background, foreground,
+//						defaultTextIconGap);
+////				g2d.setRenderingHints(GraphicsHandler.DEFAULT_RENDERING_HINT_OFF);
+//				g2d.translate(-2, 0);
+//				GraphicsHandler.suspendRendering(g2d);
+//			}
 		}
 	}
 	

@@ -19,7 +19,6 @@ import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
-import javax.swing.JFileChooser;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
@@ -54,6 +53,7 @@ import com.original.service.channel.Constants.CHANNEL;
 import com.original.service.channel.Utilies;
 import com.original.service.channel.core.ChannelService;
 import com.original.widget.OTextField;
+import com.seaglasslookandfeel.widget.CFileChooser;
 
 /**
  * 新建消息主体面板，区别于{@link ChangeMessageBodyPane}显示消息主体面板。
@@ -544,7 +544,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 		
 		//按钮对应的对话框
 		private FontChooser fontChooser = new FontChooser(content);
-		private JFileChooser fileChooser = new JFileChooser();
+		private CFileChooser fileChooser = new CFileChooser();
 		private EditorHandler handler = new EditorHandler(content);
 		private FileAttacher fileAttacher = new FileAttacher();
 		

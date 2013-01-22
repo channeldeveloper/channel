@@ -22,15 +22,17 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
 import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
 import javax.swing.event.MouseInputListener;
 
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.comp.CPanel;
+import com.original.serive.channel.comp.CScrollBar;
 import com.original.serive.channel.comp.CScrollPanel;
 import com.original.serive.channel.layout.VerticalGridLayout;
 import com.original.serive.channel.server.ChannelAccesser;
-import com.original.serive.channel.ui.widget.CScrollBar;
 import com.original.serive.channel.util.ChannelConstants;
 import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
@@ -296,11 +298,11 @@ public class ChannelDesktopPane extends CPanel implements MessageListner, Adjust
 			return;
 		}
 		
-		CPanel otherPane = new CPanel(DEFAULT_DOWN_LAYOUT); 
+		JPanel otherPane = new JPanel(DEFAULT_DOWN_LAYOUT); 
 		otherPane.add(comp);
 		otherPane.setOpaque(false);
 		//为载体添加滚动条
-		CScrollPanel jsp =  ChannelUtil.createScrollPane(otherPane, new Color(225,240,240));
+		JScrollPane jsp =  ChannelUtil.createScrollPane(otherPane, new Color(225,240,240));
 		jsp.setBorder(BorderFactory.createEmptyBorder(25, 25, 55, 5));
 		jsp.setName(name);
 		

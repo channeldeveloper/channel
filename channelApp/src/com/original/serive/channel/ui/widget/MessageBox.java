@@ -6,9 +6,8 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 
-import javax.swing.JTextArea;
-
 import com.original.serive.channel.comp.CScrollPanel;
+import com.original.serive.channel.comp.CTextArea;
 import com.original.serive.channel.util.ChannelUtil;
 
 /**
@@ -18,11 +17,11 @@ import com.original.serive.channel.util.ChannelUtil;
  */
 public class MessageBox
 {
-	private JTextArea boxArea = null;
+	private CTextArea boxArea = null;
 	private Dimension boxMaximumSize = new Dimension(500, 150);  //消息框的最大显示大小
 	
 	public MessageBox(Object content) {
-		boxArea = new JTextArea(content == null ? null : content.toString());
+		boxArea = new CTextArea(content == null ? null : content.toString());
 		boxArea.setBorder(null);
 		//设置背景透明
 		boxArea.setOpaque(false);

@@ -1,30 +1,28 @@
 package com.original.serive.channel.comp;
 
+import java.awt.FlowLayout;
 import java.awt.LayoutManager;
 
 import javax.swing.JPanel;
 
 import com.seaglasslookandfeel.ui.SeaGlassPanelUI;
-import com.original.serive.channel.util.ChannelConstants;
 
-/**
- * @Deprecated
- * @author sxy 
- *
- */
+public class CPanel extends JPanel {
 
-public class CPanel extends JPanel{
-
-	public CPanel()
-	{
-		super();
-		setUI(new SeaGlassPanelUI());
-		this.setFont(ChannelConstants.DEFAULT_FONT);
+	public CPanel() {
+		this(true);
 	}
-    public CPanel(LayoutManager layout)
-	{
-		super(layout);
-		setUI(new SeaGlassPanelUI());
-		this.setFont(ChannelConstants.DEFAULT_FONT);
+
+	public CPanel(boolean isDoubleBuffered) {
+		this(new FlowLayout(), true);
+	}
+
+	public CPanel(LayoutManager layout) {
+		this(layout, true);
+	}
+
+	public CPanel(LayoutManager layout, boolean isDoubleBuffered) {
+		super(layout, isDoubleBuffered);
+		setUI(SeaGlassPanelUI.createUI(this));
 	}
 }

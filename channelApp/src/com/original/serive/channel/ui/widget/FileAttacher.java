@@ -13,10 +13,10 @@ import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.Icon;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 
 import com.original.serive.channel.EventConstants;
 import com.original.serive.channel.comp.CButton;
+import com.original.serive.channel.comp.CCombobox;
 import com.original.serive.channel.comp.CLabel;
 import com.original.serive.channel.comp.CPanel;
 import com.original.serive.channel.layout.ChannelGridLayout;
@@ -26,6 +26,7 @@ import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.IconFactory;
 import com.original.service.channel.Attachment;
 import com.original.service.channel.Utilies;
+import com.seaglasslookandfeel.widget.CFileChooser;
 
 /**
  * 附件添加、删除控件
@@ -42,8 +43,8 @@ public class FileAttacher extends CPanel implements ActionListener, EventConstan
 			btnAdd = ChannelUtil.createAbstractButton(
 					new AbstractButtonItem(null, ADD_ATTACHMENT, attacherAddIcon));
 	
-	private JComboBox attacherBox = new JComboBox();
-	private JFileChooser attachChooser = new JFileChooser();
+	private JComboBox attacherBox = new CCombobox();
+	private CFileChooser attachChooser = new CFileChooser();
 	
 	public FileAttacher() {
 		setLayout(new ChannelGridLayout(10, 0, new Insets(5, 10, 5, 10)));

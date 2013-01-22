@@ -331,23 +331,23 @@ public final class ChannelService extends AbstractService {
 		peopleManager = new PeopleManager(morphia, mongo, ds);
 		serviceMap = new HashMap<ChannelAccount, Service>();
 		
-		HashMap<String, ChannelAccount> cas = channelServer.getChannelAccounts();
-		for (String key : cas.keySet()) {
-			ChannelAccount ca = cas.get(key);
-			if (serviceMap.containsKey(ca))
-				continue; 
-
-			try {
-				Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
-				if (sc != null) {
-					serviceMap.put(ca, sc);
-					sc.addMessageListener(new ChannelServiceListener());
-				}
-			}
-			catch(Exception ex) {
-				failedServiceAccounts.add(ca);
-			}
-		}
+//		HashMap<String, ChannelAccount> cas = channelServer.getChannelAccounts();
+//		for (String key : cas.keySet()) {
+//			ChannelAccount ca = cas.get(key);
+//			if (serviceMap.containsKey(ca))
+//				continue; 
+//
+//			try {
+//				Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
+//				if (sc != null) {
+//					serviceMap.put(ca, sc);
+//					sc.addMessageListener(new ChannelServiceListener());
+//				}
+//			}
+//			catch(Exception ex) {
+//				failedServiceAccounts.add(ca);
+//			}
+//		}
 	}
 	
 	/**

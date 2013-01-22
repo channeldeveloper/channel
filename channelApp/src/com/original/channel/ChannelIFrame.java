@@ -60,15 +60,14 @@ public class ChannelIFrame extends JInternalFrame implements ChannelConstants
 	private void init() throws Exception
 	{
 		try {
-//			 UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
 			// 不使用全局的风格，但是单独一些组件可以使用风格,如果使用风，需要初始化一下。
-			// so
-			SeaGlassLookAndFeel sglaf = new SeaGlassLookAndFeel();
+			SeaGlassLookAndFeel sglaf = SeaGlassLookAndFeel.getInstance();
+			SeaGlassLookAndFeel.setDefaultFont(DEFAULT_FONT);
 			sglaf.initialize();
-			// 一下2句子影响全局，是否改造，待测试。
-			UIManager.getDefaults().put("defaultFont",
-					ChannelConstants.DEFAULT_FONT);
+
+			//这里可能会影响全局
 			UIManager.put("ScrollBar.width", 10); // 滚动条默认宽度
+						
 		} catch (Exception exp) {
 			exp.printStackTrace();
 		}

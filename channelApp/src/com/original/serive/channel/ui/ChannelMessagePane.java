@@ -15,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Area;
 import java.awt.geom.RoundRectangle2D;
+import java.io.File;
 import java.io.IOException;
 
 import javax.swing.Icon;
@@ -33,6 +34,7 @@ import com.original.serive.channel.util.ChannelUtil;
 import com.original.serive.channel.util.GraphicsHandler;
 import com.original.serive.channel.util.IconFactory;
 import com.original.serive.channel.util.LocationIcon;
+import com.original.service.channel.Account;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.people.People;
@@ -165,45 +167,34 @@ public class ChannelMessagePane extends CPanel
 	}
 	
 	/**
+	 * 显示消息于面板中
+	 * @param msg
+	 */
+	private void layoutMessage(ChannelMessage msg) {
+		if (showDirection) {
+			if (msg.isReceived()) { // 是接受过来的消息
+				setReceiveMsgLayout();
+			} else if (msg.isSent()) { // 是发送(回复)过去的消息
+				setPostMsgLayout();
+			}
+		} else {
+			setReceiveMsgLayout();
+			leftArrow.setVisible(false);// 不显示箭头
+			rightArrow.setVisible(false);
+		}
+	}
+	
+	/**
 	 * 初始化消息列表，用于{@link ChannelDesktopPane#initMessage(ChannelMessage)}时
 	 * @param msg
 	 */
 	public void initMessage(ChannelMessage msg) 
 	{
 		String uName = msg.getContactName();
-		
-		People pm =ChannelService.getInstance().getPeopleManager().getPeopleByMessage(msg) ;		
-		if (pm != null)
-		{		
-			String chn = msg.getChannelAccount().getChannel().getName();
-			if (chn != null && pm.getAccountMap().get(chn).getAvatar() != null)
-			{			
-				try {
-					GridFSDBFile dbfile = GridFSUtil.getGridFSUtil().getFile(pm.getAccountMap().get(chn).getAvatar());
-					String fn = dbfile.getFilename();
-					String path = QQEnvironment.getConfigTempDir() + fn;
-					dbfile.writeTo(path);
-					ImageIcon image = new ImageIcon(path);
-					Image headImage = image.getImage().
-							getScaledInstance(72, 72, Image.SCALE_SMOOTH);
-					header.getHeadImageIcon().setIcon(new ImageIcon(headImage));
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} //output to new file
-			}			
-		}
-		
-		
 		if (uid == null) {// 第一次添加
-			setUid(uName);
-
-			if (msg.isReceived()) { // 是接受过来的消息
-				setReceiveMsgLayout();
-			} else if (msg.isSent()) { // 是发送(回复)过去的消息
-				setPostMsgLayout();
-			}
-
+			setUid(msg);
+			layoutMessage(msg);
+			
 			body.initMessage(msg);
 		} else if (uid.equals(uName)) {
 			body.initMessage(msg);
@@ -219,20 +210,10 @@ public class ChannelMessagePane extends CPanel
 	{
 		String uName = msg.getContactName();
 		if (uid == null) { // 第一次添加，需要设置布局
-			setUid(uName);
+			setUid(msg);
+			layoutMessage(msg);
 
 			body.addMessage(msg, toFirst);
-			if (showDirection) {
-				if (msg.isReceived()) { // 是接受过来的消息
-					setReceiveMsgLayout();
-				} else if (msg.isSent()) { // 是发送(回复)过去的消息
-					setPostMsgLayout();
-				}
-			} else {
-				setReceiveMsgLayout();
-				leftArrow.setVisible(false);//不显示箭头
-				rightArrow.setVisible(false);
-			}
 		} else if (uid.equals(uName)) {
 			body.addMessage(msg, toFirst);
 			if(showDirection) {
@@ -248,7 +229,7 @@ public class ChannelMessagePane extends CPanel
 	 */
 	public void newMessage(ChannelMessage msg)
 	{
-		setUid(msg == null ? null : msg.getContactName());
+		setUid(msg);
 		if(statusBar instanceof NewMessageTopBar) {
 			((NewMessageTopBar) statusBar).setMessage(msg);
 		}
@@ -263,8 +244,8 @@ public class ChannelMessagePane extends CPanel
 	{
 		if(msg != null && msg.getMessageID() != null)
 		{
-			setUid(msg.getContactName());
-			changeMsgLayoutIfNeed(msg);
+			setUid(msg);
+			layoutMessage(msg);
 		}
 	}
 	
@@ -276,13 +257,15 @@ public class ChannelMessagePane extends CPanel
 	}
 	
 	/**
-	 * 设置联系人的Uid
-	 * @param uid 用户账号id
+	 * 由消息来设置联系人的Uid
+	 * @param msg 消息对象
 	 */	
-	public void setUid(String uid) {
+	public void setUid(ChannelMessage msg) {
+		String uid = msg == null ? null : msg.getContactName();
 		if (this.uid == null || !this.uid.equals(uid)) {
 			this.uid = uid;
 			header.setContactName(uid); // 目前设置联系人用户名即为Uid
+			header.setHeadImageIcon(msg); //设置联系人头像
 		}
 	}
 
@@ -510,6 +493,35 @@ public class ChannelMessagePane extends CPanel
 				} else {
 					g2d.drawString(contactName, (SIZE.width - g
 							.getFontMetrics().stringWidth(contactName)) / 2, 0);
+				}
+			}
+		}
+		
+		//设置联系人头像，此算法待优化。以后可能放置在线程中！
+		public void setHeadImageIcon(ChannelMessage msg) {
+			if(msg != null) {
+				People pm =ChannelService.getInstance().getPeopleManager().getPeopleByMessage(msg) ;		
+				if (pm != null)
+				{		
+					String chn = msg.getChannelAccount().getChannel().getName();
+					Account acc = pm.getAccountMap().get(chn);
+					if (chn != null && acc.getAvatar() != null)
+					{
+						try {
+							GridFSDBFile dbfile = GridFSUtil.getGridFSUtil().getFile(acc.getAvatar());
+							String fn = dbfile.getFilename();
+							String path = QQEnvironment.getConfigTempDir() + fn;
+							File file = new File(path);
+							if (!file.exists()) {
+								dbfile.writeTo(path);
+							}
+							ImageIcon image = new ImageIcon(path);
+							Image headImage = image.getImage().getScaledInstance(72, 72, Image.SCALE_SMOOTH);
+							headIcon.setIcon(new ImageIcon(headImage));
+						} catch (IOException ex) {
+							
+						} 
+					}			
 				}
 			}
 		}

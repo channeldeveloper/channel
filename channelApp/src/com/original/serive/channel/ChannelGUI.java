@@ -35,9 +35,6 @@ import com.seaglasslookandfeel.SeaGlassLookAndFeel;
  */
 public class ChannelGUI extends JFrame implements ChannelConstants
 {	
-	//对一些主要控件做一下本地缓存，以后使用时直接从缓存中获取对象。
-
-	
 	public ChannelGUI()
 	{
 		setSize(CHANNELWIDTH, CHANNELHEIGHT - STATUSBARHEIGHT);
@@ -59,21 +56,17 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 		}
 	}
 
-
-	
 	//初始化应用程序，也方便外部程序整合
 	private void init() throws Exception
 	{
 		//开始应用程序：
 		try {
-//			 UIManager.setLookAndFeel("com.seaglasslookandfeel.SeaGlassLookAndFeel");
 			// 不使用全局的风格，但是单独一些组件可以使用风格,如果使用风，需要初始化一下。
-			// so
-			SeaGlassLookAndFeel sglaf = new SeaGlassLookAndFeel();
+			SeaGlassLookAndFeel sglaf = SeaGlassLookAndFeel.getInstance();
+			SeaGlassLookAndFeel.setDefaultFont(DEFAULT_FONT);
 			sglaf.initialize();
-			// 一下2句子影响全局，是否改造，待测试。
-			UIManager.getDefaults().put("defaultFont",
-					ChannelConstants.DEFAULT_FONT);
+			
+			//这里可能会影响全局
 			UIManager.put("ScrollBar.width", 10); // 滚动条默认宽度
 		} catch (Exception exp) {
 			exp.printStackTrace();

@@ -2,21 +2,12 @@ package com.original.serive.channel.comp;
 
 import javax.swing.JTextPane;
 
-import com.original.serive.channel.util.ChannelConstants;
+import com.seaglasslookandfeel.ui.SeaGlassTextAreaUI;
 
+public class CTextPane extends JTextPane {
 
-
-/**
- * @Deprecated
- * @author sxy 
- *
- */
-
-public class CTextPane extends JTextPane{
-
-	public CTextPane()
-	{
+	public CTextPane() {
 		super();
-		this.setFont(ChannelConstants.DEFAULT_FONT);
-	}  
+		setUI(SeaGlassTextAreaUI.createUI(this));
+	}
 }

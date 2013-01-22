@@ -4,17 +4,10 @@ import javax.swing.JViewport;
 
 import com.seaglasslookandfeel.ui.SeaGlassViewportUI;
 
-/**
- * @Deprecated
- * @author sxy 
- *
- */
+public class CViewport extends JViewport {
 
-public class CViewport extends JViewport{
-
-	public CViewport()
-	{
+	public CViewport() {
 		super();
-		setUI(new SeaGlassViewportUI());
-	}  
+		setUI(SeaGlassViewportUI.createUI(this));
+	}
 }

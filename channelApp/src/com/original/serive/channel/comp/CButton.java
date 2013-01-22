@@ -1,40 +1,31 @@
 package com.original.serive.channel.comp;
 
+import java.awt.Insets;
+
 import javax.swing.Icon;
 import javax.swing.JButton;
-import javax.swing.UIManager;
 
-import com.original.serive.channel.util.ChannelConstants;
 import com.seaglasslookandfeel.ui.SeaGlassButtonUI;
 
-/**
-
- * @Deprecated
- * @author sxy 
- *
- */
-
 public class CButton extends JButton{
-
-	public CButton()
-	{
-		super();
-		
-		setUI(new SeaGlassButtonUI());
-		this.setFont(ChannelConstants.DEFAULT_FONT);
-	}  
 	
-	public CButton(String text)
-	{
-		super(text);
-		setUI(new SeaGlassButtonUI());
-		this.setFont(ChannelConstants.DEFAULT_FONT);
-	}  
-	
-	public CButton(String text, Icon icon)
-	{
-		super(text, icon);
-		setUI(new SeaGlassButtonUI());
-		this.setFont(ChannelConstants.DEFAULT_FONT);
+	public CButton() {
+		this(null);
 	}
+
+	public CButton(String text) {
+		this(text, null);
+	}
+
+	public CButton(String text, Icon icon) {
+		super(text, icon);
+		setUI(SeaGlassButtonUI.createUI(this));
+	}
+
+	@Override
+	public void updateUI() {
+		// TODO 自动生成的方法存根
+		setUI(SeaGlassButtonUI.createUI(this));
+	}
+	
 }

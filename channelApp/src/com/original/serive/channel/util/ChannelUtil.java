@@ -40,9 +40,7 @@ import javax.swing.JColorChooser;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JRootPane;
 import javax.swing.JScrollBar;
 import javax.swing.SwingUtilities;
@@ -62,6 +60,7 @@ import chrriis.dj.nativeswing.swtimpl.components.WebBrowserWindowFactory;
 import com.original.serive.channel.border.ShadowBorder;
 import com.original.serive.channel.comp.CButton;
 import com.original.serive.channel.comp.CMenuItem;
+import com.original.serive.channel.comp.COptionPane;
 import com.original.serive.channel.comp.CPanel;
 import com.original.serive.channel.comp.CPopupMenu;
 import com.original.serive.channel.comp.CScrollPanel;
@@ -76,6 +75,8 @@ import com.original.serive.channel.ui.widget.FilePreviewer;
 import com.original.serive.channel.ui.widget.ImagePane;
 import com.original.serive.channel.ui.widget.MessageBox;
 import com.original.widget.OScrollBar;
+import com.seaglasslookandfeel.SeaGlassLookAndFeel;
+import com.seaglasslookandfeel.widget.CFileChooser;
 
 /**
  * 一些通用算法，目前主要用于客户端界面应用，服务端类请勿使用。
@@ -398,7 +399,7 @@ NativeInterface.open();
 	public static void showWithDialog(Dimension size, Component parent,
 			String title, boolean modal, Container child) {
 		if (parent == null) {
-			parent = JOptionPane.getRootFrame();
+			parent = COptionPane.getRootFrame();
 		}
 		JDialog d = createDialog(parent, title, modal);
 		d.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
@@ -420,8 +421,8 @@ NativeInterface.open();
 			Object content) {
 		MessageBox box = new MessageBox(content);
 		
-		final JOptionPane   pane = new JOptionPane(box.getMessageBox(), JOptionPane.INFORMATION_MESSAGE,
-                JOptionPane.DEFAULT_OPTION, null,
+		final COptionPane   pane = new COptionPane(box.getMessageBox(), COptionPane.INFORMATION_MESSAGE,
+                COptionPane.DEFAULT_OPTION, null,
                 null, null);
 		
 pane.addPropertyChangeListener(new PropertyChangeListener() {
@@ -429,10 +430,10 @@ pane.addPropertyChangeListener(new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				// TODO 自动生成的方法存根
-				if(evt.getPropertyName() == JOptionPane.VALUE_PROPERTY) {
+				if(evt.getPropertyName() == COptionPane.VALUE_PROPERTY) {
 					
 					if(evt.getNewValue() instanceof Integer 
-							&& ((Integer)evt.getNewValue()).intValue() != JOptionPane.CLOSED_OPTION) {
+							&& ((Integer)evt.getNewValue()).intValue() != COptionPane.CLOSED_OPTION) {
 						SwingUtilities.getWindowAncestor(pane).dispose();
 					}
 				}
@@ -450,18 +451,18 @@ pane.addPropertyChangeListener(new PropertyChangeListener() {
 		
 MessageBox box = new MessageBox(content);
 		
-		final JOptionPane   pane = new JOptionPane(box.getMessageBox(), JOptionPane.QUESTION_MESSAGE,
-                JOptionPane.YES_NO_OPTION, null,
+		final COptionPane   pane = new COptionPane(box.getMessageBox(), COptionPane.QUESTION_MESSAGE,
+                COptionPane.YES_NO_OPTION, null,
                 null, null);
 		pane.addPropertyChangeListener(new PropertyChangeListener() {
 			
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				// TODO 自动生成的方法存根
-				if(evt.getPropertyName() == JOptionPane.VALUE_PROPERTY) {
+				if(evt.getPropertyName() == COptionPane.VALUE_PROPERTY) {
 					
 					if(evt.getNewValue() instanceof Integer 
-							&& ((Integer)evt.getNewValue()).intValue() != JOptionPane.CLOSED_OPTION) {
+							&& ((Integer)evt.getNewValue()).intValue() != COptionPane.CLOSED_OPTION) {
 						SwingUtilities.getWindowAncestor(pane).dispose();
 					}
 				}
@@ -474,7 +475,7 @@ MessageBox box = new MessageBox(content);
 	}
 	public static boolean confirm(Component parent, String title,
 			Object content) {
-		return JOptionPane.YES_OPTION == showConfirmDialog(parent, title, content);
+		return COptionPane.YES_OPTION == showConfirmDialog(parent, title, content);
 	}
 	
 	/**
@@ -482,23 +483,23 @@ MessageBox box = new MessageBox(content);
 	 * @param op 选项面板
 	 * @return
 	 */
-	private static int getOptionValue(JOptionPane op) {
+	private static int getOptionValue(COptionPane op) {
 		Object selectedValue = op.getValue();
 		Object[] options = op.getOptions();
 
 		if (selectedValue == null)
-			return JOptionPane.CLOSED_OPTION;
+			return COptionPane.CLOSED_OPTION;
 		if (options == null) {
 			if (selectedValue instanceof Integer)
 				return ((Integer) selectedValue).intValue();
-			return JOptionPane.CLOSED_OPTION;
+			return COptionPane.CLOSED_OPTION;
 		}
 		for (int counter = 0, maxCounter = options.length; 
 				counter < maxCounter; counter++) {
 			if (options[counter].equals(selectedValue))
 				return counter;
 		}
-		return JOptionPane.CLOSED_OPTION;
+		return COptionPane.CLOSED_OPTION;
 	}
 	
 	/**
@@ -515,7 +516,7 @@ MessageBox box = new MessageBox(content);
 		}
 
 		if (parent == null) {
-			parent = JOptionPane.getRootFrame();
+			parent = COptionPane.getRootFrame();
 		}
 
 		if (parent instanceof Frame) {
@@ -671,7 +672,9 @@ MessageBox box = new MessageBox(content);
 		final	JDialog dialog = JColorChooser.createDialog(c, title, modal, chooserPane, null, null);
 		dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		body.add(dialog.getContentPane());
+		SeaGlassLookAndFeel.useOurUIs(body);
 		dialog.setContentPane(body);
+		dialog.pack();
 		checkWindowLocation(dialog);
 		dialog.setVisible(true);
 		return chooserPane.getColor();
@@ -681,7 +684,7 @@ MessageBox box = new MessageBox(content);
 	 * 显示自定义图片选择对话框
 	 */
 	public static File showImageChooserDialog(Component c, String title, boolean modal,
-		     JFileChooser chooserPane)
+		     CFileChooser chooserPane)
 	{
 		return showFileChooserDialog(c, title, modal, chooserPane,
 new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
@@ -692,16 +695,16 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 	 * 显示自定义文件选择对话框
 	 */
 	public static File showFileChooserDialog(Component c, String title, boolean modal,
-		     JFileChooser chooserPane, FileFilter filter) {
+		    CFileChooser chooserPane, FileFilter filter) {
 		if(chooserPane == null) {
-			chooserPane = new JFileChooser();
+			chooserPane = new CFileChooser();
 		}
 		if(filter != null) {
 			chooserPane.setFileFilter(filter);
 			new FilePreviewer(chooserPane);
 		}
-		chooserPane.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		chooserPane.setOpaque(false);
+		chooserPane.setFileSelectionMode(CFileChooser.FILES_ONLY);
+		chooserPane.setOpaque(true);
 		
 		FileChooserListener fcl = new FileChooserListener(chooserPane);
 		chooserPane.addActionListener(fcl);
@@ -710,13 +713,13 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 	}	
 	
 	public static void showFileSaveDialog(Component c, String title, boolean modal,
-		     JFileChooser savePane, File saveFile) {
+		     CFileChooser savePane, File saveFile) {
 		if(savePane == null) {
-			savePane = new JFileChooser();
-			savePane.setDialogType(JFileChooser.SAVE_DIALOG);
+			savePane = new CFileChooser();
+			savePane.setDialogType(CFileChooser.SAVE_DIALOG);
 		}
 		savePane.setSelectedFile(saveFile);
-		savePane.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		savePane.setFileSelectionMode(CFileChooser.FILES_ONLY);
 		savePane.setOpaque(false);
 		
 		FileChooserListener fcl = new FileChooserListener(savePane);
