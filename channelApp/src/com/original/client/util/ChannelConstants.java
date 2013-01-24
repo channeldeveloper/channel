@@ -29,7 +29,8 @@ public interface ChannelConstants
 			IconFactory.loadIconByConfig("closeIcon"));
 	
 	//颜色类
-	Color LIGHT_TEXT_COLOR = new Color(85,127,196);
+	Color LIGHT_TEXT_COLOR = new Color(85,127,196),
+			MENU_BACKGROUND = new Color(46, 156, 202);
 	
 	//坐标点
 	Point CENTER_POINT = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();

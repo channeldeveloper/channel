@@ -1,5 +1,6 @@
 ﻿package com.original.client.border;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
@@ -32,6 +33,8 @@ public class SingleLineBorder extends AbstractBorder
 	private boolean drawGradient = false;//是否带有渐变效果
 	private Color edgeColor = new Color(255, 255, 255, 0);
 	
+	private int thickness = 1;
+	
 	public SingleLineBorder(int direction)
 	{
 		this(direction, Color.gray);
@@ -44,9 +47,15 @@ public class SingleLineBorder extends AbstractBorder
 	
 	public SingleLineBorder(int direction, Color color, boolean drawGradient)
 	{
+		this(direction, color, drawGradient, 1);
+	}
+	
+	public SingleLineBorder(int direction, Color color, boolean drawGradient, int thickness)
+	{
 		this.borderDirection = direction;
 		this.borderColor = color;
 		this.drawGradient = drawGradient;
+		this.thickness = thickness;
 	}
 	
 	@Override
@@ -69,7 +78,7 @@ public class SingleLineBorder extends AbstractBorder
 						new Color[] { edgeColor, borderColor, edgeColor });
 				g2d.setPaint(paint);
 			}
-			drawLine(g2d, x+1, y, x+1, y + height);
+			drawLine(g2d, x+thickness, y, x+thickness, y + height);
 			break;
 		case BOTTOM:
 			if (!drawGradient)
@@ -83,7 +92,7 @@ public class SingleLineBorder extends AbstractBorder
 						new Color[] { edgeColor, borderColor, edgeColor });
 				g2d.setPaint(paint);
 			}
-			drawLine(g2d, x, y+height-1, x+width, y+height-1); 
+			drawLine(g2d, x, y+height-thickness, x+width, y+height-thickness); 
 			break;
 		case RIGHT:
 			if (!drawGradient)
@@ -97,7 +106,7 @@ public class SingleLineBorder extends AbstractBorder
 						new Color[] { edgeColor, borderColor, edgeColor });
 				g2d.setPaint(paint);
 			}
-			drawLine(g2d, x+width-1, y, x+width-1, y+height); 
+			drawLine(g2d, x+width-thickness, y, x+width-thickness, y+height); 
 			break;
 		case TOP:
 		default:
@@ -112,7 +121,7 @@ public class SingleLineBorder extends AbstractBorder
 						new Color[] { edgeColor, borderColor, edgeColor });
 				g2d.setPaint(paint);
 			}
-			drawLine(g2d, x, y+1, x+width, y+1); 
+			drawLine(g2d, x, y+thickness, x+width, y+thickness); 
 			break;
 		}
 		
@@ -129,6 +138,9 @@ public class SingleLineBorder extends AbstractBorder
 	 */
 	protected void drawLine(Graphics2D g2d, int x1, int y1, int x2, int y2)
 	{
+		if(thickness > 1) {
+			g2d.setStroke(new BasicStroke(thickness));
+		}
 		g2d.drawLine(x1, y1, x2, y2);
 	}
 

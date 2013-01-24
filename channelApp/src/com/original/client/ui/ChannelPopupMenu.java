@@ -21,6 +21,7 @@ import com.original.client.border.SingleLineBorder;
 import com.original.client.layout.ChannelGridLayout;
 import com.original.client.ui.ChannelMessagePane.ContactHeader;
 import com.original.client.ui.data.AbstractButtonItem;
+import com.original.client.util.ChannelConstants;
 import com.original.client.util.ChannelUtil;
 import com.original.client.util.GraphicsHandler;
 import com.original.client.util.IconFactory;
@@ -206,7 +207,7 @@ public class ChannelPopupMenu extends SGPopupMenu implements EventConstants
 			g2d.fillRoundRect(0, 0, width, height, 8, 8);
 			if(focusBounds != null)
 			{
-				g2d.setColor( new Color(46,156,202));
+				g2d.setColor( ChannelConstants.MENU_BACKGROUND);
 				g2d.fillRect(focusBounds.x, focusBounds.y, focusBounds.width, focusBounds.height);
 			}
 			GraphicsHandler.suspendRendering(g2d);
