@@ -30,7 +30,8 @@ public interface ChannelConstants
 	
 	//颜色类
 	Color LIGHT_TEXT_COLOR = new Color(85,127,196),
-			MENU_BACKGROUND = new Color(46, 156, 202);
+			MENU_BACKGROUND = new Color(46, 156, 202),
+			TITLE_COLOR = new Color(58, 182, 210);
 	
 	//坐标点
 	Point CENTER_POINT = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
@@ -38,7 +39,8 @@ public interface ChannelConstants
 			CHANNELHEIGHT = ChannelConfig.getIntValue("height"),
 			TOOLBARHEIGHT = ChannelConfig.getIntValue("toolbarHeight"),
 			STATUSBARHEIGHT = ChannelConfig.getIntValue("statusbarHeight"),
-	DESKTOPHEIGHT = ChannelConfig.getIntValue("desktopHeight");
+	DESKTOPHEIGHT = ChannelConfig.getIntValue("desktopHeight"),
+	SETTINGPANEWIDTH = ChannelConfig.getIntValue("settingPaneWidth");
 			
 	int MARGIN_TOP = CENTER_POINT.y - (CHANNELHEIGHT/2 - TOOLBARHEIGHT),
 			MARGIN_LEFT = CENTER_POINT.x - CHANNELWIDTH/2,

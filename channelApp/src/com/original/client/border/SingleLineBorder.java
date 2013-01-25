@@ -28,10 +28,10 @@ public class SingleLineBorder extends AbstractBorder
 			RIGHT = 2,
 			BOTTOM = 3;
 	
-	private int borderDirection = TOP; //Border的方向
-	private Color borderColor = Color.gray;//Border的颜色
-	private boolean drawGradient = false;//是否带有渐变效果
-	private Color edgeColor = new Color(255, 255, 255, 0);
+	protected int borderDirection = TOP; //Border的方向
+	protected Color borderColor = Color.gray;//Border的颜色
+	protected boolean drawGradient = false;//是否带有渐变效果
+	protected Color edgeColor = new Color(255, 255, 255, 0);
 	
 	private int thickness = 1;
 	

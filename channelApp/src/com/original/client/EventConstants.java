@@ -11,6 +11,7 @@ public interface EventConstants
 	String PREFIX_SHOW = "SHOW_",
 			PREFIX_SHOWALL = "SHOWALL_",
 			PREFIX_NEW = "NEW_",
+			PREFIX_SETTING = "SETTING_",
 			PREFIX_SHOWANDNEW = "SHOW_NEW_";
 	
 	
@@ -96,4 +97,8 @@ public interface EventConstants
 	/* 添加、删除附件 */
 	String ADD_ATTACHMENT = "add attachment",
 			DEL_ATTACHMENT = "del attachment";
+	
+	/* 添加、删除账户 */
+	String ADD_PROFILE  = "add profile",
+			DEL_PROFILE = "del profile";
 }

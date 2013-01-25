@@ -48,7 +48,7 @@ public class ChannelHyperlinkListener implements HyperlinkListener {
 		} else if (despURL.startsWith("http://")
 				|| despURL.startsWith("https://")) {
 			try {
-				ChannelUtil.showBrowser(null, despURL);
+				ChannelUtil.showBrowser(null, despURL).setVisible(true);
 			} catch (Exception ex) {
 				System.err.println(ex);
 			}

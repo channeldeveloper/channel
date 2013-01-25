@@ -36,6 +36,7 @@ import com.original.channel.ChannelNativeCache;
 import com.original.client.EventConstants;
 import com.original.client.ui.data.AbstractButtonItem;
 import com.original.client.ui.data.MenuItem;
+import com.original.client.ui.setting.ChannelSettingPane;
 import com.original.client.util.ChannelConfig;
 import com.original.client.util.ChannelConstants;
 import com.original.client.util.ChannelUtil;
@@ -161,11 +162,16 @@ public class ChannelToolBar extends SGPanel implements ActionListener, EventCons
 	//一些控制按钮的触发事件
 	public void actionPerformed(ActionEvent e)
 	{
-		if(e.getActionCommand() == NEW) {
+		ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
+		if (e.getActionCommand() == NEW) {
 			ChannelMessagePane cmp = new ChannelMessagePane(new NewMessageTopBar(true));
-			cmp.newMessage(null); 
-			ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
-			desktop.addOtherShowComp(PREFIX_NEW,  cmp);
+			cmp.newMessage(null);
+			desktop.addOtherShowComp(PREFIX_NEW, cmp);
+			
+		} else if (e.getActionCommand() == SETTING) {
+			ChannelSettingPane csp = new ChannelSettingPane();
+			csp.addProfile();
+			desktop.addSettingShowComp(PREFIX_SETTING, csp);
 		}
 	}
 

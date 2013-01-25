@@ -24,6 +24,7 @@ public class TitleLineBorder extends SingleLineBorder {
 	private Color titleColor; // 标题颜色
 	
 	private LocationIcon cornerIcon;// 边角按钮，一般为关闭按钮
+	private int marginLeft = 0, marginRight = 0; //边框的左右边距（上下边距自动调整）
 
 	public TitleLineBorder(String title) {
 		this(title, null);
@@ -35,12 +36,22 @@ public class TitleLineBorder extends SingleLineBorder {
 
 	public TitleLineBorder(String title, ImageIcon titleIcon,
 			LocationIcon cornerIcon) {
-		this(title, titleIcon, cornerIcon, Color.gray, Color.gray);
+		this(title, titleIcon, cornerIcon, Color.black, Color.black);
+	}
+	
+	public TitleLineBorder(String title, ImageIcon titleIcon,
+			LocationIcon cornerIcon, int borderDirection, int borderThickness) {
+		this(title, titleIcon, cornerIcon, Color.black, Color.black, borderDirection, borderThickness);
 	}
 
 	public TitleLineBorder(String title, ImageIcon titleIcon,
 			LocationIcon cornerIcon, Color lineColor, Color titleColor) {
-		super(BOTTOM, lineColor);
+		this(title, titleIcon, cornerIcon, lineColor, titleColor, BOTTOM, 1);
+	}
+	
+	public TitleLineBorder(String title, ImageIcon titleIcon,
+			LocationIcon cornerIcon, Color lineColor, Color titleColor, int borderDirection, int borderThickness) {
+		super(borderDirection, lineColor, false, borderThickness);
 		
 		this.title = title;
 		this.titleIcon = titleIcon;
@@ -51,7 +62,9 @@ public class TitleLineBorder extends SingleLineBorder {
 	
 	//计算边框顶部的高度，由图标和字体的高度计算而来
 	private int calcaulateBorderTopHeight(Component c) {
-		FontMetrics fm = c.getFontMetrics(c.getFont());
+		return calcaulateBorderTopHeight(c.getFontMetrics(c.getFont()));
+	}
+	private int calcaulateBorderTopHeight(FontMetrics fm) {
 		int topHeight = Math.max(Math.max(
 				titleIcon == null ? 0 : titleIcon.getIconHeight(),
 				title == null ? 0 : fm.getHeight()
@@ -70,7 +83,7 @@ public class TitleLineBorder extends SingleLineBorder {
 		Font font = g2d.getFont();
 		FontMetrics fontMetrics = g2d.getFontMetrics(font);
 
-		int topHeight = calcaulateBorderTopHeight(c); // 顶部的高度
+		int topHeight = calcaulateBorderTopHeight(fontMetrics); // 顶部的高度
 
 		if (titleIcon != null && title != null) {
 			//绘制标题图标
@@ -78,20 +91,20 @@ public class TitleLineBorder extends SingleLineBorder {
 			g.drawImage(titleIcon.getImage(), titleIconX, titleIconY, null);
 			
 			//绘制标题
-			g2d.setFont(font.deriveFont(Font.BOLD));
+			g2d.setFont(font.deriveFont(Font.BOLD).deriveFont(16F));
 			g2d.setColor(titleColor);
-			g.drawString(title, titleIcon.getIconWidth() + 5, y + (topHeight - fontMetrics.getHeight()) / 2);
+			g.drawString(title, titleIcon.getIconWidth() + 10, y + (topHeight - fontMetrics.getHeight()/2) );
 		} else if (title != null) {
 			
 			//绘制标题
-			g2d.setFont(font.deriveFont(Font.BOLD));
+			g2d.setFont(font.deriveFont(Font.BOLD).deriveFont(16F));
 			g2d.setColor(titleColor);
-			g.drawString(title, 5, y + (topHeight - fontMetrics.getHeight())	/ 2);
+			g.drawString(title, x, y + (topHeight - fontMetrics.getHeight()/2));
 		}
 
 		g2d.setFont(font);
 		if (cornerIcon != null) { //绘制边角图标
-			int cornerIconX = width - cornerIcon.getWidth() - 5, 
+			int cornerIconX =x + width - cornerIcon.getWidth(), 
 					cornerIconY = y + (topHeight - cornerIcon.getHeight()) / 2;
 
 			g.drawImage(cornerIcon.getImage(), cornerIconX, cornerIconY, null);
@@ -104,10 +117,28 @@ public class TitleLineBorder extends SingleLineBorder {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Insets getBorderInsets(Component c) {
-		int topHeight = calcaulateBorderTopHeight(c);
+	protected void drawLine(Graphics2D g2d, int x1, int y1, int x2, int y2) {
+		switch(borderDirection) {
+		case TOP:
+			int topHeight = calcaulateBorderTopHeight(g2d.getFontMetrics()) + 10;
+			super.drawLine(g2d, x1, y1+topHeight, x2, y2+topHeight);
+			break;
+
+		default:
+			super.drawLine(g2d, x1, y1, x2, y2);
+		}
 		
-		return new Insets(topHeight + 10, 0, 10, 0);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public Insets getBorderInsets(Component c) {
+		int topHeight = 	calcaulateBorderTopHeight(c) +
+				(borderDirection == TOP ? 10 : 0);
+		
+		return new Insets(topHeight + 10, marginLeft, 10, marginRight);
 	}
 
 	/**
@@ -115,13 +146,22 @@ public class TitleLineBorder extends SingleLineBorder {
 	 */
 	@Override
 	public Insets getBorderInsets(Component c, Insets insets) {
-		int topHeight = calcaulateBorderTopHeight(c);
+		int topHeight = calcaulateBorderTopHeight(c) +
+				(borderDirection == TOP ? 10 : 0);
 		
 		insets.top = topHeight + 10;
-		insets.left = 0;
+		insets.left = marginLeft;
 		insets.bottom = 10;
-		insets.right = 0;
+		insets.right = marginRight;
 		return insets;
+	}
+
+	public void setMarginLeft(int marginLeft) {
+		this.marginLeft = marginLeft;
+	}
+	
+	public void setMarginRight(int marginRight) {
+		this.marginRight = marginRight;
 	}
 
 }

@@ -30,6 +30,7 @@ import javax.swing.event.MouseInputListener;
 import com.original.channel.ChannelAccesser;
 import com.original.channel.ChannelNativeCache;
 import com.original.client.EventConstants;
+import com.original.client.layout.ChannelGridLayout;
 import com.original.client.layout.VerticalGridLayout;
 import com.original.client.ui.widget.ScrollBar;
 import com.original.client.util.ChannelConstants;
@@ -310,6 +311,32 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 		jsp.putClientProperty(LAST_SHOW_COMPONENT, this.getClientProperty(LAST_SHOW_COMPONENT));
 		
 		add(name, jsp);
+		showComp(name);
+	}
+	
+	/**
+	 * 添加设置面板。设置面板区别于其他面板，所以需要单独添加
+	 * @param name
+	 * @param comp
+	 */
+	public void addSettingShowComp(String name, JComponent comp)
+	{
+		if(name == null)
+			return;
+		
+		//如果已有该面板，则显示
+		if(indexOfShowComp(name) != -1) {
+			showComp(name);
+			return;
+		}
+		
+		JPanel otherPane = new JPanel(new ChannelGridLayout(new Insets(0, 240, 0, 0))); 
+		otherPane.add(comp);
+		otherPane.setOpaque(false);
+		otherPane.setName(name);
+		otherPane.putClientProperty(LAST_SHOW_COMPONENT, this.getClientProperty(LAST_SHOW_COMPONENT));
+		
+		add(name, otherPane);
 		showComp(name);
 	}
 	

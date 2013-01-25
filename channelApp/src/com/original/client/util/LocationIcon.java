@@ -3,6 +3,7 @@
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.net.URL;
 
@@ -60,7 +61,6 @@ public class LocationIcon implements Icon
 	{
 		return width;
 	}
-
 	public int getIconHeight()
 	{
 		return height;
@@ -72,7 +72,6 @@ public class LocationIcon implements Icon
 			return new Rectangle(x_pos, y_pos, width, height);
 		return bounds;
 	}
-	
 	public void setBounds(int x, int y, int w, int h)
 	{
 		bounds = new Rectangle(x, y, w, h);
@@ -81,12 +80,15 @@ public class LocationIcon implements Icon
 	{
 		this.bounds = bounds;
 	}
+	public boolean contains(Point p)
+	{
+		return getBounds().contains(p);
+	}
 
 	public ImageIcon getIcon()
 	{
 		return (ImageIcon)icon;
 	}
-	
 	public Image getImage() 
 	{
 		return ((ImageIcon)icon).getImage();
@@ -96,7 +98,6 @@ public class LocationIcon implements Icon
 	{
 		return ( (ImageIcon)icon).getIconWidth();
 	}
-	
 	public int getHeight() 
 	{
 		return ( (ImageIcon)icon).getIconHeight();

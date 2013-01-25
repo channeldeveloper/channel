@@ -358,7 +358,7 @@ public class ChannelMessagePane extends SGPanel
 	 */
 	public static class ContactHeader extends SGPanel
 	{
-		public static  Dimension SIZE =  new Dimension(80, 100),
+		public static  Dimension SIZE =  new Dimension(78, 100),
 				HEADSIZE = new Dimension(72, 72);
 		
 		private LocationIcon headIcon = null;//联系人头像
