@@ -13,5 +13,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/OriWidget"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OriWidgetRes"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/pips-main-launch"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/channelSetting"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
