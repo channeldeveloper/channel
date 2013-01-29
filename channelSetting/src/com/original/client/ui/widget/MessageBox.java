@@ -6,9 +6,12 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 
-import com.original.client.util.ChannelUtil;
-import com.seaglasslookandfeel.widget.SGScrollPane;
-import com.seaglasslookandfeel.widget.SGTextArea;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.plaf.TextUI;
+
+import com.original.client.util.Utilities;
+import com.original.widget.plaf.OTextAreaUI;
 
 /**
  * 消息框，用于弹窗显示。如确认消息、提示消息等等。
@@ -17,12 +20,14 @@ import com.seaglasslookandfeel.widget.SGTextArea;
  */
 public class MessageBox
 {
-	private SGTextArea boxArea = null;
+	private JTextArea boxArea = null;
 	private Dimension boxMaximumSize = new Dimension(500, 150);  //消息框的最大显示大小
 	
 	public MessageBox(Object content) {
-		boxArea = new SGTextArea(content == null ? null : content.toString());
+		boxArea = new JTextArea(content == null ? null : content.toString());
 		boxArea.setBorder(null);
+//		boxArea.setUI(new OTextAreaUI(boxArea));
+		boxArea.setUI((TextUI)OTextAreaUI.createUI(boxArea));
 		//设置背景透明
 		boxArea.setOpaque(false);
 		boxArea.setBackground(new Color(255, 255, 255, 0));
@@ -45,7 +50,7 @@ public class MessageBox
 		Container container = boxArea;
 		
 		if (boxArea.getUI().getPreferredSize(boxArea).height > boxMaximumSize.height) {
-			SGScrollPane boxPane = (SGScrollPane)ChannelUtil.createScrollPane(boxArea, Color.gray);
+			JScrollPane boxPane = Utilities.createScrollPane(boxArea, Color.gray);
 
 			//设置相对大小
 			Dimension preferedSize = (Dimension) boxArea.getSize().clone();

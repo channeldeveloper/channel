@@ -87,7 +87,7 @@ public class ChannelIFrame extends JInternalFrame implements ChannelConstants
 					switch(((ChannelException) ex).getChannel())
 					{
 					case WEIBO: //如果出现需要微博授权的提示错误
-						 ChannelUtil.showAuthorizeWindow(topWindow, ca.getAccount().getUser(), new WindowAdapter()
+						ChannelUtil.showAuthorizeWindow(topWindow, ca.getAccount().getUser(), new WindowAdapter()
 						{
 							public void windowClosing(WindowEvent e) //当用户关闭授权浏览器窗口时，表示跳过此错误
 							{

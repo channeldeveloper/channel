@@ -1,13 +1,10 @@
-﻿package com.original.client.util;
-
-import iqq.ui.QQFaceDialog;
+package com.original.client.util;
 
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dialog;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.Insets;
@@ -15,8 +12,6 @@ import java.awt.Point;
 import java.awt.Window;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.WindowListener;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedInputStream;
@@ -27,7 +22,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.nio.Buffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -35,59 +29,40 @@ import java.nio.channels.FileChannel.MapMode;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-import javax.imageio.ImageIO;
 import javax.swing.AbstractButton;
 import javax.swing.Box;
-import javax.swing.ImageIcon;
+import javax.swing.Box.Filler;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JEditorPane;
-import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRootPane;
 import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.ListCellRenderer;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.Box.Filler;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
-import sun.swing.SwingUtilities2;
-import weibo4j.http.AccessToken;
-import weibo4j.model.WeiboException;
-import chrriis.dj.nativeswing.swtimpl.NativeInterface;
-import chrriis.dj.nativeswing.swtimpl.components.JWebBrowser;
-import chrriis.dj.nativeswing.swtimpl.components.WebBrowserAdapter;
-import chrriis.dj.nativeswing.swtimpl.components.WebBrowserListener;
-import chrriis.dj.nativeswing.swtimpl.components.WebBrowserNavigationEvent;
-import chrriis.dj.nativeswing.swtimpl.components.WebBrowserWindowFactory;
-
-import com.original.channel.ChannelAccesser;
 import com.original.client.border.ShadowBorder;
 import com.original.client.layout.VerticalGridLayout;
 import com.original.client.ui.ChannelMessageTopBar;
 import com.original.client.ui.data.AbstractButtonItem;
 import com.original.client.ui.data.MenuItem;
 import com.original.client.ui.data.TitleItem;
-import com.original.client.ui.widget.FileChooserListener;
-import com.original.client.ui.widget.FilePreviewer;
-import com.original.client.ui.widget.ImagePane;
 import com.original.client.ui.widget.MessageBox;
 import com.original.client.ui.widget.ToolTip;
+import com.original.widget.OButton;
 import com.original.widget.OScrollBar;
-import com.seaglasslookandfeel.widget.SGButton;
-import com.seaglasslookandfeel.widget.SGColorChooser;
-import com.seaglasslookandfeel.widget.SGFileChooser;
-import com.seaglasslookandfeel.widget.SGMenuItem;
-import com.seaglasslookandfeel.widget.SGOptionPane;
-import com.seaglasslookandfeel.widget.SGPanel;
-import com.seaglasslookandfeel.widget.SGScrollPane;
+import com.original.widget.model.LevelButtonModel.BUTTONLEVEL;
 
-/**
- * 一些通用算法，目前主要用于客户端界面应用，服务端类请勿使用。
- * @author WMS
- *
- */
-public class ChannelUtil implements ChannelConstants
+public class Utilities implements ChannelConstants
 {
 	/**
 	 * 判断文本是否为空
@@ -125,23 +100,6 @@ public class ChannelUtil implements ChannelConstants
 	}
 	
 	/**
-	 * 为文本添加指定长度的空格
-	 * @param text 文本
-	 * @param fm 字体测量工具
-	 * @param blankLength 空格长度
-	 * @return
-	 */
-	public static String appendBlank(String text, FontMetrics fm, int blankLength)
-	{
-		if(text != null) {
-			int blankNum = (int)((double)blankLength/fm.stringWidth(" "));
-			for(int i=0;i<blankNum;i++)
-				text += " ";
-		}
-		return text;
-	}
-	
-	/**
 	 * 创建水平、或垂直方向的指定填充区域(<=0表示任意的宽度、或高度)
 	 * @param h 水平填充宽度
 	 * @param v 垂直填充高度
@@ -158,96 +116,21 @@ public class ChannelUtil implements ChannelConstants
 	}
 	
 	/**
-	 * 截取指定长度subLength(单位px)的字符串
-	 * @param text 字符串
-	 * @param fm 字体测量工具
-	 * @param cutLength 截取长度
-	 * @return
-	 */
-	public static String cutString(String text, FontMetrics fm, int cutLength)
-	{
-		if(text != null && fm.stringWidth(text) > cutLength)
-		{
-			int len = 0;
-			for(int i=0 ; i<text.length(); i++)
-			{
-				len += fm.charWidth(text.charAt(i));
-				if(len == cutLength) {
-					return text.substring(0, i) + "…";
-				}
-				else if(len > cutLength) {
-					return text.substring(0, i-1) + "…";
-				}
-			}
-		}
-		return text;
-	}
-	public static String cutString(String text, JComponent comp)
-	{
-		if(comp != null && !isEmpty(text)) {
-			FontMetrics fm = SwingUtilities2.getFontMetrics(comp, comp.getFont());
-			int cutLength = comp.getPreferredSize().width - fm.stringWidth("...");
-			return cutString(text, fm, cutLength);
-		}
-		return null;
-	}
-	
-	/**
-	 * 按照设定的宽度、高度来设置图像的宽度、宽度，保持原图像的宽高比
-	 * @param image 原图像
-	 * @param width  设定宽度
-	 * @param height 设定高度
-	 * @return
-	 */
-	public static Dimension adjustImage(ImageIcon image, int width, int height)
-	{
-		Dimension dim = new Dimension();
-		if(image != null && width >0 && height > 0)
-		{
-			return adjustImage(image.getIconWidth(), image.getIconHeight(), width, height);
-		}
-		return dim;
-	}
-	public static Dimension adjustImage(int oldWidth, int oldHeight, int width, int height)
-	{
-		Dimension dim = new Dimension();
-		if(oldWidth >0 && oldHeight > 0 && width >0 && height > 0)
-		{			
-			//如果设定宽、高度和图片原来的宽、高度一致，就不需要调整了
-			if(width == oldWidth && height == oldHeight)
-			{
-				dim.width = width;
-				dim.height = height;
-				return dim;
-			}
-
-			double d1 = oldWidth / (double) oldHeight, d2 = width
-					/ (double) height;
-
-			if (d2 >= d1) { // 以高度为准
-				if (oldHeight > height)
-					oldHeight = height;
-				oldWidth = (int) (oldHeight * d1);
-			} else {// 以宽度为准
-				if (oldWidth > width)
-					oldWidth = width;
-				oldHeight = (int) (oldWidth / d1);
-			}
-			
-			dim.width = oldWidth;
-			dim.height = oldHeight;
-		}
-		return dim;
-	}
-	
-	/**
 	 * 由按钮项目构建按钮
 	 * @param item 按钮项目
 	 * @return
 	 */
-	public static SGButton createAbstractButton(AbstractButtonItem item)
+	public static JButton createAbstractButton(AbstractButtonItem item)
 	{
-		return createAbstractButton(item, SGButton.class);
+		return createAbstractButton(item, JButton.class);
+	}
+	public static OButton createApplicationButton(AbstractButtonItem item)
+	{
+		OButton button = createAbstractButton(item, OButton.class);
+		button.setLevel(BUTTONLEVEL.APPLICATION);
+//		button.getModel().getButtonEffect().setDrawBorder(false);
+		button.getModel().getButtonEffect().setHasShadow(false);
+		return button;
 	}
 	public static <T extends AbstractButton> T  createAbstractButton(AbstractButtonItem item, Class<T> clazz)
 	{
@@ -273,6 +156,7 @@ public class ChannelUtil implements ChannelConstants
 			if(item.getText() == null) {//如果是图片按钮
 				button.setMargin(new Insets(0, 0, 0, 0));
 				button.setContentAreaFilled(false);
+				button.setBorderPainted(false);
 				button.setCursor(HAND_CURSOR);
 				
 				if(item.getSize() == null && item.getIcon() != null) { //如果没有设置大小，则用图片大小
@@ -291,9 +175,9 @@ public class ChannelUtil implements ChannelConstants
 	 * @param item 菜单项目
 	 * @return
 	 */
-	public static SGMenuItem createMenuItem(MenuItem item) {
+	public static JMenuItem createMenuItem(MenuItem item) {
 		if(item != null) {
-			SGMenuItem menuItem = new SGMenuItem(item.getText(), item.getIcon());
+			JMenuItem menuItem = new JMenuItem(item.getText(), item.getIcon());
 			menuItem.setActionCommand(item.getActionCommand());
 			if(item.getSize() != null) {
 				menuItem.setPreferredSize(item.getSize());
@@ -302,111 +186,6 @@ public class ChannelUtil implements ChannelConstants
 			return menuItem;
 		}
 		return null;
-	}
-	
-	/**
-	 * 显示微博授权浏览器窗口，注意该窗口一旦打开，将使主程序处于wait()状态，待授权结束后才notify
-	 * @throws WeiboException
-	 * @return 授权是否成功
-	 */
-	public static void showAuthorizeWindow(final Window owner, final String account, final WindowListener listener) throws WeiboException
-	{
-		if(owner == null)
-			throw new IllegalArgumentException("Authorize window hasn't known it's owner");
-
-		final String authorizeURL = ChannelAccesser.getOauthRemoteURL();
-		final JWebBrowser browser = new JWebBrowser();
-		final WebBrowserListener wlistener = new WebBrowserAdapter()
-		{
-			public void locationChanged(WebBrowserNavigationEvent evt)
-			{
-				String site = evt.getWebBrowser().getResourceLocation();
-				if (site == null || authorizeURL.equals(site)
-						|| site.indexOf("code=") == -1) {
-					return;
-				}
-				String code = site.substring(site.lastIndexOf("code=") + 5);
-				AccessToken accessToken = null;
-				try {
-					accessToken = ChannelAccesser.getAccessTokenByCode(code);
-				} catch (WeiboException e) {
-					e.printStackTrace();
-				}
-				
-				//本地保存授权密钥
-				if (accessToken == null) {
-					return;
-				}
-				else {
-					ChannelAccesser.storeAccessTokenKey(account, accessToken.getAccessToken());
-					SwingUtilities.getWindowAncestor(browser).dispose();//自动关闭浏览器窗口
-				}
-			}};
-			
-			try {
-				Window window = showBrowser(browser, owner, authorizeURL, wlistener);
-				window.addWindowListener(listener);
-				window.setVisible(true);
-			}
-			catch(Exception ex) {
-				throw new WeiboException(ex);
-			}
-			
-	}
-	
-	/**
-	 * 显示本地浏览器窗口
-	 * @param URL
-	 */
-	public static Window showBrowser(Window owner, String URL) throws Exception
-	{
-		return showBrowser(owner, URL, null);
-	}
-	public static Window showBrowser(Window owner,  final String URL, final WebBrowserListener listener) throws Exception
-	{
-		return showBrowser(null, owner, URL, listener);
-	}
-	public static Window showBrowser(JWebBrowser webBrowser, Window owner,  final String URL, final WebBrowserListener listener) throws Exception
-	{
-NativeInterface.open();
-		
-		 final JWebBrowser browser = webBrowser == null ? new JWebBrowser() : webBrowser;
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				browser.setBarsVisible(false);
-				browser.setButtonBarVisible(false);
-				browser.setDefaultPopupMenuRegistered(false);
-				browser.navigate(URL);
-				
-				if(listener != null) {
-					browser.addWebBrowserListener(listener);
-				}
-			}
-		});
-		
-		final Window window = (Window)WebBrowserWindowFactory.create(owner, browser);			
-		//使用系统自带的标题栏
-		if (window instanceof JDialog) {
-			((JDialog) window).setUndecorated(false);
-			((JDialog) window).setModal(true);
-			((JDialog) window).getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-		} else if (window instanceof JFrame) {
-			((JFrame) window).setUndecorated(false);
-			((JFrame) window).getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-		}
-		
-		window.setSize(CHANNELWIDTH*2/3, CHANNELHEIGHT*2/3);
-		window.setMaximumSize(new Dimension(CHANNELWIDTH, CHANNELHEIGHT-STATUSBARHEIGHT));
-		if(owner == null)
-			window.setLocationRelativeTo(null);
-		checkWindowLocation(window);
-
-		try{
-			NativeInterface.runEventPump();
-		}
-		catch(Exception ex) { }
-		
-		return window;
 	}
 	
 	/**
@@ -419,7 +198,7 @@ NativeInterface.open();
 	public static void showWithDialog(Dimension size, Component parent,
 			String title, boolean modal, Container child) {
 		if (parent == null) {
-			parent = SGOptionPane.getRootFrame();
+			parent = JOptionPane.getRootFrame();
 		}
 		JDialog d = createDialog(parent, title, modal);
 		d.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
@@ -441,8 +220,8 @@ NativeInterface.open();
 			Object content) {
 		MessageBox box = new MessageBox(content);
 		
-		final SGOptionPane   pane = new SGOptionPane(box.getMessageBox(), SGOptionPane.INFORMATION_MESSAGE,
-                SGOptionPane.DEFAULT_OPTION, null,
+		final JOptionPane   pane = new JOptionPane(box.getMessageBox(), JOptionPane.INFORMATION_MESSAGE,
+				JOptionPane.DEFAULT_OPTION, null,
                 null, null);
 		
 pane.addPropertyChangeListener(new PropertyChangeListener() {
@@ -450,10 +229,10 @@ pane.addPropertyChangeListener(new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				// TODO 自动生成的方法存根
-				if(evt.getPropertyName() == SGOptionPane.VALUE_PROPERTY) {
+				if(evt.getPropertyName() == JOptionPane.VALUE_PROPERTY) {
 					
 					if(evt.getNewValue() instanceof Integer 
-							&& ((Integer)evt.getNewValue()).intValue() != SGOptionPane.CLOSED_OPTION) {
+							&& ((Integer)evt.getNewValue()).intValue() != JOptionPane.CLOSED_OPTION) {
 						SwingUtilities.getWindowAncestor(pane).dispose();
 					}
 				}
@@ -471,18 +250,18 @@ pane.addPropertyChangeListener(new PropertyChangeListener() {
 		
 MessageBox box = new MessageBox(content);
 		
-		final SGOptionPane   pane = new SGOptionPane(box.getMessageBox(), SGOptionPane.QUESTION_MESSAGE,
-                SGOptionPane.YES_NO_OPTION, null,
+		final JOptionPane   pane = new JOptionPane(box.getMessageBox(), JOptionPane.QUESTION_MESSAGE,
+                JOptionPane.YES_NO_OPTION, null,
                 null, null);
 		pane.addPropertyChangeListener(new PropertyChangeListener() {
 			
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				// TODO 自动生成的方法存根
-				if(evt.getPropertyName() == SGOptionPane.VALUE_PROPERTY) {
+				if(evt.getPropertyName() == JOptionPane.VALUE_PROPERTY) {
 					
 					if(evt.getNewValue() instanceof Integer 
-							&& ((Integer)evt.getNewValue()).intValue() != SGOptionPane.CLOSED_OPTION) {
+							&& ((Integer)evt.getNewValue()).intValue() != JOptionPane.CLOSED_OPTION) {
 						SwingUtilities.getWindowAncestor(pane).dispose();
 					}
 				}
@@ -495,7 +274,7 @@ MessageBox box = new MessageBox(content);
 	}
 	public static boolean confirm(Component parent, String title,
 			Object content) {
-		return SGOptionPane.YES_OPTION == showConfirmDialog(parent, title, content);
+		return JOptionPane.YES_OPTION == showConfirmDialog(parent, title, content);
 	}
 	
 	/**
@@ -503,23 +282,23 @@ MessageBox box = new MessageBox(content);
 	 * @param op 选项面板
 	 * @return
 	 */
-	private static int getOptionValue(SGOptionPane op) {
+	private static int getOptionValue(JOptionPane op) {
 		Object selectedValue = op.getValue();
 		Object[] options = op.getOptions();
 
 		if (selectedValue == null)
-			return SGOptionPane.CLOSED_OPTION;
+			return JOptionPane.CLOSED_OPTION;
 		if (options == null) {
 			if (selectedValue instanceof Integer)
 				return ((Integer) selectedValue).intValue();
-			return SGOptionPane.CLOSED_OPTION;
+			return JOptionPane.CLOSED_OPTION;
 		}
 		for (int counter = 0, maxCounter = options.length; 
 				counter < maxCounter; counter++) {
 			if (options[counter].equals(selectedValue))
 				return counter;
 		}
-		return SGOptionPane.CLOSED_OPTION;
+		return JOptionPane.CLOSED_OPTION;
 	}
 	
 	/**
@@ -536,7 +315,7 @@ MessageBox box = new MessageBox(content);
 		}
 
 		if (parent == null) {
-			parent = SGOptionPane.getRootFrame();
+			parent = JOptionPane.getRootFrame();
 		}
 
 		if (parent instanceof Frame) {
@@ -549,18 +328,16 @@ MessageBox box = new MessageBox(content);
 	/**
 	 * 创建自定义面板，与Channel主程序面板风格一致
 	 */
-	public static SGPanel createCustomedPane(final JDialog dialog, final Container child, final String title)
+	public static JPanel createCustomedPane(final JDialog dialog, final Container child, final String title)
 	{
-		SGPanel body = new SGPanel(new VerticalGridLayout(
+		JPanel body = new JPanel();
+		body.setLayout(new VerticalGridLayout(
 				VerticalGridLayout.TOP_TO_BOTTOM,0,0,new Insets(0, 0, 5, 2)));
 		body.setBorder(new ShadowBorder(2, 10, 0.4f, child.getBackground()));
 		
 		ChannelMessageTopBar topBar = new ChannelMessageTopBar(true) {
 			@Override
 			public void doClose() {
-				// TODO Auto-generated method stub
-				if(dialog instanceof QQFaceDialog)
-					((QQFaceDialog) dialog).setTextEditor(null);
 				dialog.dispose();
 			}
 
@@ -596,7 +373,7 @@ MessageBox box = new MessageBox(content);
 			String title, boolean modal,final Container child)
 	{
 		JDialog d = createDialog(parent, title, modal);
-		final SGPanel body = createCustomedPane(d, child, title);
+		final JPanel body = createCustomedPane(d, child, title);
 		
 		d.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		d.setContentPane(body);
@@ -642,54 +419,17 @@ MessageBox box = new MessageBox(content);
 	}
 	
 	/**
-	 * 显示图片对话框
-	 */
-	public static void showImageDialog(final String imgURL)
-	{
-		BufferedImage image = null;
-		try {
-			image = ImageIO.read(new URL(imgURL));
-		} catch (Exception ex) {
-			System.err.println("加载图片失败：" + ex);
-		}
-
-		if (image != null) {
-			final ImagePane ip = new ImagePane();
-			final JDialog dialog = createCustomedDialog(null, "查看原图", true, ip);
-			
-			Thread loading = new Thread(new Runnable() {// 图片加载线程
-				public void run() {
-					ip.setBackground(imgURL);
-					if (ip.getBackgroundImage() != null) {
-						SGPanel container = (SGPanel) dialog.getContentPane();
-						container.remove(ip);
-						container.add(ip.getScrollImagePane());
-						container.validate();
-
-						dialog.pack();
-						checkWindowLocation(dialog);
-					}
-				}
-			}, "Loading Image");
-			loading.start();
-			
-			checkWindowLocation(dialog);
-			dialog.setVisible(true);
-		}
-	}
-	
-	/**
 	 * 显示自定义颜色选择对话框
 	 */
 	public static Color showColorChooserDialog(Component c, String title, boolean modal,
-	      SGColorChooser chooserPane) throws HeadlessException {
+	      JColorChooser chooserPane) throws HeadlessException {
 		if(chooserPane == null) {
-			chooserPane = new SGColorChooser();
+			chooserPane = new JColorChooser();
 		}
-		SGPanel body = new SGPanel();
+		JPanel body = new JPanel();
 		body.setBorder(new ShadowBorder());
 		
-		final	JDialog dialog = SGColorChooser.createDialog(c, title, modal, chooserPane, null, null);
+		final	JDialog dialog = JColorChooser.createDialog(c, title, modal, chooserPane, null, null);
 		dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		
 		body.add(dialog.getContentPane());
@@ -700,63 +440,63 @@ MessageBox box = new MessageBox(content);
 		return chooserPane.getColor();
 	}
 	
-	/**
-	 * 显示自定义图片选择对话框
-	 */
-	public static File showImageChooserDialog(Component c, String title, boolean modal,
-		     SGFileChooser chooserPane)
-	{
-		return showFileChooserDialog(c, title, modal, chooserPane,
-new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
-		"bmp", "gif", "jpg", "jpeg", "png"));
-	}
-	
-	/**
-	 * 显示自定义文件选择对话框
-	 */
-	public static File showFileChooserDialog(Component c, String title, boolean modal,
-		    SGFileChooser chooserPane, FileFilter filter) {
-		if(chooserPane == null) {
-			chooserPane = new SGFileChooser();
-		}
-		if(filter != null) {
-			chooserPane.setFileFilter(filter);
-			new FilePreviewer(chooserPane);
-		}
-		chooserPane.setFileSelectionMode(SGFileChooser.FILES_ONLY);
-		chooserPane.setOpaque(true);
-		
-		FileChooserListener fcl = new FileChooserListener(chooserPane);
-		chooserPane.addActionListener(fcl);
-		showCustomedDialog(c, title, true, chooserPane);
-		return fcl.getChooseFile();
-	}	
-	
-	public static void showFileSaveDialog(Component c, String title, boolean modal,
-		     SGFileChooser savePane, File saveFile) {
-		if(savePane == null) {
-			savePane = new SGFileChooser();
-			savePane.setDialogType(SGFileChooser.SAVE_DIALOG);
-		}
-		savePane.setSelectedFile(saveFile);
-		savePane.setFileSelectionMode(SGFileChooser.FILES_ONLY);
-		savePane.setOpaque(false);
-		
-		FileChooserListener fcl = new FileChooserListener(savePane);
-		savePane.addActionListener(fcl);
-		showCustomedDialog(c, title, true, savePane);
-		
-		File chooseFile = fcl.getChooseFile();
-		if(chooseFile != null) {
-			try {
-				copyBigFile(saveFile, chooseFile); //复制文件
-				showMessageDialog(c, "保存成功", "文件保存成功！");
-			} catch (IOException ex) {
-				// TODO 自动生成的 catch 块
-				showMessageDialog(c, "错误", ex);
-			}
-		}
-	}
+//	/**
+//	 * 显示自定义图片选择对话框
+//	 */
+//	public static File showImageChooserDialog(Component c, String title, boolean modal,
+//			JFileChooser chooserPane)
+//	{
+//		return showFileChooserDialog(c, title, modal, chooserPane,
+//new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
+//		"bmp", "gif", "jpg", "jpeg", "png"));
+//	}
+//	
+//	/**
+//	 * 显示自定义文件选择对话框
+//	 */
+//	public static File showFileChooserDialog(Component c, String title, boolean modal,
+//		    JFileChooser chooserPane, FileFilter filter) {
+//		if(chooserPane == null) {
+//			chooserPane = new JFileChooser();
+//		}
+//		if(filter != null) {
+//			chooserPane.setFileFilter(filter);
+//			new FilePreviewer(chooserPane);
+//		}
+//		chooserPane.setFileSelectionMode(JFileChooser.FILES_ONLY);
+//		chooserPane.setOpaque(true);
+//		
+//		FileChooserListener fcl = new FileChooserListener(chooserPane);
+//		chooserPane.addActionListener(fcl);
+//		showCustomedDialog(c, title, true, chooserPane);
+//		return fcl.getChooseFile();
+//	}	
+//	
+//	public static void showFileSaveDialog(Component c, String title, boolean modal,
+//		     JFileChooser savePane, File saveFile) {
+//		if(savePane == null) {
+//			savePane = new JFileChooser();
+//			savePane.setDialogType(JFileChooser.SAVE_DIALOG);
+//		}
+//		savePane.setSelectedFile(saveFile);
+//		savePane.setFileSelectionMode(JFileChooser.FILES_ONLY);
+//		savePane.setOpaque(false);
+//		
+//		FileChooserListener fcl = new FileChooserListener(savePane);
+//		savePane.addActionListener(fcl);
+//		showCustomedDialog(c, title, true, savePane);
+//		
+//		File chooseFile = fcl.getChooseFile();
+//		if(chooseFile != null) {
+//			try {
+//				copyBigFile(saveFile, chooseFile); //复制文件
+//				showMessageDialog(c, "保存成功", "文件保存成功！");
+//			} catch (IOException ex) {
+//				// TODO 自动生成的 catch 块
+//				showMessageDialog(c, "错误", ex);
+//			}
+//		}
+//	}
 	
 	/**
 	 * 复制文件操作。将源文件复制到目标文件(夹)指定的路径。如果目标文件存在，则覆盖。
@@ -927,34 +667,54 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 	/**
 	 * 显示QQ表情对话框
 	 */
-	public static void showQQFaceDialog(Component c, String title, boolean modal, 
-			JEditorPane editor)
-	{
-		QQFaceDialog dialog = QQFaceDialog.getInstance();
-		if(dialog.getTextEditor() == editor) {
-			dialog.setVisible(true);
-			return;
-		}
-		
-		dialog.setTextEditor(editor);
-	SGPanel body = createCustomedPane(dialog, dialog.getDefautFacePanel(), title);
-	dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-	dialog.setContentPane(body);
-	dialog.pack();
-	dialog.setLocationRelativeTo(c);
-	checkWindowLocation(dialog);
-	dialog.setVisible(true);
+//	public static void showQQFaceDialog(Component c, String title, boolean modal, 
+//			JEditorPane editor)
+//	{
+//		QQFaceDialog dialog = QQFaceDialog.getInstance();
+//		if(dialog.getTextEditor() == editor) {
+//			dialog.setVisible(true);
+//			return;
+//		}
+//		
+//		dialog.setTextEditor(editor);
+//	OPanel body = createCustomedPane(dialog, dialog.getDefautFacePanel(), title);
+//	dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+//	dialog.setContentPane(body);
+//	dialog.pack();
+//	dialog.setLocationRelativeTo(c);
+//	checkWindowLocation(dialog);
+//	dialog.setVisible(true);
+//	}
+	
+	public static void showToolTip(final Component c, final String tipText) {
+		final ToolTip toolTip = new ToolTip();
+		c.addFocusListener(new FocusListener() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				if (!toolTip.isInvokerShow()) {
+					toolTip.setToolTipText(tipText);
+					toolTip.show(c, 0, 25);
+				} else {
+					toolTip.removeInvoker(c);
+				}
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+
+			}
+		});
 	}
 	
 	/**
 	 * 创建带滚动条的面板
 	 */
-	public static SGScrollPane createScrollPane(Component c) {
+	public static JScrollPane createScrollPane(Component c) {
 		return createScrollPane(c, Color.gray);
 	}
-	public static SGScrollPane createScrollPane(Component c, Color barColor) {
-		SGScrollPane jsp = new SGScrollPane(c, SGScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-				SGScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+	public static JScrollPane createScrollPane(Component c, Color barColor) {
+		JScrollPane jsp = new JScrollPane(c, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
 		// 不显示边框，同时设置背景透明
 		jsp.setBorder(null);
@@ -966,23 +726,35 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		return jsp;
 	}
 	
-	public static void showToolTip(final Component c, final String tipText) {
-		final ToolTip toolTip = new ToolTip();
-		c.addFocusListener(new FocusListener() {
+	/**
+	 * 获取水平或垂直方向对应的表格渲染器
+	 * @param alignment 对齐方向，见{@link SwingConstants}
+	 * @return
+	 */
+	public static ListCellRenderer getAliginCellRenderer(final int alignment)
+	{
+		return new DefaultListCellRenderer() {
 			@Override
-			public void focusLost(FocusEvent e) {
-				if (!toolTip.isInvokerShow()) {
-					toolTip.setToolTipText(tipText);
-					toolTip.show(c, 0, c.getY() + 25);
-				} else {
-					toolTip.removeInvoker(c);
+			public Component getListCellRendererComponent(JList list,
+					Object value, int index, boolean isSelected,
+					boolean cellHasFocus) {
+				// TODO 自动生成的方法存根
+				JLabel cell = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected,
+						cellHasFocus);
+				switch(alignment) {
+				case TOP:
+				case BOTTOM:
+					cell.setVerticalAlignment(alignment);
+					break;
+					
+				case LEFT:
+				case RIGHT:
+					cell.setHorizontalAlignment(alignment);
+					break;
 				}
+				return cell;
 			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
-
-			}
-		});
+		};
 	}
+
 }

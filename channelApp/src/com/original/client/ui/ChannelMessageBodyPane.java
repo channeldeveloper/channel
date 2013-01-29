@@ -40,6 +40,7 @@ import com.original.client.util.ChannelConfig;
 import com.original.client.util.ChannelConstants;
 import com.original.client.util.ChannelHyperlinkListener;
 import com.original.client.util.ChannelUtil;
+import com.original.client.util.ChannelUtil;
 import com.original.client.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;

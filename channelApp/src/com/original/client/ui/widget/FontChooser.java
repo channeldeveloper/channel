@@ -30,6 +30,7 @@ import com.original.client.ui.data.AbstractButtonItem;
 import com.original.client.ui.data.FontStyle;
 import com.original.client.util.ChannelConfig;
 import com.original.client.util.ChannelUtil;
+import com.original.client.util.ChannelUtil;
 import com.original.client.util.IconFactory;
 import com.seaglasslookandfeel.widget.SGButton;
 import com.seaglasslookandfeel.widget.SGColorChooser;
