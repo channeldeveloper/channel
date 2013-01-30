@@ -38,6 +38,7 @@ import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.Constants.CHANNEL;
+import com.original.service.channel.Protocol;
 import com.original.service.channel.Service;
 import com.original.service.channel.config.Initializer;
 import com.original.service.channel.event.ChannelEvent;
@@ -331,23 +332,23 @@ public final class ChannelService extends AbstractService {
 		peopleManager = new PeopleManager(morphia, mongo, ds);
 		serviceMap = new HashMap<ChannelAccount, Service>();
 		
-//		HashMap<String, ChannelAccount> cas = channelServer.getChannelAccounts();
-//		for (String key : cas.keySet()) {
-//			ChannelAccount ca = cas.get(key);
-//			if (serviceMap.containsKey(ca))
-//				continue; 
-//
-//			try {
-//				Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
-//				if (sc != null) {
-//					serviceMap.put(ca, sc);
-//					sc.addMessageListener(new ChannelServiceListener());
-//				}
-//			}
-//			catch(Exception ex) {
-//				failedServiceAccounts.add(ca);
-//			}
-//		}
+		HashMap<String, ChannelAccount> cas = channelServer.getChannelAccounts();
+		for (String key : cas.keySet()) {
+			ChannelAccount ca = cas.get(key);
+			if (serviceMap.containsKey(ca))
+				continue; 
+
+			try {
+				Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
+				if (sc != null) {
+					serviceMap.put(ca, sc);
+					sc.addMessageListener(new ChannelServiceListener());
+				}
+			}
+			catch(Exception ex) {
+				failedServiceAccounts.add(ca);
+			}
+		}
 	}
 	
 	/**
@@ -836,8 +837,91 @@ public final class ChannelService extends AbstractService {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	//注意不需要再次查询数据库：
+	public List<Account> getAccounts() {
+		return channelServer.getAccounts();
+	}
+	
+	public void addChannelFromAccount(Account acc) {
+		if(hasChannelByAccount(acc)) 
+			return;
+		
+		Channel ch = new Channel();
+		ch.setName(acc.getChannelName());
+		ch.setVendor(acc.getVendor());
+		ch.setType("email");
+		ch.setStatus("running");
+		ch.setDomain(acc.getDomain());
+		Protocol[] protocols = new Protocol[2];
+		protocols[0] = new Protocol(); //接收服务器
+		protocols[0].setName(acc.getRecvProtocol());
+		protocols[0].setType("incoming");
+		protocols[0].setServer(acc.getRecvServer());
+		protocols[0].setPort(acc.getRecvPort());
+		
+		protocols[1] = new Protocol();//发送服务器
+		protocols[1].setName(acc.getSendProtocol());
+		protocols[1].setType("outgoing");
+		protocols[1].setServer(acc.getSendServer());
+		protocols[1].setPort(acc.getSendPort());
+		ch.setProtocols(protocols);
+		
+		ch.setContentType(new String[]{"html"});
+		ch.setActions(new String[]{"send","receive","reply","quick reply"});
+		
+		ds.save(ch);
+	}
+	
+	public void delChannelByAccount(Account acc) {//
+		if(acc != null && acc.getUser() != null) {
+			Query<ChannelAccount> q = ds.createQuery(ChannelAccount.class).field("account.user").equal(acc.getUser());
+			q.disableValidation();
+			ds.delete(q);
+		}
+	}
+	
+	public void pushAccountToProfile(Account acc) {//添加一个账户至profile中
+		if(acc != null) {
+			Query<Profile> q = ds.createQuery(Profile.class); //这里目前只有一个
+			UpdateOperations<Profile> ops = ds.createUpdateOperations(
+					Profile.class).add("accounts", acc) ;
+			
+			ds.update(q, ops, true);
+		}
+	}
+	public void popAccountFromProfile(Account acc) {//从profile中移除一个账户，注意覆盖Account类的equals()方法
+		if(acc != null) {
+			Query<Profile> q = ds.createQuery(Profile.class); //这里目前只有一个
+			UpdateOperations<Profile> ops = ds.createUpdateOperations(
+					Profile.class).removeAll("accounts", acc);
+			ds.update(q, ops, false);
+		}
+	}
+	public boolean hasAccountInProfile(Account acc) {//是否存在此账户
+		if (acc != null) {
+			Query<Profile> q = ds.createQuery(Profile.class).retrievedFields(true, "accounts");
+			Profile profile = q.get();
+			if (profile != null) {
+				Account[] accounts = profile.getAccounts();
+				if (accounts != null && accounts.length > 0) {
+					for (Account account : accounts) {
+						if (account.equals(acc))
+							return true;
+					}
+				}
+			}
+		}
 
-
+		return false;
+	}
+	public boolean hasChannelByAccount(Account acc) {
+		if(acc != null && acc.getName() != null) {
+			Query<Channel> q = ds.createQuery(Channel.class).field("name").endsWithIgnoreCase(acc.getName());
+			return q.iterator().hasNext();
+		}
+		return false;
+	}
 	
 	// ///////////////////
 	/**

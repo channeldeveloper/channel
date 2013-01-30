@@ -171,7 +171,7 @@ public class ChannelToolBar extends SGPanel implements ActionListener, EventCons
 			
 		} else if (e.getActionCommand() == SETTING) {
 			ChannelSettingPane csp = new ChannelSettingPane();
-			csp.addProfile();
+			csp.initProfileAccount();
 			desktop.addSettingShowComp(PREFIX_SETTING, csp);
 		}
 	}

@@ -1,11 +1,13 @@
 package com.original.channel;
 
+import java.util.List;
+
+import com.original.service.channel.Account;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.core.MessageManager;
 
-
 /**
- * Channel访问服务，用于UI界面访问远程服务，操作数据库等。目前是CS结构
+ * Channel访问服务，用于UI界面访问远程服务，操作数据库等。
  * @author WMS
  *
  */
@@ -23,5 +25,9 @@ public class ChannelAccesser
 	
 	public static ChannelService getChannelService() {
 		return cs;
+	}
+	
+	public static List<Account> getAccounts() {
+		return cs.getAccounts();
 	}
 }

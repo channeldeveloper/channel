@@ -35,13 +35,20 @@ public class Account {
 	//This is needed for we can literally parse user account such as 189787878, maybe im_qq, maybe phone mumber.
 	private String channelName;//Unique
 	
-	private String status;
+	private String status;//"-1"表示禁用 ; "0"或null表示启用
 	
 	private String description;
 	
 	private String customs;//==hashMap
 	
 	private String gender;
+	
+	//other info for mail account：
+	private String recvServer, sendServer;
+	private String recvPort, sendPort;
+	private String recvProtocol, sendProtocol;
+	private String domain, vendor;
+	
 	/**
 	 * @return the userId
 	 */
@@ -198,6 +205,63 @@ public class Account {
 	public void setGender(String gender) {
 		this.gender = gender;
 	}
+	
+	public String getRecvServer() {
+		return recvServer;
+	}
+	public void setRecvServer(String recvServer) {
+		this.recvServer = recvServer;
+	}
+	
+	public String getSendServer() {
+		return sendServer;
+	}
+	public void setSendServer(String sendServer) {
+		this.sendServer = sendServer;
+	}
+	
+	public String getRecvPort() {
+		return recvPort;
+	}
+	public void setRecvPort(String recvPort) {
+		this.recvPort = recvPort;
+	}
+	
+	public String getSendPort() {
+		return sendPort;
+	}
+	public void setSendPort(String sendPort) {
+		this.sendPort = sendPort;
+	}
+	
+	public String getRecvProtocol() {
+		return recvProtocol;
+	}
+	public void setRecvProtocol(String recvProtocol) {
+		this.recvProtocol = recvProtocol;
+	}
+	
+	public String getSendProtocol() {
+		return sendProtocol;
+	}
+	public void setSendProtocol(String sendProtocol) {
+		this.sendProtocol = sendProtocol;
+	}
+	
+	public String getDomain() {
+		return domain;
+	}
+	public void setDomain(String domain) {
+		this.domain = domain;
+	}
+	
+	public String getVendor() {
+		return vendor;
+	}
+	public void setVendor(String vendor) {
+		this.vendor = vendor;
+	}
+	
 
 //	public abstract HashMap<String, String> getCustoms();
 

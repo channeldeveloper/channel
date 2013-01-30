@@ -7,6 +7,7 @@
 package com.original.service.channel.core;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Logger;
 
 import com.google.code.morphia.Datastore;
@@ -132,6 +133,10 @@ public class ChannelServer {
 	public HashMap<String, ChannelAccount> getChannelAccounts() {
 		
 		return chAccountMger.getChAccountMap();
+	}
+	
+	public List<Account> getAccounts() {
+		return chAccountMger.getAccounts();
 	}
 
 	// operation

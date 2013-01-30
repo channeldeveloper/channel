@@ -320,10 +320,10 @@ public class WeiboParser implements Constants
 	 * @throws WeiboException
 	 */
 	public static String parseUTF8(String content) throws WeiboException{
-		try {
-            content = URLEncoder.encode(content, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-        }
+//		try {
+//            content = URLEncoder.encode(content, "UTF-8");
+//        } catch (UnsupportedEncodingException e) {
+//        }
 		return content;
 	}
 	
@@ -334,29 +334,32 @@ public class WeiboParser implements Constants
 	 * @return
 	 * @throws WeiboException
 	 */
-	public static ImageItem parseUTF8(ChannelMessage msg, boolean addAt) throws WeiboException
+	public static Object[] parseUTF8(ChannelMessage msg, boolean addAt) throws WeiboException
 	{
-		ImageItem imgItem = null;
 		String content = null;
+		Object[] items = null;
 		if(msg != null && (content = msg.getBody()) != null)
 		{
-			imgItem = new ImageItem();
-			
 			//获取图片
 			String[] imgURLs = fetchImageURL(content);
+			
+			items = new Object[2];
 			if(imgURLs != null) {
 				content = content.replace(imgURLs[0], "");//清除图片内容
 				content = content.replaceAll("\r|\n", ""); //清除换行符
-				imgItem.setContent(parseBytes(imgURLs[1]));//提取图片
+//				imgItem.setContent(parseBytes(imgURLs[1]));//提取图片
+				items[1] = parseBytes(imgURLs[1]);
 			}
 			
 			if (addAt) {
-				imgItem.setText(parseUTF8("//@" + msg.getToAddr() + ": " + content));
+//				imgItem.setText(parseUTF8("//@" + msg.getToAddr() + ": " + content));
+				items[0] = "//@" + msg.getToAddr() + ": " + parseUTF8( content);
 			} else {
-				imgItem.setText(parseUTF8(content));
+//				imgItem.setText(parseUTF8(content));
+				items[0] = parseUTF8(content);
 			}
 		}
-		return imgItem;
+		return items;
 	}
 	
 	/**

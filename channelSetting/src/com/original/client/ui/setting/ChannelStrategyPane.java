@@ -49,6 +49,8 @@ new ChannelGridBagLayoutManager(this);
 	private OButton btnOK = Utilities.createApplicationButton(new AbstractButtonItem("确定", CONFIRM, null)),
 			btnCancel = Utilities.createApplicationButton(new AbstractButtonItem("取消", CANCEL, null));
 	
+	private ChannelProfilePane profile = null; //主面板
+	
 	private String[] weeks = {"周一", "周二", "周三", "周四", "周五", "周六", "周日"};//星期
 	
 	public ChannelStrategyPane(CHANNEL channel)
@@ -162,6 +164,11 @@ new ChannelGridBagLayoutManager(this);
 		lbTitle.setForeground(TITLE_COLOR);
 		return lbTitle;
 	}
+	
+	//设置个人信息主面板
+	public void setProfilePane(ChannelProfilePane profile) {
+		this.profile = profile;
+	}
 
 	//统一字体
 	@Override
@@ -177,7 +184,12 @@ new ChannelGridBagLayoutManager(this);
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO 自动生成的方法存根
-		
+		if(e.getActionCommand()== CANCEL) {
+			ChannelSettingPane csp = null;
+			if(profile != null && (csp = profile.getSettingPane()) != null) {
+				csp.removeComponent(channel.name());
+			}
+		}
 	}
 
 	@Override

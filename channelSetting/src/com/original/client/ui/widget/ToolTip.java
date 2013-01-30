@@ -1,5 +1,6 @@
 package com.original.client.ui.widget;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -27,9 +28,19 @@ public class ToolTip extends OPopupMenu{
 	public ToolTip() {
 		add(menu);
 	}
-	
+
 	public void setToolTipText(String text) {
 		menu.setText(text);
+	}
+	public String getToolTipText() {
+		return menu.getText();
+	}
+	
+	public void setToolTipColor(Color fg) {
+		menu.setForeground(fg);
+	}
+	public Color getToolTipColor() {
+		return menu.getForeground();
 	}
 	
 	public void setLocation(int x, int y) {

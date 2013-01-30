@@ -1,13 +1,14 @@
 package com.original.client.ui.widget;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.util.Hashtable;
 
-import com.original.client.util.ChannelUtil;
 import com.original.client.util.GraphicsHandler;
+import com.original.client.util.Utilities;
 import com.seaglasslookandfeel.widget.SGMenuItem;
 import com.seaglasslookandfeel.widget.SGPopupMenu;
 
@@ -21,19 +22,32 @@ public class ToolTip extends SGPopupMenu{
 	private static Hashtable<Component, Hashtable<String, Object>> clientProperties = 
 			new Hashtable<Component, Hashtable<String,Object>>();
 	
+	private static Hashtable<Component, ToolTip> clientBindsToolTips = 
+			new Hashtable<Component, ToolTip>();
+	
 	private SGMenuItem menu = new SGMenuItem();
 	private Component invoker = null;
 	public ToolTip() {
 		add(menu);
 	}
-	
+
 	public void setToolTipText(String text) {
 		menu.setText(text);
+	}
+	public String getToolTipText() {
+		return menu.getText();
+	}
+	
+	public void setToolTipColor(Color fg) {
+		menu.setForeground(fg);
+	}
+	public Color getToolTipColor() {
+		return menu.getForeground();
 	}
 	
 	public void setLocation(int x, int y) {
 		// TODO 自动生成的方法存根
-		Point point = ChannelUtil.checkComponentLocation(x, y, this);
+		Point point = Utilities.checkComponentLocation(x, y, this);
 		super.setLocation(point.x, point.y);
 	}
 

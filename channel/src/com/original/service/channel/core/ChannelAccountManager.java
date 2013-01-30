@@ -9,6 +9,7 @@ package com.original.service.channel.core;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -136,6 +137,7 @@ public class ChannelAccountManager {
 	}
 
 	private HashMap<String, ChannelAccount> chAccountMap = new HashMap<String, ChannelAccount>();
+	private List<Account> accountList = new ArrayList<Account>();
 	private Mongo mongo;
 	private Morphia morphia;
 	private Datastore ds;
@@ -163,7 +165,7 @@ public class ChannelAccountManager {
 	protected void init() {
 		logger = Logger.getLogger(Constants.Channel_DB_Name);
 		// load profile (system multi-account)
-		List<Account> allAccount = new ArrayList<Account>();
+//		List<Account> allAccount = new ArrayList<Account>();
 		HashMap<ObjectId, Profile> profileMap = new HashMap<ObjectId, Profile>();
 		Query<Profile> profiles = ds.find(Profile.class);
 		List<Profile> profileList = profiles.asList();
@@ -172,7 +174,7 @@ public class ChannelAccountManager {
 			profileMap.put(profile.getId(), profile);
 			if (profile.getAccounts() != null) {
 				for (int i = 0; i < profile.getAccounts().length; i++) {
-					allAccount.add(profile.getAccounts()[i]);
+					accountList.add(profile.getAccounts()[i]);
 				}
 			}
 		}
@@ -195,8 +197,8 @@ public class ChannelAccountManager {
 			}
 		}
 		// read from profile and recreate new account
-		if (allAccount.size() > 0) {
-			for (Account account : allAccount) {
+		if (accountList.size() > 0) {
+			for (Account account : accountList) {
 				
 				String key = getKey(account);
 				if (!chAccountMap.containsKey(key)) {
@@ -263,6 +265,10 @@ public Collection<ChannelAccount> getChannelAccounts()
 {
 	return this.chAccountMap.values();
 
+}
+
+public List<Account> getAccounts() {
+	return this.accountList;
 }
    
 

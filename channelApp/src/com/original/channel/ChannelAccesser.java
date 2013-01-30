@@ -1,9 +1,12 @@
 package com.original.channel;
 
+import java.util.List;
+
 import weibo4j.Oauth;
 import weibo4j.http.AccessToken;
 import weibo4j.model.WeiboException;
 
+import com.original.service.channel.Account;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.protocols.sns.weibo.WeiboService;
@@ -67,5 +70,9 @@ public class ChannelAccesser
 	
 	public static ChannelService getChannelService() {
 		return cs;
+	}
+	
+	public static List<Account> getAccounts() {
+		return cs.getAccounts();
 	}
 }

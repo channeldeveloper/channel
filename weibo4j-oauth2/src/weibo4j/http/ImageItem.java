@@ -23,36 +23,11 @@ import com.sun.imageio.plugins.png.PNGImageReader;
 public class ImageItem {
 	private byte[] content;
 	private String name;
-	private String text;
 	private String contentType;
-	
-	public ImageItem() {
-		this.name = Constants.UPLOAD_MODE;
-	}
-	
 	public ImageItem(byte[] content) throws WeiboException {
-	    this(Constants.UPLOAD_MODE, content);
+	    this(Constants.UPLOAD_MODE,content);
 	}
-	
 	public ImageItem(String name,byte[] content) throws WeiboException{
-		this.name = name;
-		this.setContent(content);
-	}
-	
-	public byte[] getContent() {
-		return content;
-	}
-	public String getName() {
-		return name;
-	}
-	public String getContentType() {
-		return contentType;
-	}
-	public String getText() {
-		return text;
-	}
-
-	public void setContent(byte[] content) throws WeiboException {
 		String imgtype = null;
 		try {
 		    imgtype = getContentType(content);
@@ -63,20 +38,22 @@ public class ImageItem {
 	    if(imgtype!=null&&(imgtype.equalsIgnoreCase("image/gif")||imgtype.equalsIgnoreCase("image/png")
 	            ||imgtype.equalsIgnoreCase("image/jpeg"))){
 	    	this.content=content;
+	    	this.name=name;
 	    	this.contentType=imgtype;
 	    }else{
 	    	throw new WeiboException(
             "Unsupported image type, Only Suport JPG ,GIF,PNG!");
 	    }
 	}
-	public void setName(String name) {
-		this.name = name;
+	
+	public byte[] getContent() {
+		return content;
 	}
-	public void setContentType(String contentType) {
-		this.contentType = contentType;
-	}	
-	public void setText(String text) {
-		this.text = text;
+	public String getName() {
+		return name;
+	}
+	public String getContentType() {
+		return contentType;
 	}
 
 	public static String getContentType(byte[] mapObj) throws IOException {

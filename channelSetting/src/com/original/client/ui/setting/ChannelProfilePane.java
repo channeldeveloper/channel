@@ -1,6 +1,7 @@
 package com.original.client.ui.setting;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
@@ -15,6 +16,7 @@ import java.awt.event.MouseMotionAdapter;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -27,6 +29,7 @@ import com.original.client.util.ChannelConstants;
 import com.original.client.util.IconFactory;
 import com.original.client.util.LocationIcon;
 import com.original.client.util.Utilities;
+import com.original.service.channel.Account;
 import com.original.widget.OCheckBox;
 import com.original.widget.OTabbedPane;
 
@@ -62,6 +65,7 @@ public class ChannelProfilePane extends JPanel implements ChannelConstants, Even
 	 * 分析当前消息Channel的类型，设置相应的标题信息等
 	 */
 	private void analyzeChannelType() {
+		this.setFont(DEFAULT_FONT);
 		switch(channel) {
 		case MAIL:
 			this.setBorder(new TitleLineBorder("邮件", titleIcon4Mail, addIcon, LIGHT_TEXT_COLOR, TITLE_COLOR));
@@ -81,9 +85,11 @@ public class ChannelProfilePane extends JPanel implements ChannelConstants, Even
 	 * 设置当前面板的父面板，即设置面板
 	 * @param csp
 	 */
-	public void setSettingPane(ChannelSettingPane csp)
-	{
+	public void setSettingPane(ChannelSettingPane csp) {
 		this.csp = csp;
+	}
+	public ChannelSettingPane getSettingPane() {
+		return this.csp;
 	}
 	
 	/**
@@ -93,7 +99,7 @@ public class ChannelProfilePane extends JPanel implements ChannelConstants, Even
 		this.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if(addIcon.contains(e.getPoint())) {
-					addProfileBody();
+					showProfileTabPane();
 				}
 			}
 		});
@@ -110,36 +116,99 @@ public class ChannelProfilePane extends JPanel implements ChannelConstants, Even
 	}
 	
 	/**
-	 * 添加个人账户
+	 * 初始化添加个人账户
 	 */
-	public void addProfileBody() {
-		Body body = new Body();
+	public void initProfileBody(Account acc) {
+		Body body = new Body(acc);
 		add(body);
 		this.validate();
-		this.getParent().validate();
+	}
+	
+	/**
+	 * 手动添加个人账户
+	 */
+	public boolean addProfileBody(Account acc) {
+		if(acc != null) {
+			
+			try { //先数据库添加后，再界面添加
+				if (csp != null)
+					csp.addProfileAccount(acc);
+			} catch (Exception ex) {
+				Utilities.showMessageDialog(this, "错误", ex.getMessage());
+				return false;
+			}
+			
+			Body body = new Body(acc);
+			add(body);
+			
+			Component comp = this;
+			while (true) { //反复刷新界面
+				comp.validate();
+				comp = comp.getParent();
+				if (comp == null || comp instanceof ChannelSettingPane)
+					break;
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * 显示账户添加和策略设置选项面板
+	 */
+	private void showProfileTabPane() {
+		if(this.csp != null) {
+			OTabbedPane otp = new OTabbedPane();
+			JPanel accountPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			ChannelAccountPane cap = new ChannelAccountPane(channel);
+			cap.setProfilePane(this);
+			accountPane.add( cap);
+			accountPane.setOpaque(false);
+			accountPane.setPreferredSize(new Dimension(SETTINGPANEWIDTH, DESKTOPHEIGHT-125));
+			otp.addTab("账户", accountPane, null, false);
+			
+			if(channel == CHANNEL.MAIL) { //目前设定邮件才有【策略】
+				JPanel strategyPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
+				ChannelStrategyPane csp = new ChannelStrategyPane(channel);
+				csp.setProfilePane(this);
+				strategyPane.add( csp);
+				strategyPane.setOpaque(false);
+				strategyPane.setPreferredSize(new Dimension(SETTINGPANEWIDTH, DESKTOPHEIGHT-125));
+				otp.addTab("策略", strategyPane, null, false);
+				otp.setSelectedIndex(0);//默认选中账户
+			}
+			
+			this.csp.addComponent(channel.name(), otp);
+		}
 	}
 	
 	/**
 	 * 删除个人账户
 	 * @param body 账户面板
 	 */
-	private void removeProfileBody(Body body) {
-		if(csp != null) {
-			OTabbedPane otp = new OTabbedPane();
-			JPanel accountPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
-			accountPane.add( new ChannelAccountPane(channel));
-			accountPane.setOpaque(false);
-			accountPane.setPreferredSize(new Dimension(SETTINGPANEWIDTH, DESKTOPHEIGHT-125));
+	private boolean removeProfileBody(Body body) {
+if(body != null && body.account != null) {
 			
-			JPanel strategyPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
-			strategyPane.add( new ChannelStrategyPane(channel));
-			strategyPane.setOpaque(false);
-			strategyPane.setPreferredSize(new Dimension(SETTINGPANEWIDTH, DESKTOPHEIGHT-125));
+			try { //先数据库添加后，再界面添加
+				if (csp != null)
+					csp.removeProfileAccount(body.account);
+			} catch (Exception ex) {
+				Utilities.showMessageDialog(this, "错误", ex.getMessage());
+				return false;
+			}
 			
-			otp.addTab("账户", accountPane);
-			otp.addTab("策略", strategyPane);
-			csp.addComponent(channel.name(), otp);
+			this.remove(body);//先删除子界面
+			Component comp = this;
+			while (true) { //再反复刷新父界面
+				comp.validate();
+				comp = comp.getParent();
+				if (comp == null || comp instanceof ChannelSettingPane)
+					break;
+			}
+			return true;
 		}
+		return false;
+		
 	}
 	
 	public class Body extends JPanel implements ItemListener, ActionListener
@@ -148,15 +217,18 @@ public class ChannelProfilePane extends JPanel implements ChannelConstants, Even
 				new ChannelGridBagLayoutManager(this);
 		
 		private OCheckBox profCb = new OCheckBox();
-		private JLabel profName = new JLabel("channel"),
+		private JLabel profName = new JLabel(),
 				profStatus = new JLabel("禁用"),
-				profAccount = new JLabel("channeldeveloper@gmail.com");
+				profAccount = new JLabel();
 		
 		private ImageIcon delIcon = IconFactory.loadIconByConfig("fileDelIcon");
 		private JButton profDelButton = Utilities.createAbstractButton(
 				new AbstractButtonItem(null, DEL_PROFILE, delIcon));
 		
-		public Body() {
+		Account account = null; //当前账户
+		
+		public Body(Account account) {
+			this.account = account;
 			layoutMgr.setAnchor(GridBagConstraints.WEST); //靠右对齐，主要针对标签
 			layoutMgr.setInsets(new Insets(0, 5, 10, 1));//1px偏移调整
 			
@@ -177,6 +249,11 @@ public class ChannelProfilePane extends JPanel implements ChannelConstants, Even
 			profAccount.setForeground(LIGHT_TEXT_COLOR);
 			profStatus.setForeground(Color.gray);
 			profCb.addItemListener(this);
+			
+			if(account != null) {
+				profName.setText(account.getName());
+				profAccount.setText(account.getUser());
+			}
 		}
 
 		@Override
@@ -197,8 +274,21 @@ public class ChannelProfilePane extends JPanel implements ChannelConstants, Even
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(e.getSource() == profDelButton)			 {
+				if(Utilities.confirm(null, "确认删除", "是否删除此账户？")) {
 				removeProfileBody(this);
+				}
 			}
 		}
+		
+		//统一字体
+		@Override
+		public void add(Component comp, Object constraints) {
+			// TODO 自动生成的方法存根
+			comp.setFont(DEFAULT_FONT);
+			if(comp instanceof JComponent)
+				((JComponent) comp).setOpaque(false);
+			super.add(comp, constraints);
+		}
+
 	}
 }

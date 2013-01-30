@@ -686,24 +686,41 @@ MessageBox box = new MessageBox(content);
 //	dialog.setVisible(true);
 //	}
 	
-	public static void showToolTip(final Component c, final String tipText) {
+	public static void addToolTip(final Component c, final String tipText) {
 		final ToolTip toolTip = new ToolTip();
-		c.addFocusListener(new FocusListener() {
-			@Override
-			public void focusGained(FocusEvent e) {
-				if (!toolTip.isInvokerShow()) {
-					toolTip.setToolTipText(tipText);
-					toolTip.show(c, 0, 25);
-				} else {
-					toolTip.removeInvoker(c);
-				}
+		toolTip.setToolTipText(tipText);
+		c.addFocusListener(new ToolTipFocusListener(toolTip));
+	}
+	
+	public static void showToolTip(final Component c, String tipText, Color tipColor) {
+		ToolTipFocusListener ttListener = getToolTipFocusListener(c);
+		ToolTip tt = null;
+		if (ttListener == null) {
+			tt = new ToolTip();
+		} else {
+			tt = ttListener.tt;
+			if (tipText == null) 
+				tipText = tt.getToolTipText();
+		}
+		
+		if (!tt.isInvokerShow()) {
+			tt.setToolTipText(tipText);
+			tt.setToolTipColor(tipColor);
+			tt.show(c, 0, 30);
+		} else {
+			tt.removeInvoker(c);
+		}
+	}
+	
+	private static ToolTipFocusListener getToolTipFocusListener(Component c) {
+		FocusListener[] listeners = c.getFocusListeners();
+		if(listeners != null && listeners.length > 0) {
+			for(FocusListener listener : listeners) {
+				if(listener instanceof ToolTipFocusListener)
+					return (ToolTipFocusListener)listener;
 			}
-
-			@Override
-			public void focusLost(FocusEvent e) {
-
-			}
-		});
+		}
+		return null;
 	}
 	
 	/**
@@ -756,5 +773,26 @@ MessageBox box = new MessageBox(content);
 			}
 		};
 	}
+	
+	public static class ToolTipFocusListener implements FocusListener
+	{
+		ToolTip tt = null;
+		ToolTipFocusListener(ToolTip toolTip)
+		{
+			tt = toolTip;
+		}
+		@Override
+		public void focusGained(FocusEvent e) {
+			if (!tt.isInvokerShow()) {
+				tt.show((Component)e.getSource(), 0, 30);
+			} else {
+				tt.removeInvoker((Component)e.getSource());
+			}
+		}
 
+		@Override
+		public void focusLost(FocusEvent e) {
+
+		}
+	}
 }

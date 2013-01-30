@@ -74,8 +74,16 @@ public class WeiboSender implements Constants{
 				}
 			}
 			else if(action == ACTION_REPLY) { //回复，其实就是发表一份微博，只是在最前面加上“@某人：”
-				ImageItem imgItem = WeiboParser.parseUTF8(msg, is_comment); //自己给自己发，不需要@自己
-				timeLine.UploadStatus(imgItem.getText(), imgItem);
+				Object[] items = WeiboParser.parseUTF8(msg, is_comment); //自己给自己发，不需要@自己
+				if(items != null && items.length == 2) {
+					ImageItem imgItem = items[1] == null ? null :  new ImageItem((byte[])items[1]);
+					if(imgItem == null) {
+						timeLine.UpdateStatus((String)items[0]);
+					}
+					else {
+						timeLine.UploadStatus((String)items[0], imgItem);
+					}
+				}
 			}
 		}
 		else {
