@@ -469,6 +469,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 							try {
 								ChannelService cs = ChannelAccesser.getChannelService();
 								if (e.getActionCommand() == POST) {
+									sendMsg.setProcessed(true);
 									cs.put(Constants.ACTION_REPLY, sendMsg); //回复
 									
 									//添加消息
@@ -476,6 +477,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 									desktop.addMessage(sendMsg);
 								} else if (e.getActionCommand() == SAVE_TO_DRAFT) {
 									sendMsg.setRepost(isMessageAddrEditable());
+									sendMsg.setDrafted(true);
 									cs.put(Constants.ACTION_PUT_DRAFT, sendMsg); //存草稿
 								}
 								

@@ -7,17 +7,13 @@ package com.original.service.channel.protocols.sns.weibo;
  * ORIGINAL PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
  */
 
-import iqq.util.QQEnvironment;
-
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -71,7 +67,9 @@ public class WeiboService extends AbstractService {
 	
 	//微博授权AccessToken本地保存文件名
 	public static File SNS_WEIBO_OAUTH = new File(System.getProperty("user.dir"), 
-			"sns_weibo_oauth.dat");
+			"sns_weibo_oauth.dat"),
+			 SNS_WEIBO_TEMPDIR = new File(System.getProperty("user.dir"), 
+					"sns_weibo");
 	private static Map<Account, String> accessTokens = new HashMap<Account, String>();
 	private static Properties weiboProp = new Properties();
 	
@@ -80,6 +78,10 @@ public class WeiboService extends AbstractService {
 			InputStream in = new FileInputStream(SNS_WEIBO_OAUTH);
 			weiboProp.load(in); //将文件读至内存中
 			in.close();
+			
+			if(!SNS_WEIBO_TEMPDIR.exists()) {
+				SNS_WEIBO_TEMPDIR.mkdir();
+			}
 		}
 		catch(Exception ex) {
 			log.error(ex.getMessage());
@@ -428,9 +430,7 @@ public class WeiboService extends AbstractService {
 			 }
 
 			 ImageIcon avadar = new ImageIcon(profile);
-			 String path = QQEnvironment.getMemberDir() + user.getId()
-					 + "priofile.png";
-			 File faceFile = new File(path);
+			 File faceFile = new File(SNS_WEIBO_TEMPDIR, user.getId() + "_profile.png");
 //			 if (!faceFile.exists()) {
 //				 System.out.println("No ex");
 //			 } else {
