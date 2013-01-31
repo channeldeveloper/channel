@@ -34,6 +34,8 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractButton;
@@ -81,6 +83,7 @@ import com.seaglasslookandfeel.widget.SGMenuItem;
 import com.seaglasslookandfeel.widget.SGOptionPane;
 import com.seaglasslookandfeel.widget.SGPanel;
 import com.seaglasslookandfeel.widget.SGScrollPane;
+import com.sun.rmi.rmid.ExecOptionPermission;
 
 /**
  * 一些通用算法，目前主要用于客户端界面应用，服务端类请勿使用。
@@ -89,6 +92,8 @@ import com.seaglasslookandfeel.widget.SGScrollPane;
  */
 public class ChannelUtil implements ChannelConstants
 {
+	static ExecutorService executor = Executors.newCachedThreadPool();
+	
 	/**
 	 * 判断文本是否为空
 	 * @param text 文本
@@ -959,7 +964,10 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		// 不显示边框，同时设置背景透明
 		jsp.setBorder(null);
 		jsp.setOpaque(false);
-		jsp.setVerticalScrollBar(new OScrollBar(JScrollBar.VERTICAL, barColor));
+		
+		JScrollBar vsb = new OScrollBar(JScrollBar.VERTICAL, barColor);
+		vsb.setUnitIncrement(100);
+		jsp.setVerticalScrollBar(vsb);
 		jsp.setViewportBorder(null);
 		jsp.getViewport().setOpaque(false);
 		
@@ -984,5 +992,9 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 
 			}
 		});
+	}
+	
+	public static void exec(Runnable command) {
+		executor.execute(command);
 	}
 }

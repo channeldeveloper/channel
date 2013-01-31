@@ -10,12 +10,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +28,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
-import weibo4j.http.ImageItem;
 import weibo4j.model.Emotion;
 import weibo4j.model.WeiboException;
 
@@ -111,6 +108,7 @@ public class WeiboParser implements Constants
 			@Override
 			public String call() throws Exception {
 				parserLock.lock();
+				List<String> cache = new ArrayList<String>();
 				try {
 					String copy = text;
 					if(copy != null && copy.length() > 0) {
@@ -118,12 +116,18 @@ public class WeiboParser implements Constants
 						String phrase = null;
 						while(matcher.find()) {
 							phrase = matcher.group();
+							if (cache.contains(phrase))
+								continue;
+							
 							copy = copy.replace(phrase, findEmotions(phrase));
+							cache.add(phrase);
 						}
 					}
 					return copy;
 				}
 				finally {
+					cache.clear();
+					cache = null;
 					parserLock.unlock();
 				}
 			}
@@ -147,13 +151,14 @@ public class WeiboParser implements Constants
 			return text;
 		}
 	}	
+	
 	/**
 	 * 查找表情
 	 * @param phrase 表情短语
 	 * @return 表情的链接地址
 	 */
 	public static String findEmotions(String phrase) {
-		if(phrase != null && phrase.matches("\\[.+?\\]")) {
+		if(phrase != null && phrase.matches("\\[(.+?)\\]")) {
 			Object obj = cache.get(PREFIX_EMOTION+phrase);
 			if(obj != null) 
 				return (String)obj;

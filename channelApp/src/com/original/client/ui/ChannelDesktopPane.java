@@ -519,7 +519,8 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 			}
 			g2d.drawImage(HOMEICON.getImage(), homeIconArea.x, homeIconArea.y, this);
 		}
-				
+		
+		GraphicsHandler.suspendRendering(g2d);
 	}
 
 	@Override

@@ -497,7 +497,7 @@ public class ChannelToolBar extends SGPanel implements ActionListener, EventCons
 		@Override
 		protected void paintComponent(Graphics g)
 		{
-			Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
+//			Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
 			
 //			int width = owner.getBounds().width, height = getHeight();
 //			
@@ -509,7 +509,8 @@ public class ChannelToolBar extends SGPanel implements ActionListener, EventCons
 //			g2d.fillRoundRect(3, 3, width-2*3, height-2*3, 5*2, 5*2);
 //			
 //			g2d.setRenderingHints(GraphicsHandler.DEFAULT_RENDERING_HINT_OFF);
-			super.paintComponent(g2d);
+//			super.paintComponent(g2d);
+			super.paintComponent(g);
 		}
 
 		//菜单项点击触发事件

@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,7 +69,7 @@ public final class ChannelService extends AbstractService {
 	
 	private ChannelServer channelServer;
 
-	private HashMap<ChannelAccount, Service> serviceMap;
+	private HashMap<ChannelAccount, Service> serviceMap = new HashMap<ChannelAccount, Service>();
 	private MessageManager msgManager;
 	private PeopleManager peopleManager;
 
@@ -81,6 +83,9 @@ public final class ChannelService extends AbstractService {
 
 	private Initializer initializer;
 	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
+	private static ExecutorService executor = Executors.newSingleThreadExecutor();
+	private static boolean isRunError = false, //是否启动出错
+			isStart = false;//服务是否已启动
 	
 	private static ChannelService singleton;
 //	private static ThreadManager threadPool;
@@ -103,6 +108,7 @@ public final class ChannelService extends AbstractService {
 	 */
 	private ChannelService() {
 		initMongoDB();
+		//将启动服务放入线程中。
 		init();
 	}
 
@@ -286,7 +292,7 @@ public final class ChannelService extends AbstractService {
 		this.listenerList = listenerList;
 	}
 
-	private void initMongoDB() {
+	private void initMongoDB() { //暂时不置于线程中
 		logger = Logger.getLogger("channer");
 		morphia = new Morphia();
 		morphia.map(ChannelAccount.class);
@@ -306,49 +312,56 @@ public final class ChannelService extends AbstractService {
 		} catch (Exception exp) {
 			logger.log(Level.SEVERE,
 					"To connect MongoDB Service fail!" + exp.toString());
-			System.exit(1);//exit
+			isRunError = true;
+			return;
 		}
-
-	}
-
-	// ////////////////////////control and event
-	/**
-	 * 
-	 */
-
-	private void init() {
 		
-		//db and collection
 		initializer = new Initializer(mongo);
 		try {
 			initializer.init(false);
-			
 		} catch (Exception exp) {
 			logger.log(Level.SEVERE, "To init channel db fail!" + exp.toString());
+			isRunError = true;
+			return;
 		}
 		
 		msgManager = new MessageManager(morphia, mongo, ds);
 		channelServer = new ChannelServer(morphia, mongo, ds);
 		peopleManager = new PeopleManager(morphia, mongo, ds);
-		serviceMap = new HashMap<ChannelAccount, Service>();
-		
-		HashMap<String, ChannelAccount> cas = channelServer.getChannelAccounts();
-		for (String key : cas.keySet()) {
-			ChannelAccount ca = cas.get(key);
-			if (serviceMap.containsKey(ca))
-				continue; 
+	}
 
-			try {
-				Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
-				if (sc != null) {
-					serviceMap.put(ca, sc);
-					sc.addMessageListener(new ChannelServiceListener());
+	private void init() { //启动channel服务，置于线程中进行
+		
+		Runnable initServiceTask = new Runnable() {
+			public void run() {
+				if(isRunError) {
+					return;
 				}
+				
+				HashMap<String, ChannelAccount> cas = channelServer.getChannelAccounts();
+				for (String key : cas.keySet()) {
+					ChannelAccount ca = cas.get(key);
+					if (serviceMap.containsKey(ca))
+						continue; 
+
+					try {
+						Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
+						if (sc != null) {
+							serviceMap.put(ca, sc);
+							sc.addMessageListener(new ChannelServiceListener());
+						}
+					}
+					catch(Exception ex) {
+						failedServiceAccounts.add(ca);
+					}
+				}
+				
+				//立即启动，不能外部调用，否则起不来！
+				start();
 			}
-			catch(Exception ex) {
-				failedServiceAccounts.add(ca);
-			}
-		}
+		};
+		
+		executor.execute(initServiceTask);
 	}
 	
 	/**
@@ -459,8 +472,9 @@ public final class ChannelService extends AbstractService {
 	}
 
 	@Override
-	public void start() {
-
+	public synchronized void start() {
+if(isStart) return;
+		
 		if (serviceMap == null) {
 			return;
 		}
@@ -471,7 +485,7 @@ public final class ChannelService extends AbstractService {
 			Service service = serviceMap.get(key);
 			service.start();
 		}
-
+isStart = true;
 	}
 //
 //	@Override

@@ -125,7 +125,7 @@ public class SingleLineBorder extends AbstractBorder
 			break;
 		}
 		
-//		GraphicsHandler.suspendRendering(g2d);
+		GraphicsHandler.suspendRendering(g2d);
 	}
 	
 	/**

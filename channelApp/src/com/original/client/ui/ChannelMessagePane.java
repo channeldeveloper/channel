@@ -21,7 +21,10 @@ import java.io.IOException;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import org.bson.types.ObjectId;
+
 import com.mongodb.gridfs.GridFSDBFile;
+import com.original.channel.ChannelAccesser;
 import com.original.client.layout.ChannelGridBagLayoutManager;
 import com.original.client.layout.VerticalGridLayout;
 import com.original.client.ui.widget.ToolTip;
@@ -33,7 +36,6 @@ import com.original.client.util.IconFactory;
 import com.original.client.util.LocationIcon;
 import com.original.service.channel.Account;
 import com.original.service.channel.ChannelMessage;
-import com.original.service.channel.core.ChannelService;
 import com.original.service.people.People;
 import com.original.service.storage.GridFSUtil;
 import com.seaglasslookandfeel.widget.SGLabel;
@@ -347,7 +349,7 @@ public class ChannelMessagePane extends SGPanel
 			//填充背景
 			g2d.setColor(bgColor);
 			g2d.fillRoundRect(0, 0, width, height, 10, 10);
-//			GraphicsHandler.suspendRendering(g2d);
+			GraphicsHandler.suspendRendering(g2d);
 		}
 	}
 	
@@ -498,31 +500,48 @@ public class ChannelMessagePane extends SGPanel
 		}
 		
 		//设置联系人头像，此算法待优化。以后可能放置在线程中！
-		public void setHeadImageIcon(ChannelMessage msg) {
+		public void setHeadImageIcon(final ChannelMessage msg) {
 			if(msg != null) {
-				People pm =ChannelService.getInstance().getPeopleManager().getPeopleByMessage(msg) ;		
-				if (pm != null)
-				{		
-					String chn = msg.getChannelAccount().getChannel().getName();
-					Account acc = pm.getAccountMap().get(chn);
-					if (chn != null && acc.getAvatar() != null)
-					{
-						try {
-							GridFSDBFile dbfile = GridFSUtil.getGridFSUtil().getFile(acc.getAvatar());
-							String fn = dbfile.getFilename();
-							String path = QQEnvironment.getConfigTempDir() + fn;
-							File file = new File(path);
-							if (!file.exists()) {
-								dbfile.writeTo(path);
-							}
-							ImageIcon image = new ImageIcon(path);
-							Image headImage = image.getImage().getScaledInstance(72, 72, Image.SCALE_SMOOTH);
-							headIcon.setIcon(new ImageIcon(headImage));
-						} catch (IOException ex) {
-							
-						} 
-					}			
-				}
+				Runnable loading = new Runnable() {
+					public void run() {
+						People pm =ChannelAccesser.getPeopleManager().getPeopleByMessage(msg) ;		
+						if (pm != null)
+						{		
+							String chn = msg.getChannelAccount().getChannel().getName();
+							Account acc = pm.getAccountMap().get(chn);
+							if (chn != null && acc.getAvatar() != null)
+							{
+								try {
+									ObjectId avatar = acc.getAvatar();
+									String avatarPath = null;
+									if(avatar != null) {
+										File file = new File( QQEnvironment.getConfigTempDir() , avatar.toString());
+										if (file.exists()) { // 查找有文件缓存记录
+											avatarPath = file.getPath();
+										} else {
+											// 如果没有缓存记录，则查找数据库
+											GridFSDBFile dbfile = null;
+											if ((dbfile = GridFSUtil.getGridFSUtil().getFile(avatar)) != null) { // 有记录！
+												dbfile.writeTo(file);
+												avatarPath = file.getPath();
+											}
+										}
+										
+										if(avatarPath != null) {
+											ImageIcon image = new ImageIcon(avatarPath);
+											Image headImage = image.getImage().getScaledInstance(72, 72, Image.SCALE_SMOOTH);
+											headIcon.setIcon(new ImageIcon(headImage));
+											repaint();
+										}
+									}
+									
+								} catch (IOException ex) {
+								} 
+							}			
+						}
+					}
+				};
+				ChannelUtil.exec(loading);
 			}
 		}
 	}

@@ -11,6 +11,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
 
+import weibo4j.model.WeiboException;
+
 import com.original.client.ui.ChannelDesktopPane;
 import com.original.client.ui.ChannelToolBar;
 import com.original.client.util.ChannelConfig;
@@ -53,6 +55,63 @@ public class ChannelIFrame extends JInternalFrame implements ChannelConstants
 		}
 	}
 	
+	//启动服务
+		private ChannelService startService() throws Exception 
+		{
+			//1. Data 和 View 要分开
+			//2. 服务 和 应用(控制) 要分开
+			//3. 服务控制自服务，不由第3方应用外部控制，
+			//4. 服务不能启动，不影响存库数据(ChannelMessage)访问
+			final ChannelService cs =  ChannelAccesser.getChannelService();
+			
+			//渠道服务的控制内部控制。
+			//不联网也能启动，因为需要看历史数据
+			Window win = SwingUtilities.getWindowAncestor(this);
+			while(!cs.isStartupAll()) {
+				try {
+					cs.restartService();
+				}
+				catch(Exception ex) {
+					ex.printStackTrace();
+					
+					if(ex instanceof ChannelException) {
+						final ChannelAccount ca = ((ChannelException) ex).getChannelAccount();
+						
+						switch(((ChannelException) ex).getChannel())
+						{
+						case WEIBO: //如果出现需要微博授权的提示错误
+							try {
+								ChannelUtil.showAuthorizeWindow(SwingUtilities.getWindowAncestor(this), ca.getAccount().getUser(), new WindowAdapter() {
+									public void windowClosing(WindowEvent e) //当用户关闭授权浏览器窗口时，表示跳过此错误
+									{
+										cs.skipService(ca);
+									}
+								});
+							} catch (WeiboException we) {//未知错误，可能网络不通
+								cs.skipService(ca);
+							}
+							break;
+							
+						case QQ: //如果出现QQ登录需要验证码
+							int option = JOptionPane.showConfirmDialog(win, ex.getMessage(),
+									"是否重试", JOptionPane.YES_NO_OPTION);
+							if(option != JOptionPane.YES_OPTION) {//-1:关闭 1:否 0:是
+								cs.skipService(ca);
+							}
+							break;
+							
+						case MAIL:
+							break;
+						}
+					}
+					else {
+						cs.skipAllService();
+//						break;
+					}
+				}
+			}
+			return cs;
+		}
 	
 	//程序执行入口
 	private void init() throws Exception
@@ -65,56 +124,6 @@ public class ChannelIFrame extends JInternalFrame implements ChannelConstants
 		} catch (Exception exp) {
 			exp.printStackTrace();
 		}
-				
-		//1. Data 和 View 要分开
-		//2. 服务 和 应用(控制) 要分开
-		//3. 服务控制自服务，不由第3方应用外部控制，
-		//4. 服务不能启动，不影响存库数据(ChannelMessage)访问
-		
-		final ChannelService cs = ChannelAccesser.getChannelService();
-		
-		//渠道服务的控制内部控制。
-//		while(!cs.isStartupAll()) {
-			try {
-				cs.restartService();
-			}
-			catch(Exception ex) {
-				ex.printStackTrace();
-				
-				if(ex instanceof ChannelException) {
-					final ChannelAccount ca = ((ChannelException) ex).getChannelAccount();
-					Window topWindow = SwingUtilities.getWindowAncestor(this);
-					switch(((ChannelException) ex).getChannel())
-					{
-					case WEIBO: //如果出现需要微博授权的提示错误
-						ChannelUtil.showAuthorizeWindow(topWindow, ca.getAccount().getUser(), new WindowAdapter()
-						{
-							public void windowClosing(WindowEvent e) //当用户关闭授权浏览器窗口时，表示跳过此错误
-							{
-								cs.skipService(ca);
-							}
-						});
-						break;
-						
-					case QQ: //如果出现QQ登录需要验证码
-						int option = JOptionPane.showConfirmDialog(topWindow, ex.getMessage(),
-								"是否重试", JOptionPane.YES_NO_OPTION);
-						if(option != JOptionPane.YES_OPTION) {//-1:关闭 1:否 0:是
-							cs.skipService(ca);
-						}
-						break;
-						
-					case MAIL:
-						break;
-					}
-				}
-				else {
-					cs.skipAllService();
-//					break;
-				}
-			}
-//		}
-		cs.start();
 		
 		//使用层面板的方式来布局
 		JLayeredPane mp = getLayeredPane();
@@ -140,21 +149,23 @@ public class ChannelIFrame extends JInternalFrame implements ChannelConstants
 
 		desktop.setBounds(0,40,ChannelDesktopPane.SIZE.width,
 				ChannelDesktopPane.SIZE.height);		
-		cs.addMessageListener(desktop);
 		toolbar.addMessageChangeListener(desktop);
 		
 		mp.add(desktop, JLayeredPane.DEFAULT_LAYER);
 		setVisible(true);
 		
-		//开始添加信息：
-		MessageManager msm =ChannelAccesser.getMsgManager();
-		List<ChannelMessage> msgs = msm.getMessagesByFlags(new String[]{ChannelMessage.FLAG_TRASHED, 
-				ChannelMessage.FLAG_DRAFT}, 
-				new Integer[]{0, 0});
-		for (ChannelMessage m : msgs)
-		{			
-			desktop.initMessage(m); //注意不要使用addMessage()，用途不一样
-		}
+		ChannelService cs = startService();
+		cs.addMessageListener(desktop);
+		
+//开始添加信息：
+MessageManager msm =cs.getMsgManager();
+List<ChannelMessage> msgs = msm.getMessagesByFlags(new String[]{ChannelMessage.FLAG_TRASHED, 
+		ChannelMessage.FLAG_DRAFT}, 
+		new Integer[]{0, 0});
+for (ChannelMessage m : msgs)
+{			
+	desktop.initMessage(m); //注意不要使用addMessage()，用途不一样
+}
 	}
 	
 }

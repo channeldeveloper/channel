@@ -133,8 +133,9 @@ public class ToolTip extends SGPopupMenu{
 	@Override
 	protected void paintComponent(Graphics g) {
 		// TODO 自动生成的方法存根
-		Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
-		super.paintComponent(g2d);
+//		Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
+//		super.paintComponent(g2d);
+		super.paintComponent(g);
 	}
 }
  

@@ -81,6 +81,8 @@ public class ImagePane extends SGPanel implements ChannelConstants
 			
 			g2d.drawString(initTips, (width-fontWidth)/2, (height - fontHeight) / 2);
 		}
+		
+		GraphicsHandler.suspendRendering(g2d);
 	}
 
 	public BufferedImage getBackgroundImage() {

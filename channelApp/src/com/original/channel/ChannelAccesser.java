@@ -10,6 +10,7 @@ import com.original.service.channel.Account;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.protocols.sns.weibo.WeiboService;
+import com.original.service.people.PeopleManager;
 
 /**
  * Channel访问服务，用于UI界面访问远程服务，操作数据库等。
@@ -19,7 +20,7 @@ import com.original.service.channel.protocols.sns.weibo.WeiboService;
 public class ChannelAccesser
 {
 	static Oauth oauth = new Oauth();
-	static ChannelService cs = ChannelService.getInstance();
+	static ChannelService cs = null;
 	
 	/**
 	 * 获取激活 授权Token的远程地址
@@ -68,7 +69,14 @@ public class ChannelAccesser
 		return cs.getMsgManager();
 	}
 	
+	public static PeopleManager getPeopleManager() {
+		return cs.getPeopleManager();
+	}
+	
 	public static ChannelService getChannelService() {
+		if(cs == null) {
+			cs = ChannelService.getInstance();
+		}
 		return cs;
 	}
 	

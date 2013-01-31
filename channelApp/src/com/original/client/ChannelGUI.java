@@ -54,19 +54,10 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 			exp.printStackTrace();
 		}
 	}
-
-	//初始化应用程序，也方便外部程序整合
-	private void init() throws Exception
+	
+	//启动服务
+	private ChannelService startService() throws Exception 
 	{
-		//开始应用程序：
-		try {
-			SeaGlassLookAndFeel sglaf = SeaGlassLookAndFeel.getInstance();
-			SeaGlassLookAndFeel.setDefaultFont(DEFAULT_FONT);
-			sglaf.initialize();
-			
-		} catch (Exception exp) {
-			exp.printStackTrace();
-		}
 		//1. Data 和 View 要分开
 		//2. 服务 和 应用(控制) 要分开
 		//3. 服务控制自服务，不由第3方应用外部控制，
@@ -119,14 +110,27 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 				}
 			}
 		}
-		cs.start();
+		return cs;
+	}
+
+	//初始化应用程序，也方便外部程序整合
+	private void init() throws Exception
+	{
+		//开始应用程序：
+		try {
+			SeaGlassLookAndFeel sglaf = SeaGlassLookAndFeel.getInstance();
+			SeaGlassLookAndFeel.setDefaultFont(DEFAULT_FONT);
+			sglaf.initialize();
+			
+		} catch (Exception exp) {
+			exp.printStackTrace();
+		}
 		
 		//使用层面板的方式来布局
 		JLayeredPane mp = getLayeredPane();
 		//用户头像(第1层)
 		ChannelToolBar.ChannelUserHeadLabel userHead = new ChannelToolBar.ChannelUserHeadLabel();		
 		ChannelNativeCache.setUserHeadLabel(userHead);
-
 
 		userHead.setBounds(0, 1, ChannelConfig.getIntValue("userHeadWidth"), //1做了1px下移调整
 				ChannelConfig.getIntValue("userHeadHeight"));
@@ -145,14 +149,16 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 
 		desktop.setBounds(0,40,ChannelDesktopPane.SIZE.width,
 				ChannelDesktopPane.SIZE.height);		
-		cs.addMessageListener(desktop);
 		toolbar.addMessageChangeListener(desktop);
 		
 		mp.add(desktop, JLayeredPane.DEFAULT_LAYER);
 		setVisible(true);
 		
+		ChannelService cs = startService();
+				cs.addMessageListener(desktop);
+				
 //开始添加信息：
-		MessageManager msm =ChannelAccesser.getMsgManager();
+		MessageManager msm =cs.getMsgManager();
 		List<ChannelMessage> msgs = msm.getMessagesByFlags(new String[]{ChannelMessage.FLAG_TRASHED, 
 				ChannelMessage.FLAG_DRAFT}, 
 				new Integer[]{0, 0});
