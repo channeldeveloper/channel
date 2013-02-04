@@ -177,10 +177,7 @@ public class ChannelUtil implements ChannelConstants
 			for(int i=0 ; i<text.length(); i++)
 			{
 				len += fm.charWidth(text.charAt(i));
-				if(len == cutLength) {
-					return text.substring(0, i) + "…";
-				}
-				else if(len > cutLength) {
+				if(len >= cutLength) {
 					return text.substring(0, i-1) + "…";
 				}
 			}

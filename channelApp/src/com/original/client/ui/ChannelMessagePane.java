@@ -2,6 +2,7 @@
 
 import iqq.util.QQEnvironment;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -10,6 +11,8 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -20,6 +23,7 @@ import java.io.IOException;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.Timer;
 
 import org.bson.types.ObjectId;
 
@@ -52,7 +56,7 @@ import com.seaglasslookandfeel.widget.SGPopupMenu;
  * @author WMS
  *
  */
-public class ChannelMessagePane extends SGPanel
+public class ChannelMessagePane extends SGPanel implements ActionListener
 {
 	private ChannelGridBagLayoutManager layoutMgr = 
 			new ChannelGridBagLayoutManager(this);
@@ -71,10 +75,13 @@ public class ChannelMessagePane extends SGPanel
 	private SGLabel leftArrow = new SGLabel(IconFactory.loadIconByConfig("leftArrowIcon")),
 			rightArrow = new SGLabel(IconFactory.loadIconByConfig("rightArrowIcon"));
 	private Dimension arrowSize = new Dimension(ChannelConfig.getIntValue("arrowWidth"),
-			ContactHeader.HEADSIZE.height);
+			header.HEADSIZE.height);
 	
 	String uid = null; //联系人账号(用户名)，和ChannelMessagePane一一对应。
 	boolean showDirection = true; //是否显示消息方向(即是否改变消息面板的布局方向)，如果为false，则只由receive方向
+	
+	Timer gradientPainter = new Timer(100, this);
+	boolean isStartTimer = false;
 	
 	public ChannelMessagePane() {
 		this(new ChannelMessageStatusBar());
@@ -211,16 +218,23 @@ public class ChannelMessagePane extends SGPanel
 	public void addMessage(ChannelMessage msg, boolean toFirst)
 	{
 		String uName = msg.getContactName();
+		boolean isAdd = false;
 		if (uid == null) { // 第一次添加，需要设置布局
 			setUid(msg);
 			layoutMessage(msg);
 
 			body.addMessage(msg, toFirst);
+			isAdd = true;
 		} else if (uid.equals(uName)) {
 			body.addMessage(msg, toFirst);
 			if(showDirection) {
 				changeMsgLayoutIfNeed(msg); // 检查是否要改变消息布局方向
 			}
+			isAdd = true;
+		}
+		
+		if (isAdd && toFirst) {
+			startGradientPainter();
 		}
 	}
 	
@@ -278,6 +292,41 @@ public class ChannelMessagePane extends SGPanel
 	public String getUid() {
 		return this.uid;
 	}
+	
+	
+//启动消息添加渐变效果	
+	private void startGradientPainter() {
+		if (gradientPainter.isRunning())
+			return;
+		
+		isStartTimer = true;
+		gradientPainter.start();
+	}
+	
+//停止消息添加渐变效果
+	private void stopGradientPainter() {
+		if (!gradientPainter.isRunning())
+			return;
+		
+		header.alpha = 0; 
+		container.alpha = 0;
+		isStartTimer = false;
+		gradientPainter.stop();
+	}
+	
+//渐变效果绘制定时器，每隔0.1s绘制一次
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO 自动生成的方法存根
+		if (header.alpha >= 10 && container.alpha >= 10) {
+			stopGradientPainter();
+		}
+
+		header.repaint();
+		container.repaint();
+	}
+
+
 
 	/**
 	 * 消息内容面板，其实就是ChannelMessageBody面板和ChannelMessageStatusBar上下两部分组成
@@ -287,6 +336,7 @@ public class ChannelMessagePane extends SGPanel
 	public  class MessageContainer extends SGPanel
 	{
 		Color bgColor = Color.white;//背景颜色，默认白色
+		int alpha = 0;//透明像素(0.0-1.0)，计算时使用alpha/10.0
 		
 		public MessageContainer(ChannelMessageStatusBar msgStatusBar)
 		{
@@ -342,6 +392,11 @@ public class ChannelMessagePane extends SGPanel
 		{
 			Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
 			int width = getWidth()-2, height = getHeight()-2;
+			
+			if(isStartTimer) {
+				if(alpha > 10) alpha = 10;
+				g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float)(alpha++/10.0)));
+			}
 
 			//绘制阴影2px
 			GraphicsHandler.fillShadow(g2d, 4, width, height, 10, 0.2f);
@@ -358,9 +413,9 @@ public class ChannelMessagePane extends SGPanel
 	 * @author WMS
 	 *
 	 */
-	public static class ContactHeader extends SGPanel
+	public class ContactHeader extends SGPanel
 	{
-		public static  Dimension SIZE =  new Dimension(78, 100),
+		public Dimension SIZE =  new Dimension(78, 100),
 				HEADSIZE = new Dimension(72, 72);
 		
 		private LocationIcon headIcon = null;//联系人头像
@@ -369,6 +424,8 @@ public class ChannelMessagePane extends SGPanel
 				contactPopupMenu = new ToolTip();
 		private Rectangle headBounds = null,
 				contactBounds = new Rectangle(0, SIZE.height-20, SIZE.width, 16);		
+		
+		int alpha = 0;//透明像素(0.0-1.0)，计算时使用alpha/10.0
 		
 		public ContactHeader(Icon headImage)
 		{
@@ -463,6 +520,11 @@ public class ChannelMessagePane extends SGPanel
 			RenderingHints hints = GraphicsHandler.DEFAULT_RENDERING_HINT_ON;
 			hints.put(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 			Graphics2D g2d = GraphicsHandler.optimizeGraphics(g, hints);
+			
+			if(isStartTimer) {
+				if(alpha > 10) alpha = 10;
+				g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float)(alpha++/10.0)));
+			}
 			
 			int width = HEADSIZE.width, height = HEADSIZE.height;
 			

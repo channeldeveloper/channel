@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -39,7 +40,6 @@ import com.original.client.ui.ChannelMessagePane.MessageContainer;
 import com.original.client.util.ChannelConfig;
 import com.original.client.util.ChannelConstants;
 import com.original.client.util.ChannelHyperlinkListener;
-import com.original.client.util.ChannelUtil;
 import com.original.client.util.ChannelUtil;
 import com.original.client.util.IconFactory;
 import com.original.service.channel.ChannelMessage;
@@ -728,7 +728,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		{
 			if(text == null) return;
 			//清除换行符：\r \n <BR>等
-			text = text.replaceAll("\r|\n|\\<BR\\>|\\<br\\>", "").trim();
+			text = text.replaceAll("\r|\n|\\<BR\\>|\\<br\\>|<p>|</p>", "").trim();
 			
 			Matcher matcher = Pattern.compile("<img.*?>").matcher(text);
 			while(matcher.find()) {

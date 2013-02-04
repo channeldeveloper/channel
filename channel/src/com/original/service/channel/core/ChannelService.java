@@ -1139,24 +1139,26 @@ isStart = true;
 	 * 
 	 */
 	@Override
-	public List<Account> getContacts() {
+	public  List<Account> getContacts() {
 		// TODO Auto-generated method stub
-		ArrayList<Account> all = new ArrayList<Account>();
-		Collection<Service> scm = serviceMap.values();		
-		for (Service sc : scm)
-		{			
-			try
-			{
-				if (sc != null && sc.getContacts() != null ){
-				all.addAll(sc.getContacts());
+		synchronized (serviceMap) {
+			ArrayList<Account> all = new ArrayList<Account>();
+			Collection<Service> scm = serviceMap.values();		
+			for (Service sc : scm)
+			{			
+				try
+				{
+					if (sc != null && sc.getContacts() != null ){
+					all.addAll(sc.getContacts());
+					}
 				}
+				catch(Exception exp)
+				{
+					exp.printStackTrace();
+				}			
 			}
-			catch(Exception exp)
-			{
-				exp.printStackTrace();
-			}			
+			return all;
 		}
-		return all;
 	}
 	
 	/**

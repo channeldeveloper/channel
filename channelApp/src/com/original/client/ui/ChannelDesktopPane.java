@@ -160,7 +160,12 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 
 		boolean isLock = false;
 		try {
-			if(isLock = channelLock.tryLock()) {
+			if (isLock = channelLock.tryLock()) {
+				try {
+					Thread.sleep(1000); //设置一个延时
+				} catch (InterruptedException ex) {
+				}
+				
 				ChannelMessagePane msgContainer = null;
 				if ((msgContainer = findMessage(owner, msg)) == null) {
 					msgContainer = new ChannelMessagePane();
