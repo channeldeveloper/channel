@@ -330,8 +330,6 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 
 	/**
 	 * 消息内容面板，其实就是ChannelMessageBody面板和ChannelMessageStatusBar上下两部分组成
-	 * @author WMS
-	 *
 	 */
 	public  class MessageContainer extends SGPanel
 	{
@@ -410,8 +408,6 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 	
 	/**
 	 * 联系人头像标签，可以通用
-	 * @author WMS
-	 *
 	 */
 	public class ContactHeader extends SGPanel
 	{

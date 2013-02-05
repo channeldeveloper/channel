@@ -6,7 +6,6 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
-import java.awt.GradientPaint;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,6 +22,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
+import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.SwingPropertyChangeSupport;
@@ -381,7 +381,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			//添加子控件
 			add(top, BorderLayout.NORTH);
 			
-			add(center, BorderLayout.CENTER);
+			add(center.getCenterScrollPane(), BorderLayout.CENTER);
 			
 			add(bottom, BorderLayout.SOUTH);
 			
@@ -418,12 +418,12 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		}
 		
 		//设置大小，只改变高度(宽度仍保持不变)
-		public void autoAdjustHeight()
+		public void autoAdjustHeight(boolean isOn)
 		{
 			Dimension dim = this.getPreferredSize();
-			dim.height = Top.SIZE.height + 
-					center.getPreferredScrollableViewportSize().height + 
-					(bottom.isVisible() ? Bottom.SIZE.height + 5*3: 5*2); //5px为垂直间距
+			dim.height = Top.SIZE.height
+					+ (isOn ? center.getPreferredScrollableViewportHeight() : Center.SIZE.height-10)
+					+ (bottom.isVisible() ? Bottom.SIZE.height + 5 * 3 : 5 * 2); // 5px为垂直间距
 			setPreferredSize(dim);
 		}
 		
@@ -439,7 +439,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 				center.showComplete(iMsg);
 				bottom.showMessageReplyArea();
 				
-				autoAdjustHeight();
+				autoAdjustHeight(true);
 			}
 			else {
 				top.setVisible(QUICK_REPLY, true);
@@ -447,7 +447,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 				center.showMessagePart(iMsg);
 				bottom.hideReplyContent();
 				
-				autoAdjustHeight();
+				autoAdjustHeight(false);
 			}
 		}
 		
@@ -706,19 +706,35 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		EditorKit editorKit = createDefaultEditorKit();
 		HTMLEditorKit	htmlEditorKit = new HTMLEditorKit();		
 		
+		JScrollPane centerScrollPane = null;
 		public Center()
 		{
 			//设置默认样式，等面板显示完整内容，再设置new HTMLEditorKit()
-//			setEditorKit(new HTMLEditorKit());//设置样式为HTML编辑样式
+			setEditorKit(new HTMLEditorKit());//设置样式为HTML编辑样式
 			StyleSheet sheet= htmlEditorKit.getStyleSheet();
 			sheet.addRule("a {text-decoration: none; color: blue; }");
 			this.setFont(ChannelConstants.DEFAULT_FONT);
 			
-			setEditable(false);//不可编辑
+//			setEditable(false);//不可编辑
 			setOpaque(false);
 			setBackground(new Color(0, 0, 0, 0));//当上面透明无效时，这是唯一的办法
 			setBorder(new EmptyBorder(0, 45, 0, 10));
 			addHyperlinkListener(new ChannelHyperlinkListener());//支持超链
+		}
+		
+		public JScrollPane getCenterScrollPane() {
+			if (centerScrollPane == null) {
+				centerScrollPane = ChannelUtil.createScrollPane(this);
+				centerScrollPane
+						.setPreferredSize(new Dimension(SIZE.width, 185));
+			}
+			return centerScrollPane;
+		}
+		
+		//获取Center面板相对合适的高度
+		public int getPreferredScrollableViewportHeight() {
+			return Math.min(this.getPreferredScrollableViewportSize().height, 
+					getCenterScrollPane().getPreferredSize().height);
 		}
 		
 		/**
@@ -746,13 +762,9 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		 * @param msg 消息对象
 		 */
 		public void showComplete(ChannelMessage msg) {
-			if(msg != null) {
-				if(htmlEditorKit != getEditorKit())
-				{
-					setEditorKit(htmlEditorKit);
-				}
-				
+			if(msg != null) {				
 				super.setText(msg.getCompleteMsg());
+				setCaretPosition(0);
 			}
 		}
 
@@ -763,10 +775,6 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		public void showMessagePart(ChannelMessage msg)
 		{
 			if(msg != null) {
-				if(editorKit != getEditorKit()) 
-				{
-					setEditorKit(editorKit);
-				}
 				setText(msg.getShortMsg());
 			}
 		}		

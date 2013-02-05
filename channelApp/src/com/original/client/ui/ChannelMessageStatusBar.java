@@ -8,6 +8,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.border.EmptyBorder;
 
@@ -44,6 +46,7 @@ public class ChannelMessageStatusBar extends SGPanel implements PropertyChangeLi
 			IconFactory.loadIconByConfig("expandAllIcon"), SGLabel.RIGHT);
 	
 	protected boolean hasNotify = false;
+	protected Lock channelLock = new ReentrantLock();
 	
 	public void addNotify()
 	{
@@ -129,32 +132,39 @@ public class ChannelMessageStatusBar extends SGPanel implements PropertyChangeLi
 	@Override
 	public void propertyChange(PropertyChangeEvent evt)
 	{
-		if (evt.getPropertyName() == EventConstants.MAIL_COUNT_CHANGE_PROPERTY)
-		{
-			int newCount = evt.getNewValue() instanceof Integer ? 
-					((Integer)evt.getNewValue()).intValue(): 0;
-					if(newCount != 0) {
-						mailCount += newCount;
-						mailLabel.setText("邮件：" + mailCount);
-					}
+		try {
+			channelLock.lock();
 			
-		} else if (evt.getPropertyName() == EventConstants.QQ_COUNT_CHANGE_PROPERTY)
-		{
-			int newCount = evt.getNewValue() instanceof Integer ? 
-					((Integer)evt.getNewValue()).intValue(): 0;
-					if(newCount != 0) {
-						qqCount += newCount;
-						qqLabel.setText("QQ：" + qqCount);
-					}
+			if (evt.getPropertyName() == EventConstants.MAIL_COUNT_CHANGE_PROPERTY)
+			{
+				int newCount = evt.getNewValue() instanceof Integer ? 
+						((Integer)evt.getNewValue()).intValue(): 0;
+						if(newCount != 0) {
+							mailCount += newCount;
+							mailLabel.setText("邮件：" + mailCount);
+						}
+				
+			} else if (evt.getPropertyName() == EventConstants.QQ_COUNT_CHANGE_PROPERTY)
+			{
+				int newCount = evt.getNewValue() instanceof Integer ? 
+						((Integer)evt.getNewValue()).intValue(): 0;
+						if(newCount != 0) {
+							qqCount += newCount;
+							qqLabel.setText("QQ：" + qqCount);
+						}
 
-		} else if (evt.getPropertyName() == EventConstants.WEIBO_COUNT_CHANGE_PROPERTY)
-		{
-			int newCount = evt.getNewValue() instanceof Integer ? 
-					((Integer)evt.getNewValue()).intValue(): 0;
-					if(newCount != 0) {
-						weiboCount += newCount;
-						weiboLabel.setText("微博：" + weiboCount);
-					}
+			} else if (evt.getPropertyName() == EventConstants.WEIBO_COUNT_CHANGE_PROPERTY)
+			{
+				int newCount = evt.getNewValue() instanceof Integer ? 
+						((Integer)evt.getNewValue()).intValue(): 0;
+						if(newCount != 0) {
+							weiboCount += newCount;
+							weiboLabel.setText("微博：" + weiboCount);
+						}
+			}
+		}
+		finally {
+			channelLock.unlock();
 		}
 	}
 }

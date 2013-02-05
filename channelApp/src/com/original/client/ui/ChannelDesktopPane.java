@@ -93,6 +93,7 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 		setLayout(layoutMgr);
 		DEFAULT_PANE.setLayout(DEFAULT_UP_LAYOUT);
 		DEFAULT_SCROLLBAR.addAdjustmentListener(this);
+		DEFAULT_SCROLLBAR.setUnitIncrement(100);
 		
 		addDefaultShowComp(DEFAULT_NAME, DEFAULT_PANE);
 	}
@@ -143,7 +144,7 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 	 */
 	public void addMessage(ChannelMessage msg) {
 		if (DEFAULT_PANE != currentShowComp) {
-			showDefaultComp();
+//			showDefaultComp();
 		}
 		addMessage(DEFAULT_PANE, msg);
 	}
@@ -411,6 +412,7 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 			FILTER_PANE = new SGPanel();
 			FILTER_PANE.setLayout(DEFAULT_UP_LAYOUT);
 			FILTER_SCROLLBAR.addAdjustmentListener(this);
+			FILTER_SCROLLBAR.setUnitIncrement(100);
 			addDefaultShowComp(FILTER_NAME, FILTER_PANE);
 		} else { // 每次打开时，都清空面板，以便重新加载数据
 			clearDefaultFilter();
