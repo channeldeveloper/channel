@@ -132,33 +132,15 @@ public class PeopleManager {
 		}
 		return false;
 	}
-//	
-//	/**
-//	 * 
-//	 * @param ps
-//	 */
-//	public void save(People[] ps)
-//	{		
-//		//save Message
-//		if (ps != null && ps.length > 0)
-//		{
-//			for (People p : ps)
-//			{
-//				try
-//				{
-//					ds.save(p);
-//				}
-//				catch(Exception exp)
-//				{
-//					exp.printStackTrace();
-//				}
-//			}			
-//		}
-//	}
 
-	// find
+
+	
+
+	//	获取所有联系人（按照名称，按照消息的ReceivedTime先后顺序）排序	Song	2013/2/6	2013-2-7
+	
 	/**
-	 * get All Messages
+	 * get 获取所有联系人 by Name
+	 * 
 	 * 
 	 * @return
 	 */
@@ -168,6 +150,21 @@ public class PeopleManager {
 		List<People> chmsgs = chmsgQuery.asList();
 
 		return chmsgs;
+	}
+	
+	/**
+	 * get 获取所有联系人 by Name
+	 * //	获取一个联系人的所有消息，按照时间排序。	Song	2013-2-7	2013-2-8.
+	 * 方法1. 获得联系人，找他他们的某个消息，每个消息的时间时间序列，然后排序。
+	 * 方法2、获取消息，逐个消息过滤，找出联系人。
+	 * 方法3、建立MessagePeople Collection。？
+	 * 
+	 * 
+	 * @return
+	 */
+	public List<People> getPeopleByMessageDate() {
+
+		throw  null;
 	}
 	
 	/**
@@ -288,21 +285,11 @@ public class PeopleManager {
 		
 		return null;
 	}
-//	/**
-//	 * 
-//	 * @param chMsgs
-//	 */
-//	public void savePeople(ChannelMessage[] chMsgs)
-//	{		
-//		//save Message
-//		if (chMsgs != null && chMsgs.length > 0)
-//		{
-//			for (ChannelMessage chmsg : chMsgs)
-//			{
-//				savePeople(chmsg);
-//			}
-//		}
-//	}
+
+
+
+	
+
 	
 	// /////////////////////////////
 	
