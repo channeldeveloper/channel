@@ -101,4 +101,6 @@ public interface EventConstants
 	/* 添加、删除账户 */
 	String ADD_PROFILE  = "add profile",
 			DEL_PROFILE = "del profile";
+	
+	String CONFIRM = "confirm";//确认
 }

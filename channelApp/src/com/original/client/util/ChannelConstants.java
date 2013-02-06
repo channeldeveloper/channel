@@ -49,5 +49,6 @@ public interface ChannelConstants
 	
 	//枚举类
 	enum TYPE {MAIL, WEIBO, QQ}
+	enum CHANNEL{MAIL, QQ, WEIBO}
 
 }

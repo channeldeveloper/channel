@@ -28,6 +28,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import javax.swing.JToggleButton;
 import javax.swing.event.SwingPropertyChangeSupport;
 import javax.swing.plaf.basic.BasicMenuItemUI;
@@ -575,7 +576,7 @@ public class ChannelToolBar extends SGPanel implements ActionListener, EventCons
 		//点击用户头像触发事件
 		public void doClick()
 		{
-			System.out.println("click");
+			JOptionPane.showConfirmDialog(this, "Pending:回到首页!");
 		}
 	}
 }

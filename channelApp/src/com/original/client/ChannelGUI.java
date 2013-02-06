@@ -5,6 +5,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 import javax.swing.JOptionPane;
@@ -121,6 +122,7 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 			SeaGlassLookAndFeel sglaf = SeaGlassLookAndFeel.getInstance();
 			SeaGlassLookAndFeel.setDefaultFont(DEFAULT_FONT);
 			sglaf.initialize();
+			JDialog.setDefaultLookAndFeelDecorated(false);
 			
 		} catch (Exception exp) {
 			exp.printStackTrace();
