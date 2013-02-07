@@ -9,15 +9,22 @@ package com.original.widget.plaf;
  *   1. 修正了老杨提出的静态对象应用的Bug，就是多个组件互相干涉现象 2012-05-27
  * @author ChangjianHu
  */
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.geom.Area;
+import java.awt.geom.RoundRectangle2D;
+
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JScrollBar;
+import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.metal.MetalScrollBarUI;
+
 import com.original.widget.OScrollBar;
 import com.original.widget.draw.OriPainter;
 import com.original.widget.model.ScrollBarModel;
-import java.awt.*;
-import java.awt.geom.Area;
-import java.awt.geom.RoundRectangle2D;
-import javax.swing.*;
-import javax.swing.plaf.ComponentUI;
-import javax.swing.plaf.metal.*;
 
 public class OScrollBarUI extends MetalScrollBarUI
 {
@@ -99,7 +106,7 @@ public class OScrollBarUI extends MetalScrollBarUI
         if(scrollbar.getOrientation()==JScrollBar.VERTICAL){
             r2d = new RoundRectangle2D.Double(
                 thumbBounds.x+thumbBounds.width/2, model.getBarwidth()+2,
-                model.getBarwidth(), thumbBounds.height - 2*model.getBarwidth() - 2*2,
+                model.getBarwidth(), thumbBounds.height - 1,
                 model.getBarwidth(),model.getBarwidth());
         }
         else  { // HORIZONTAL
