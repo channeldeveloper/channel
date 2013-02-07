@@ -245,6 +245,10 @@ public class EMailParser {
 				if(attachment == null) continue;
 				
 				String extention = null;
+				if (fileName == null)
+				{
+					continue;
+				}
 				if (fileName.contains(".")) {
 					extention = fileName.substring(fileName.lastIndexOf(".") + 1);
 					attachment.setFileName(fileName);

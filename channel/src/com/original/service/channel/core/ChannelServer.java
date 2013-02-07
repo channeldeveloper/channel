@@ -56,9 +56,10 @@ public class ChannelServer {
 	private Morphia morphia;
 	private Mongo mongo;
 	private Datastore ds;
-	
-	public ChannelServer(Morphia morphia, Mongo mongo, Datastore ds)
+	ChannelService cs;
+	public ChannelServer(ChannelService cs, Morphia morphia, Mongo mongo, Datastore ds)
 	{
+		this.cs = cs;
 		//1 DB and morphia init
 		logger = Logger.getLogger("channer");
 		this.morphia = morphia;

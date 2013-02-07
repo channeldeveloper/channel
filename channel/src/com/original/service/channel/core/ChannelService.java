@@ -325,9 +325,9 @@ public final class ChannelService extends AbstractService {
 			return;
 		}
 		
-		msgManager = new MessageManager(morphia, mongo, ds);
-		channelServer = new ChannelServer(morphia, mongo, ds);
-		peopleManager = new PeopleManager(morphia, mongo, ds);
+		msgManager = new MessageManager(this, morphia, mongo, ds);
+		channelServer = new ChannelServer(this, morphia, mongo, ds);
+		peopleManager = new PeopleManager(this, morphia, mongo, ds);
 	}
 
 	private void init() { //启动channel服务，置于线程中进行
@@ -352,6 +352,7 @@ public final class ChannelService extends AbstractService {
 						}
 					}
 					catch(Exception ex) {
+						ex.printStackTrace();
 						failedServiceAccounts.add(ca);
 					}
 				}
@@ -471,10 +472,20 @@ public final class ChannelService extends AbstractService {
 
 	}
 
+	/**
+	 * 渠道服务管理，不需要内部控制。
+	 */
 	@Override
+	@Deprecated 
 	public synchronized void start() {
-if(isStart) return;
-		
+		//Pending:收件装载账号，
+		//如果账号变化（是否有push服务，还是定期去取？）
+		//需要发账号变化事件，每个消息默认都必须有peopleID
+		peopleManager.loadContracts();
+		//
+		if (isStart)
+			return;
+
 		if (serviceMap == null) {
 			return;
 		}
@@ -485,24 +496,10 @@ if(isStart) return;
 			Service service = serviceMap.get(key);
 			service.start();
 		}
-isStart = true;
+		isStart = true;
 	}
-//
-//	@Override
-//	public void post(String action, List<ChannelMessage> msg) {
-//		// TODO Auto-generated method stub
-//		if (msg == null || msg.size() == 0) {
-//			return;
-//		}
-//		for (ChannelMessage m : msg) {
-//			ChannelAccount cha = m.getChannelAccount();
-//			if (cha != null) {
-//				Service sc = serviceMap.get(cha);
-//				sc.post(action, msg);
-//			}
-//		}
-//
-//	}
+
+	
 
 	/**
 	 * Inner listener
@@ -534,13 +531,20 @@ isStart = true;
 				for (int i = 0; i < chmsgs.length; i++)
 				{
 					// 保存联系人
-					People contract = peopleManager.savePeople(chmsgs[0]);
+					People contract = peopleManager.getPeopleByMessage(chmsgs[0]);
+					//Every message must have peopleId(fromAddr)
+					//Pending (Service to do weibo service , bad code pattern, later push down to weibo service)
+					if (contract == null)
+					{
+						contract = peopleManager.savePeople(chmsgs[0]);
+					}
 					if (contract != null)
 					{
 						chmsgs[0].setPeopleId(contract.getId());
+						// 保存信息
+						msgManager.save(chmsgs[0]);
 					}
-					// 保存信息
-					msgManager.save(chmsgs[0]);
+					
 				}
 				fireMessageEvent(evnt); // notify to GUI App to add message only when save successfully!
 			}
@@ -626,15 +630,35 @@ isStart = true;
 	@Override
 	public void put(String action, ChannelMessage msg) {
 		// TODO Auto-generated method stub
+		
+		//Pending Song Xueyong: 逻辑这些不处理，推到具体的实现来处理。
+		//1、存草稿看成具体渠道的一个服务，比如邮件的存草稿
+		//2、邮件发出去之后是否存库，有msg的ID决定，如果ID存在，不存，只是更新状态
+		//3、如果邮件发出去，是新构建的邮件，没有ID，要存盘
+		//4、注意每个Message 必须有peopleid!!!
 		if (msg != null) {
+			//Must have PeopleID
+			if (msg.getPeopleId() == null)
+			{
+				String toAddr = msg.getToAddr();
+				People pp = peopleManager.getPeopleByMessage(msg);
+				if (pp == null)
+				{
+					pp = peopleManager.savePeople(msg);
+				}
+				if (pp == null)
+				{
+					//Pending Exception definition for channel
+					throw new IllegalArgumentException(msg.getToAddr());
+				}
+				msg.setPeopleId(pp.getId());
+			}
 			
 			 //1、存草稿
 			if (action == Constants.ACTION_PUT_DRAFT) {
-				if (msg.getId() != null) {//删除原有的草稿，可能用户再次保存草稿！
-					System.out.println("delete old message!");
+				if (msg.getId() != null) {//删除原有的草稿，可能用户再次保存草稿！					
 					this.deleteMessage(msg.getId());
 				}
-
 				msg.setMessageID(getRandomMessageID());//设置一个随机的消息id
 				msg.setDrafted(true);
 				this.msgManager.save(msg);
@@ -645,28 +669,21 @@ isStart = true;
 			ChannelAccount cha = msg.getChannelAccount();
 			if(cha == null) { //如果为空，则获取默认账户。一般为新建消息时
 				cha = getDefaultAccount(msg.getClazz());
-			}
-			
+			}			
 			if (cha != null) {
 				Service sc = serviceMap.get(cha);
 				//预处理消息的发送id，防止出现id一致，无法保存的情况。(消息id是唯一索引！)
-				preSendProcess(action, msg);
-				
+				preSendProcess(action, msg);				
 				try {
 					if (msg.getFromAddr() == null) {
 						msg.setFromAddr(cha.getAccount().getUser());
-					}
-					
-					//@Deprecated 已用下面的线程推送方法取代
-                    //sc.put(action, msg); //下发消息，如果出错，则不保存数据库！
-					
+					}					
 					PutTask task = new PutTask(sc, action, msg);
 					Future monitor = ThreadManager.getInstance().submit(task);
 					
 					//1、自己给自己发(特殊情况)，不保存数据库：
 					if(msg.getToAddr().equals(cha.getAccount().getUser()))
-						return;
-					
+						return;					
 					//2、快速回复或完整回复，目前设定微博不需要保存，其他都保存：
 					if(action == Constants.ACTION_QUICK_REPLY ||
 							action == Constants.ACTION_REPLY)
@@ -677,8 +694,7 @@ isStart = true;
 						}
 					}
 
-					if (msg.getId() != null) { // 删除可能存在的消息的原始草稿信息
-						System.out.println("delete old message!");
+					if (msg.getId() != null) { // 删除可能存在的消息的原始草稿信息					
 						this.deleteMessage(msg.getId());
 					}
 					msg.setType(ChannelMessage.TYPE_SEND);//强制转换类型
@@ -726,16 +742,6 @@ isStart = true;
 		UUID idOne = UUID.randomUUID();
 		return millis + "$" + idOne;
 	}
-	// //////////search filter order by MessageManager////////
-
-	// ////////////////Update//////////////
-
-//	@Override
-//	public List<ChannelMessage> delete(String action, String query) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-
 	
 	
 	/**

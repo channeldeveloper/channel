@@ -88,6 +88,8 @@ public interface Service {
 
 	public abstract void start();
 	
+	
+	
 	//listener
 	
     /**
@@ -128,6 +130,9 @@ public interface Service {
      * @return
      */    
     public List<Account> getContacts();
+    
+    
+    
     
 	
 
