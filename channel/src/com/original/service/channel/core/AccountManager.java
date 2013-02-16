@@ -32,7 +32,7 @@ import com.original.service.profile.Profile;
  * @author cydow
  * @encoding UTF-8
  * @version 1.0
- * @create 2012-11-11 20:17:13
+ * @create 2012-12-11 20:17:13
  */
 public class AccountManager {
 
