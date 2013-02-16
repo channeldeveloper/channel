@@ -9,7 +9,6 @@ package com.original.service.channel.core;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,7 +34,7 @@ import com.original.service.profile.Profile;
  * @version 1.0
  * @create 2012-11-11 20:17:13
  */
-public class ChannelAccountManager {
+public class AccountManager {
 
 	private java.util.logging.Logger logger;
 	/**
@@ -151,7 +150,7 @@ public class ChannelAccountManager {
 	 * @param morphia
 	 * @param ds
 	 */
-	protected ChannelAccountManager(Mongo mongo, Morphia morphia, Datastore ds, ChannelManager chMg) {
+	protected AccountManager(Mongo mongo, Morphia morphia, Datastore ds, ChannelManager chMg) {
 		this.mongo = mongo;
 		this.morphia = morphia;
 		this.ds = ds;

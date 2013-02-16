@@ -40,8 +40,8 @@ import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.Constants.CHANNEL;
-import com.original.service.channel.SeriveManager;
 import com.original.service.channel.Protocol;
+import com.original.service.channel.SeriveManager;
 import com.original.service.channel.Service;
 import com.original.service.channel.config.Initializer;
 import com.original.service.channel.event.ChannelEvent;
@@ -66,13 +66,19 @@ import com.original.service.profile.Profile;
  * 
  */
 public final class ChannelService extends AbstractService implements SeriveManager {
-	java.util.logging.Logger logger;
-	
-	private ChannelServer channelServer;
+	private Logger logger;
+
+	//渠道的管理
+	private ChannelManager channelManager;
+	//账号的管理
+	private AccountManager accountManager;
+	//信息的管理
+	private MessageManager messageManager;
+	//信息联系人的管理
+	private PeopleManager peopleManager;
 
 	private HashMap<ChannelAccount, Service> serviceMap = new HashMap<ChannelAccount, Service>();
-	private MessageManager msgManager;
-	private PeopleManager peopleManager;
+
 
 	private String dbServer = Constants.Channel_DB_Server;
 	private int dbServerPort = Constants.Channel_DB_Server_Port;
@@ -118,20 +124,20 @@ public final class ChannelService extends AbstractService implements SeriveManag
 		init();
 	}
 
-	/**
-	 * @return the channelServer
-	 */
-	public ChannelServer getChannelServer() {
-		return channelServer;
-	}
-
-	/**
-	 * @param channelServer
-	 *            the channelServer to set
-	 */
-	public void setChannelServer(ChannelServer channelServer) {
-		this.channelServer = channelServer;
-	}
+//	/**
+//	 * @return the channelServer
+//	 */
+//	public ChannelServer getChannelServer() {
+//		return channelServer;
+//	}
+//
+//	/**
+//	 * @param channelServer
+//	 *            the channelServer to set
+//	 */
+//	public void setChannelServer(ChannelServer channelServer) {
+//		this.channelServer = channelServer;
+//	}
 
 	/**
 	 * @return the serviceMap
@@ -152,7 +158,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 * @return the msgManager
 	 */
 	public MessageManager getMsgManager() {
-		return msgManager;
+		return messageManager;
 	}
 
 	/**
@@ -160,7 +166,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 *            the msgManager to set
 	 */
 	public void setMsgManager(MessageManager msgManager) {
-		this.msgManager = msgManager;
+		this.messageManager = msgManager;
 	}
 
 	/**
@@ -331,8 +337,9 @@ public final class ChannelService extends AbstractService implements SeriveManag
 			return;
 		}
 		
-		msgManager = new MessageManager(this, morphia, mongo, ds);
-		channelServer = new ChannelServer(this, morphia, mongo, ds);
+		messageManager = new MessageManager(this, morphia, mongo, ds);
+		channelManager =  new ChannelManager(mongo, morphia, ds);
+		accountManager = new AccountManager(mongo, morphia, ds, channelManager);
 		peopleManager = new PeopleManager(this, morphia, mongo, ds);
 	}
 
@@ -344,7 +351,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 					return;
 				}
 				
-				HashMap<String, ChannelAccount> cas = channelServer.getChannelAccounts();
+				HashMap<String, ChannelAccount> cas = accountManager.getChAccountMap();
 				for (String key : cas.keySet()) {
 					ChannelAccount ca = cas.get(key);
 					if (serviceMap.containsKey(ca))
@@ -548,7 +555,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 					{
 						chmsgs[0].setPeopleId(contract.getId());
 						// 保存信息
-						msgManager.save(chmsgs[0]);
+						messageManager.save(chmsgs[0]);
 					}
 					
 				}
@@ -646,7 +653,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 			//Must have PeopleID
 			if (msg.getPeopleId() == null)
 			{
-				String toAddr = msg.getToAddr();
+//				String toAddr = msg.getToAddr();
 				People pp = peopleManager.getPeopleByMessage(msg);
 				if (pp == null)
 				{
@@ -667,7 +674,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 				}
 				msg.setMessageID(getRandomMessageID());//设置一个随机的消息id
 				msg.setDrafted(true);
-				this.msgManager.save(msg);
+				this.messageManager.save(msg);
 				return;
 			}
 			
@@ -705,7 +712,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 					}
 					msg.setType(ChannelMessage.TYPE_SEND);//强制转换类型
 					msg.setProcessed(true);
-					msgManager.save(msg);
+					messageManager.save(msg);
 				}
 				catch(Exception ex) {
 					ex.printStackTrace();
@@ -757,7 +764,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 */
 	public void deleteMessage(ObjectId id) {
 		// get
-		ChannelMessage msg = msgManager.getByID(id);
+		ChannelMessage msg = messageManager.getByID(id);
 		// delete
 		ds.delete(ChannelMessage.class, id);
 		// event to outer
@@ -775,7 +782,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 */
 	public void deleteMessage(String msgId) {
 		// get
-		Iterator<ChannelMessage> ite = msgManager.getByMessageID(msgId);
+		Iterator<ChannelMessage> ite = messageManager.getByMessageID(msgId);
 
 		ArrayList<ChannelMessage> bk = new ArrayList<ChannelMessage>();
 		while (ite.hasNext()) {
@@ -800,7 +807,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 */
 	public void deleteMessages(Filter filter) {
 		// get
-		Iterator<ChannelMessage> ite = msgManager.getMessage(filter);
+		Iterator<ChannelMessage> ite = messageManager.getMessage(filter);
 
 		ArrayList<ChannelMessage> bk = new ArrayList<ChannelMessage>();
 		while (ite.hasNext()) {
@@ -858,15 +865,15 @@ public final class ChannelService extends AbstractService implements SeriveManag
 		return q.get();
 	}
 
-	@Override
-	public ChannelAccount getChannelAccount() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public ChannelAccount getChannelAccount() {
+//		// TODO Auto-generated method stub
+//		return null;
+//	}
 	
 	//注意不需要再次查询数据库：
 	public List<Account> getAccounts() {
-		return channelServer.getAccounts();
+		return accountManager.getAccounts();
 	}
 	
 	public void addChannelFromAccount(Account acc) {
