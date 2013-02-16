@@ -146,19 +146,6 @@ public class PeopleManager {
 	}
 
 
-	// find
-//	/**
-//	 * get All Messages
-//	 * 
-//	 * @return
-//	 */
-//	public List<People> getPeople() {
-//		Query<People> chmsgQuery = ds.find(People.class).order(
-//				"name");
-//		List<People> chmsgs = chmsgQuery.asList();
-//
-//		return chmsgs;
-//	}
 	
 	/**
 	 * get All Messages

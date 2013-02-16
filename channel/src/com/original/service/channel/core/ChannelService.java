@@ -40,6 +40,7 @@ import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.Constants.CHANNEL;
+import com.original.service.channel.SeriveManager;
 import com.original.service.channel.Protocol;
 import com.original.service.channel.Service;
 import com.original.service.channel.config.Initializer;
@@ -64,7 +65,7 @@ import com.original.service.profile.Profile;
  * @author sxy
  * 
  */
-public final class ChannelService extends AbstractService {
+public final class ChannelService extends AbstractService implements SeriveManager {
 	java.util.logging.Logger logger;
 	
 	private ChannelServer channelServer;
@@ -103,6 +104,11 @@ public final class ChannelService extends AbstractService {
 		return singleton;
 	}
 
+	
+	public SeriveManager getChannelService()
+	{
+		return this;
+	}
 	/**
 	 * 
 	 */
@@ -1175,6 +1181,101 @@ public final class ChannelService extends AbstractService {
 	public Service getService(ChannelAccount ca)
 	{
 		return this.serviceMap.get(ca);
+	}
+
+	////////////////////////////////////
+//	渠道管理	启动、停用、禁用，安装，卸载。	Song	2013-2-11	2013-2-12		
+//	账号的管理	渠道多账号的管理	Song	2013-2-12	2013-2-13		
+
+
+	@Override
+	public void add(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void delelte(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void update(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public Service get(String name) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public java.util.Iterator<Service> Iterator() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public void start(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void stop(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void suspend(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void resume(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void getStatus(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public boolean isRunning(Service svc) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	@Override
+	public void resume() {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public boolean isRunning() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	
 	
