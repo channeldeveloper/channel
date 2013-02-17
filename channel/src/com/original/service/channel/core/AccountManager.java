@@ -141,6 +141,7 @@ public class AccountManager {
 	private Morphia morphia;
 	private Datastore ds;
 	private ChannelManager chMg;
+	private ChannelService cs;
 
 
 	/**
@@ -150,7 +151,8 @@ public class AccountManager {
 	 * @param morphia
 	 * @param ds
 	 */
-	protected AccountManager(Mongo mongo, Morphia morphia, Datastore ds, ChannelManager chMg) {
+	protected AccountManager(ChannelService cs, Mongo mongo, Morphia morphia, Datastore ds, ChannelManager chMg) {
+		this.cs = cs;
 		this.mongo = mongo;
 		this.morphia = morphia;
 		this.ds = ds;

@@ -39,7 +39,6 @@ import com.original.service.channel.Channel;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
-import com.original.service.channel.Constants.CHANNEL;
 import com.original.service.channel.Protocol;
 import com.original.service.channel.SeriveManager;
 import com.original.service.channel.Service;
@@ -56,18 +55,32 @@ import com.original.service.channel.protocols.sns.weibo.WeiboService;
 import com.original.service.people.People;
 import com.original.service.people.PeopleManager;
 import com.original.service.profile.Profile;
-
+//Pending
+//1. Data 和 View 要分开 //2. 服务 和 应用(控制) 要分开 //3. 服务控制自服务，不由第3方应用外部控制， //4.
+//服务不能启动，不影响存库数据(离线的ChannelMessage)访问 //5. 服务负责网络的检查和自适应
 /**
  * 
- //1. Data 和 View 要分开 //2. 服务 和 应用(控制) 要分开 //3. 服务控制自服务，不由第3方应用外部控制， //4.
- * 服务不能启动，不影响存库数据(离线的ChannelMessage)访问 //5. 服务负责网络的检查和自适应
+ * 服务管理类：
+ * 1. 渠道模块的管理。Channel.json读入，产生渠道支持模块。
+ * 2. 渠道账号的管理：用户目前使用的账号。profile.json读入，产生账号。
+ * 3. 渠道实例的管理：管理根据账号创建的运行渠道服务。根据账号和渠道，产生渠道实例。
+ * 4. 消息服务的管理：保存在系统的渠道消息。
  * 
- * @author sxy
- * 
+ * 系统初始化化过程
+ * 1). 首先建立渠道，建立账号，建立渠道实例，建立消息服务。
+ * 2) 
+ * 2). 后台启动每个渠道服务
+ * 		(1) 如果没有状态设置，（连接、初始化、启动后台接受信息）。
+ *     (1.2)连接如果需要认证，等待用户Client的的启动连接和授权。
+ * 		(2) 如果已经设置了状态，安装状态来控制。
+ *     (2.2)连接如果需要认证，等待用户Client的的启动连接和授权。
+ *     (3)启动的服务，启动联系人服务。
+ *     (4)消息后台接受。
+ *     LifeCycle(Created, 	AUTHPENDING, STARTED,SUSPEND,STOPPING,CLOSED,FAILED) 
+ * @author sxy 
  */
-public final class ChannelService extends AbstractService implements SeriveManager {
+public final class ChannelService extends AbstractService implements SeriveManager , Constants{
 	private Logger logger;
-
 	//渠道的管理
 	private ChannelManager channelManager;
 	//账号的管理
@@ -76,26 +89,18 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	private MessageManager messageManager;
 	//信息联系人的管理
 	private PeopleManager peopleManager;
-
+	//内存的渠道实例管理
 	private HashMap<ChannelAccount, Service> serviceMap = new HashMap<ChannelAccount, Service>();
-
-
-	private String dbServer = Constants.Channel_DB_Server;
-	private int dbServerPort = Constants.Channel_DB_Server_Port;
-	private String channlDBName = Constants.Channel_DB_Name;
-
 	private Morphia morphia;
 	private Mongo mongo;
 	private Datastore ds;
-
 	private Initializer initializer;
-	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
 	private static ExecutorService executor = Executors.newSingleThreadExecutor();
-	private static boolean isRunError = false, //是否启动出错
-			isStart = false;//服务是否已启动
-	
 	private static ChannelService singleton;
-//	private static ThreadManager threadPool;
+	//服务启动失败列表，Pendign每个渠道实例(ChannelAccoutn)，本身有状态。
+	//渠道本身有状态。
+	@Deprecated
+	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
 	
 	/**
 	 * 
@@ -110,11 +115,6 @@ public final class ChannelService extends AbstractService implements SeriveManag
 		return singleton;
 	}
 
-	
-	public SeriveManager getChannelService()
-	{
-		return this;
-	}
 	/**
 	 * 
 	 */
@@ -123,29 +123,99 @@ public final class ChannelService extends AbstractService implements SeriveManag
 		//将启动服务放入线程中。
 		init();
 	}
-
-//	/**
-//	 * @return the channelServer
-//	 */
-//	public ChannelServer getChannelServer() {
-//		return channelServer;
-//	}
-//
-//	/**
-//	 * @param channelServer
-//	 *            the channelServer to set
-//	 */
-//	public void setChannelServer(ChannelServer channelServer) {
-//		this.channelServer = channelServer;
-//	}
-
 	/**
-	 * @return the serviceMap
+	 * 启动数据服务。
 	 */
-	public HashMap<ChannelAccount, Service> getServiceMap() {
-		return serviceMap;
+	private void initMongoDB(){ //暂时不置于线程中,  throws ChannelException
+		//1 log
+		logger = Logger.getLogger("channer");
+		//2 db
+		morphia = new Morphia();
+		morphia.map(ChannelAccount.class);
+		morphia.map(Channel.class);
+		morphia.map(Profile.class);
+		morphia.map(Attachment.class);
+		morphia.map(People.class);
+		logger.log(Level.INFO, "Mapping POJO to Mongo DB!");
+		// DB
+		try {
+			mongo = new Mongo(Channel_DB_Server, Channel_DB_Server_Port);
+			// db mapping to object
+			ds = morphia.createDatastore(mongo, Channel_DB_Name);
+			ds.ensureIndexes();
+		} catch (Exception exp) {
+			logger.log(Level.SEVERE,
+					"To connect MongoDB Service fail!" + exp.toString());
+			//Pending, if fail , should throw exception or exit.
+			return;
+		}		
+		//reread data from config
+		initializer = new Initializer(mongo);
+		try {
+			initializer.init(false);
+		} catch (Exception exp) {
+			logger.log(Level.SEVERE, "To init channel db fail!" + exp.toString());		
+		}		
+		//4 serice managers
+		//信息的管理
+		messageManager = new MessageManager(this, morphia, mongo, ds);
+		//渠道的管理
+		channelManager =  new ChannelManager(this, mongo, morphia, ds);
+		//账号的管理（渠道实例的管理）
+		accountManager = new AccountManager(this, mongo, morphia, ds, channelManager);
+		//联系人的管理
+		peopleManager = new PeopleManager(this, morphia, mongo, ds);
 	}
 
+
+	/**
+	 * 启动渠道服务。
+	 */
+	private void init() { //启动channel服务，置于线程中进行
+		
+		Runnable initServiceTask = new Runnable() {
+			public void run() {
+				HashMap<String, ChannelAccount> cas = accountManager.getChAccountMap();
+				for (String key : cas.keySet()) {
+					ChannelAccount ca = cas.get(key);
+					if (serviceMap.containsKey(ca))
+						continue; 
+
+					try {
+						Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
+						if (sc != null) {
+							serviceMap.put(ca, sc);
+							sc.addMessageListener(new ChannelServiceListener());
+						}
+					}
+					catch(Exception ex) {
+						ex.printStackTrace();
+						failedServiceAccounts.add(ca);
+					}
+				}				
+				//立即启动，不能外部调用，否则起不来！
+				start();
+			}
+		};
+		
+		executor.execute(initServiceTask);
+	}
+	
+	/**
+	 * @return the peopleManager
+	 */
+	public PeopleManager getPeopleManager() {
+		return peopleManager;
+	}
+
+	/**
+	 * @param peopleManager the peopleManager to set
+	 */
+	public void setPeopleManager(PeopleManager peopleManager) {
+		this.peopleManager = peopleManager;
+	}
+
+	
 	/**
 	 * @param serviceMap
 	 *            the serviceMap to set
@@ -168,50 +238,11 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	public void setMsgManager(MessageManager msgManager) {
 		this.messageManager = msgManager;
 	}
-
 	/**
-	 * @return the dbServer
+	 * @return the serviceMap
 	 */
-	public String getDbServer() {
-		return dbServer;
-	}
-
-	/**
-	 * @param dbServer
-	 *            the dbServer to set
-	 */
-	public void setDbServer(String dbServer) {
-		this.dbServer = dbServer;
-	}
-
-	/**
-	 * @return the dbServerPort
-	 */
-	public int getDbServerPort() {
-		return dbServerPort;
-	}
-
-	/**
-	 * @param dbServerPort
-	 *            the dbServerPort to set
-	 */
-	public void setDbServerPort(int dbServerPort) {
-		this.dbServerPort = dbServerPort;
-	}
-
-	/**
-	 * @return the channlDBName
-	 */
-	public String getChannlDBName() {
-		return channlDBName;
-	}
-
-	/**
-	 * @param channlDBName
-	 *            the channlDBName to set
-	 */
-	public void setChannlDBName(String channlDBName) {
-		this.channlDBName = channlDBName;
+	public HashMap<ChannelAccount, Service> getServiceMap() {
+		return serviceMap;
 	}
 
 	/**
@@ -304,124 +335,25 @@ public final class ChannelService extends AbstractService implements SeriveManag
 		this.listenerList = listenerList;
 	}
 
-	private void initMongoDB() { //暂时不置于线程中
-		logger = Logger.getLogger("channer");
-		morphia = new Morphia();
-		morphia.map(ChannelAccount.class);
-		morphia.map(Channel.class);
-		morphia.map(Profile.class);
-		morphia.map(Attachment.class);
-		morphia.map(People.class);
-		logger.log(Level.INFO, "Mapping POJO to Mongo DB!");
-
-		// DB
-		try {
-			mongo = new Mongo(dbServer, dbServerPort);
-			// db mapping to object
-			ds = morphia.createDatastore(mongo, channlDBName);
-			ds.ensureIndexes();
-
-		} catch (Exception exp) {
-			logger.log(Level.SEVERE,
-					"To connect MongoDB Service fail!" + exp.toString());
-			isRunError = true;
-			return;
-		}
-		
-		initializer = new Initializer(mongo);
-		try {
-			initializer.init(false);
-		} catch (Exception exp) {
-			logger.log(Level.SEVERE, "To init channel db fail!" + exp.toString());
-			isRunError = true;
-			return;
-		}
-		
-		messageManager = new MessageManager(this, morphia, mongo, ds);
-		channelManager =  new ChannelManager(mongo, morphia, ds);
-		accountManager = new AccountManager(mongo, morphia, ds, channelManager);
-		peopleManager = new PeopleManager(this, morphia, mongo, ds);
-	}
-
-	private void init() { //启动channel服务，置于线程中进行
-		
-		Runnable initServiceTask = new Runnable() {
-			public void run() {
-				if(isRunError) {
-					return;
-				}
-				
-				HashMap<String, ChannelAccount> cas = accountManager.getChAccountMap();
-				for (String key : cas.keySet()) {
-					ChannelAccount ca = cas.get(key);
-					if (serviceMap.containsKey(ca))
-						continue; 
-
-					try {
-						Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
-						if (sc != null) {
-							serviceMap.put(ca, sc);
-							sc.addMessageListener(new ChannelServiceListener());
-						}
-					}
-					catch(Exception ex) {
-						ex.printStackTrace();
-						failedServiceAccounts.add(ca);
-					}
-				}
-				
-				//立即启动，不能外部调用，否则起不来！
-				start();
-			}
-		};
-		
-		executor.execute(initServiceTask);
-	}
 	
 	/**
-	 * @return the peopleManager
-	 */
-	public PeopleManager getPeopleManager() {
-		return peopleManager;
-	}
-
-	/**
-	 * @param peopleManager the peopleManager to set
-	 */
-	public void setPeopleManager(PeopleManager peopleManager) {
-		this.peopleManager = peopleManager;
-	}
-
-	/**
-	 * Pending Use Plug-in register to do this.
-	 * 
-	 * @param ca
-	 * @return
-	 */
-	public synchronized static Service createService(ChannelAccount ca)
-			throws Exception {
-		if (ca.getChannel().getName().startsWith("email_")) {
-			return new EmailService("Cydow", ca);
-			
-		} else if (ca.getChannel().getName().startsWith("im_qq")) {
-			return new QQService("Cydow", ca);
-
-		} else if (ca.getChannel().getName().startsWith("sns_weibo")) {
-			return new WeiboService("Cydow", ca);
-		}
-		return null;
-	}
-	
-	/**
-	 * 对于未启动成功的服务可以再次重启
+	 * 对于未启动成功的服务可以再次重启。
+	 * Pending 方法改进为制定具体的服务。
 	 * @throws Exception
 	 */
+	@Deprecated 
 	public synchronized void restartService() throws Exception {
 		if(!failedServiceAccounts.isEmpty()) {
 			ChannelAccount ca = failedServiceAccounts.firstElement();
 			restartService(ca);
 		}
 	}
+	/**
+	 *  Pending 方法改进为制定具体的服务。
+	 * @param ca
+	 * @throws Exception
+	 */
+	@Deprecated 
 	public synchronized void restartService(ChannelAccount ca) throws Exception {
 		Service sc = createService(ca);
 		if (sc != null) {
@@ -435,9 +367,14 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 * 如果服务未启动成功，用户可以选择跳过
 	 * @param ca
 	 */
+	@Deprecated 
 	public void skipService(ChannelAccount ca) {
 		failedServiceAccounts.remove(ca);
 	}	
+	/**
+	 * 
+	 */
+	@Deprecated 
 	public void skipAllService() {
 		failedServiceAccounts.clear();
 	}
@@ -449,29 +386,6 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	public boolean isStartupAll() {
 		return failedServiceAccounts.isEmpty();
 	}
-	
-//	@Override
-//	public List<ChannelMessage> get(String action, String query) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
-	
-//	@Deprecated	
-//	@Override
-//	public void put(String action, List<ChannelMessage> msg) {
-//		
-//		// TODO Auto-generated method stub
-//		if (msg == null || msg.size() == 0) {
-//			return;
-//		}
-//		for (ChannelMessage m : msg) {
-//			ChannelAccount cha = m.getChannelAccount();
-//			if (cha != null) {
-//				Service sc = serviceMap.get(cha);
-//				sc.put(action, msg);
-//			}
-//		}
-//	}
 
 	@Override
 	public void stop() {
@@ -495,13 +409,6 @@ public final class ChannelService extends AbstractService implements SeriveManag
 		//如果账号变化（是否有push服务，还是定期去取？）
 		//需要发账号变化事件，每个消息默认都必须有peopleID
 		peopleManager.loadContracts();
-		//
-		if (isStart)
-			return;
-
-		if (serviceMap == null) {
-			return;
-		}
 		// weired way, but work anyway
 		for (ChannelAccount key : serviceMap.keySet()) {
 			// System.out.println("Key : " + key.toString() + " Value : "
@@ -509,7 +416,6 @@ public final class ChannelService extends AbstractService implements SeriveManag
 			Service service = serviceMap.get(key);
 			service.start();
 		}
-		isStart = true;
 	}
 
 	
@@ -1194,96 +1100,62 @@ public final class ChannelService extends AbstractService implements SeriveManag
 //	渠道管理	启动、停用、禁用，安装，卸载。	Song	2013-2-11	2013-2-12		
 //	账号的管理	渠道多账号的管理	Song	2013-2-12	2013-2-13		
 
-
 	@Override
-	public void add(Service svc) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
+	public void add(Service svc) {}
 	@Override
-	public void delelte(Service svc) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
+	public void delelte(Service svc) {}
 	@Override
-	public void update(Service svc) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
+	public void update(Service svc) {}
 	@Override
 	public Service get(String name) {
-		// TODO Auto-generated method stub
 		return null;
 	}
-
-
 	@Override
 	public java.util.Iterator<Service> Iterator() {
-		// TODO Auto-generated method stub
 		return null;
 	}
-
-
 	@Override
-	public void start(Service svc) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
+	public void start(Service svc) {	}
 	@Override
-	public void stop(Service svc) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
+	public void stop(Service svc) {	}
 	@Override
-	public void suspend(Service svc) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
+	public void suspend(Service svc) {}
 	@Override
-	public void resume(Service svc) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
+	public void resume(Service svc) {	}
 	@Override
-	public void getStatus(Service svc) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
+	public void getStatus(Service svc) {	}
 	@Override
 	public boolean isRunning(Service svc) {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
-
 	@Override
 	public void resume() {
 		// TODO Auto-generated method stub
-		
 	}
-
-
 	@Override
 	public boolean isRunning() {
 		// TODO Auto-generated method stub
 		return false;
+	}	
+	/**
+	 * Pending Use Plug-in register to do this.
+	 * 
+	 * @param ca
+	 * @return
+	 */
+	public synchronized static Service createService(ChannelAccount ca)
+			throws Exception {
+		if (ca.getChannel().getName().startsWith("email_")) {
+			return new EmailService("Cydow", ca);
+			
+		} else if (ca.getChannel().getName().startsWith("im_qq")) {
+			return new QQService("Cydow", ca);
+
+		} else if (ca.getChannel().getName().startsWith("sns_weibo")) {
+			return new WeiboService("Cydow", ca);
+		}
+		return null;
 	}
-	
 	
 }

@@ -45,6 +45,7 @@ public class ChannelManager implements SeriveManager, Constants{
 	Mongo mongo;
 	Morphia morphia;
 	Datastore ds;
+	ChannelService cs;
 
 	
 	/**
@@ -53,8 +54,9 @@ public class ChannelManager implements SeriveManager, Constants{
 	 * @param morphia
 	 * @param ds
 	 */
-	protected ChannelManager(Mongo mongo, Morphia morphia, Datastore ds)
+	protected ChannelManager(ChannelService cs, Mongo mongo, Morphia morphia, Datastore ds)
 	{
+		this.cs = cs;
 		this.mongo = mongo;
 		this.morphia = morphia;
 		this.ds = ds;
