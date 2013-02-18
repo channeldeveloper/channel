@@ -1,5 +1,7 @@
 package com.original.client.ui.widget;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
@@ -9,21 +11,32 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JEditorPane;
+import javax.swing.Box.Filler;
+import javax.swing.border.EmptyBorder;
 import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.EditorKit;
 import javax.swing.text.Element;
 import javax.swing.text.ElementIterator;
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledEditorKit;
 import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
+import com.original.client.border.DottedLineBorder;
+import com.original.client.border.SingleLineBorder;
+import com.original.client.util.ChannelConstants;
 import com.original.client.util.ChannelUtil;
 
 /**
@@ -31,7 +44,7 @@ import com.original.client.util.ChannelUtil;
  * @author WMS
  *
  */
-public class EditorHandler {
+public class EditorHandler implements ChannelConstants{
 	
 	public static final String IMAGE_PATTERN = 
 			"<img src=\"%s\" width=\"%d\" height=\"%d\" border=\"0\">",
@@ -133,9 +146,9 @@ public class EditorHandler {
 			pos = editor.getCaretPosition();//由于删除图片标签后，会影响原来的pos，所以我们重设pos为当前光标的位置。
 		}
 		
-		StringReader sw = new StringReader(insertText);
+		StringReader sr = new StringReader(insertText);
 		try {
-			kit.read(sw, doc, pos);
+			kit.read(sr, doc, pos);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -143,8 +156,87 @@ public class EditorHandler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
-			sw.close();//关闭是一种好习惯
+			sr.close();//关闭是一种好习惯
 		}
+	}
+	
+	public void insertText(String text) {
+		Document doc = editor.getDocument();
+		EditorKit kit = editor.getEditorKit();
+		if(!(kit instanceof HTMLEditorKit)) //注意这里强制HTMLEditorKit
+		{
+			kit = new HTMLEditorKit();
+			editor.setEditorKit(kit);
+		}
+		
+		String style = String.format("style=\"font-family:%s;font-size:%s;margin-left:%s;\"",
+				DEFAULT_FONT_FAMILY, "11px", "35px");
+		
+		StringBuffer sb = new StringBuffer("<div ").append(style).append(">");
+		sb.append(text).append("</div>");
+		
+		try {
+//			doc.insertString(doc.getLength(), sb.toString(), null);
+			kit.read(new StringReader(sb.toString()), doc, doc.getLength());
+		}
+		 catch (BadLocationException ex) {
+				ex.printStackTrace();
+			}
+		catch(IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	public static void main(String[] args) {
+		String style = String.format("style=\"font-family:%s;font-size:%s;margin-left:%s;\"",
+				DEFAULT_FONT_FAMILY, "11px", "35px");
+		System.out.println(style);
+	}
+	
+	/**
+	 * 插入swing控件至文本面板中，该控件占一个段的位置。
+	 * @param comp
+	 */
+	public void insertCompParagraph(int paragraphIndex, Component comp) 
+	{
+		Document doc = editor.getDocument();
+		EditorKit kit = editor.getEditorKit();
+		if(!(kit instanceof HTMLEditorKit)) //注意这里强制HTMLEditorKit
+		{
+			kit = new HTMLEditorKit();
+			editor.setEditorKit(kit);
+		}
+		
+		StringReader sr = new StringReader("<div id=\"1\"></div>");
+		try {
+			int offset = doc.getLength();
+			kit.read(sr, doc, offset);
+
+			int length = doc.getLength();
+			MutableAttributeSet attribute = new SimpleAttributeSet();
+			StyleConstants.setComponent(attribute, comp);
+			doc.insertString(offset == 0 ? length : length - 1, " ", attribute);
+		} catch (BadLocationException ex) {
+			ex.printStackTrace();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			sr.close();//关闭是一种好习惯
+		}
+	}
+	
+	/**
+	 * 插入水平分割线，这里目前都是虚线样式。如果有其他样式，待以后优化！
+	 * 注意，不要使用css样式，swing支持不好
+	 * @throws Exception
+	 */
+	public void insertHorizontalLine(int width, int height)
+	{
+		Filler filler = ChannelUtil.createBlankFillArea(width, height);
+		filler.setBorder(BorderFactory.createCompoundBorder(
+				new EmptyBorder(0, 10, 0, 20), 
+				new DottedLineBorder(DottedLineBorder.BOTTOM, new Color(213, 213, 213), new float[]{3f,4f})));
+		insertCompParagraph(-1, filler);
 	}
 	
 	/**

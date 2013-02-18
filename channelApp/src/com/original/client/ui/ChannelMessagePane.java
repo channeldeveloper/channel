@@ -356,6 +356,10 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 				add(statusBar = msgStatusBar);
 				add(body = new ShowMessageBodyPane());
 			}
+			else if(msgStatusBar instanceof ListMessageTopBar) {
+				add(statusBar = msgStatusBar);
+				add(body = new ListMessageBodyPane());
+			}
 			else if(msgStatusBar instanceof ChannelMessageTopBar){
 				add(statusBar = msgStatusBar);
 				add(body = new ChannelMessageBodyPane());

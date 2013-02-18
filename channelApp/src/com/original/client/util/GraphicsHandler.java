@@ -23,6 +23,15 @@ public class GraphicsHandler
 	public static final RenderingHints DEFAULT_RENDERING_HINT_OFF = 
 			new RenderingHints(RenderingHints.KEY_ANTIALIASING,
 					RenderingHints.VALUE_ANTIALIAS_OFF); 
+	
+	public static final RenderingHints IMAGE_RENDERING_HINT_ON = 
+			new RenderingHints(RenderingHints.KEY_INTERPOLATION,
+					RenderingHints.VALUE_INTERPOLATION_BILINEAR); 
+	
+	public static final RenderingHints IMAGE_RENDERING_HINT_OFF = 
+			new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+					RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR); 
+	
 	/**
 	 * 生成带有默认渲染效果(抗锯齿)的图形对象
 	 * @param g

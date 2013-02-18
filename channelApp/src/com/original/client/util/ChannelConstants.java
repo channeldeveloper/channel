@@ -16,7 +16,8 @@ public interface ChannelConstants
 	//鼠标类
 	Cursor HAND_CURSOR = new Cursor(Cursor.HAND_CURSOR),
 			DEFAULT_CURSOR = new Cursor(Cursor.DEFAULT_CURSOR),
-			TEXT_CURSOR = new Cursor(Cursor.TEXT_CURSOR);
+			TEXT_CURSOR = new Cursor(Cursor.TEXT_CURSOR),
+			WAIT_CURSOR = new Cursor(Cursor.WAIT_CURSOR);
 	
 	//字体类
 	String DEFAULT_FONT_FAMILY = ChannelConfig.getPropValue("channelFont");
@@ -31,7 +32,8 @@ public interface ChannelConstants
 	//颜色类
 	Color LIGHT_TEXT_COLOR = new Color(85,127,196),
 			MENU_BACKGROUND = new Color(46, 156, 202),
-			TITLE_COLOR = new Color(58, 182, 210);
+			TITLE_COLOR = new Color(58, 182, 210),
+			TRANSLUCENCE_COLOR = new Color(128,128,128,(int)(255*0.1));
 	
 	//坐标点
 	Point CENTER_POINT = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();

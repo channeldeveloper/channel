@@ -66,7 +66,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	private PropertyChangeSupport changeSupport =
 			new SwingPropertyChangeSupport(this);
 	
-	private static ChannelService channelService = ChannelAccesser.getChannelService();
+	protected static ChannelService channelService = ChannelAccesser.getChannelService();
 	protected Lock channelLock = new ReentrantLock();
 	
 	public ChannelMessageBodyPane()
@@ -322,7 +322,8 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	public void showAllMessage()
 	{
 		ChannelMessage newMsg = null;
-		ChannelMessagePane nw = new ChannelMessagePane(new ChannelMessageTopBar());
+//		ChannelMessagePane nw = new ChannelMessagePane(new ChannelMessageTopBar());
+		ChannelMessagePane nw = new ChannelMessagePane(new ListMessageTopBar());
 		nw.showDirection = false; //不显示消息方向
 		
 		for (ChannelMessage msg : messageBodyList) {
@@ -375,7 +376,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			this.toFirst = toFirst;
 			
 			setPreferredSize(new Dimension(ChannelConfig.getIntValue("msgBodyWidth"),  
-					Top.SIZE.height + Center.SIZE.height + (!bottom.isVisible()?0:Bottom.SIZE.height)));
+					top.SIZE.height + center.SIZE.height + (!bottom.isVisible()?0:bottom.SIZE.height)));
 			setLayout(new BorderLayout(5,5));
 			
 			//添加子控件
@@ -421,9 +422,9 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		public void autoAdjustHeight(boolean isOn)
 		{
 			Dimension dim = this.getPreferredSize();
-			dim.height = Top.SIZE.height
-					+ (isOn ? center.getPreferredScrollableViewportHeight() : Center.SIZE.height-10)
-					+ (bottom.isVisible() ? Bottom.SIZE.height + 5 * 3 : 5 * 2); // 5px为垂直间距
+			dim.height = top.SIZE.height
+					+ (isOn ? center.getPreferredScrollableViewportHeight() : center.SIZE.height-10)
+					+ (bottom.isVisible() ? bottom.SIZE.height + 5 * 3 : 5 * 2); // 5px为垂直间距
 			setPreferredSize(dim);
 		}
 		
@@ -502,9 +503,9 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	}
 	
 	//头部面板
-	static class Top extends SGPanel implements ActionListener, EventConstants
+	class Top extends SGPanel implements ActionListener, EventConstants
 	{
-		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-20, 45); 
+		Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-20, 45); 
 		private SimpleDateFormat messageFormat = new SimpleDateFormat("MM月dd日 HH:mm");//消息时间格式
 		private SGLabel messageHeader = new SGLabel();
 		
@@ -742,7 +743,14 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		 */
 		public void setText(String text)
 		{
-			if(text == null) return;
+			text = cutText(getFontMetrics(getFont()), text);
+			super.setText(text);
+		}
+		
+		@Deprecated //效率太慢
+		public static String cutText(FontMetrics fm, String text) 
+		{
+			if(text == null || text.isEmpty()) return text;
 			//清除换行符：\r \n <BR>等
 			text = text.replaceAll("\r|\n|\\<BR\\>|\\<br\\>|<p>|</p>", "").trim();
 			
@@ -752,9 +760,10 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			}
 			
 			//如果文本的长度超出面板的宽度，则多余的部分会被截断，以“…”代替。
-			FontMetrics fm = getFontMetrics(getFont());
-			text = ChannelUtil.cutString(text, fm, SIZE.width-fm.stringWidth("…")*2);
-			super.setText(text);
+//			text = ChannelUtil.cutString(text, fm, SIZE.width-fm.stringWidth("…")*2);
+			//假设全部是中文，每个中文字14px，面板宽度≈700px，所以最多只显示50个中文字。
+			text = text.length() <= 50 ? text : text.substring(0, 50-1)+"…";
+			return text;
 		}
 		
 		/**
@@ -782,9 +791,9 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	}
 	
 	//底部面板，就是一个回复框面板
-	static class Bottom extends SGPanel implements ActionListener, EventConstants
+	class Bottom extends SGPanel implements ActionListener, EventConstants
 	{
-		static Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-60, 30);
+		Dimension SIZE = new Dimension(ChannelConfig.getIntValue("msgBodyWidth")-60, 30);
 		
 		private SGButton btnReply = new SGButton("发送"), btnCancel = new SGButton("取消");
 		private OTextField replyTextField = new OTextField();
