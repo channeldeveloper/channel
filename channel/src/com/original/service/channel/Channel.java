@@ -49,7 +49,6 @@ public class Channel {
 	 * default constructor.
 	 */
 	public Channel() {
-
 	}
 
 	@Id

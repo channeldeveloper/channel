@@ -9,7 +9,6 @@ package com.original.service.channel.core;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,9 +32,9 @@ import com.original.service.profile.Profile;
  * @author cydow
  * @encoding UTF-8
  * @version 1.0
- * @create 2012-11-11 20:17:13
+ * @create 2012-12-11 20:17:13
  */
-public class ChannelAccountManager {
+public class AccountManager {
 
 	private java.util.logging.Logger logger;
 	/**
@@ -142,6 +141,7 @@ public class ChannelAccountManager {
 	private Morphia morphia;
 	private Datastore ds;
 	private ChannelManager chMg;
+	private ChannelService cs;
 
 
 	/**
@@ -151,7 +151,8 @@ public class ChannelAccountManager {
 	 * @param morphia
 	 * @param ds
 	 */
-	protected ChannelAccountManager(Mongo mongo, Morphia morphia, Datastore ds, ChannelManager chMg) {
+	protected AccountManager(ChannelService cs, Mongo mongo, Morphia morphia, Datastore ds, ChannelManager chMg) {
+		this.cs = cs;
 		this.mongo = mongo;
 		this.morphia = morphia;
 		this.ds = ds;

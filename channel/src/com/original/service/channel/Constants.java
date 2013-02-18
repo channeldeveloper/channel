@@ -30,14 +30,14 @@ public interface Constants {
 	
 	public enum CHANNEL{MAIL, QQ, WEIBO}
 	
-	public static final String QQ = "QQ",
-			WEIBO = "Weibo",
-			MAIL  = "Mail";
-	
-	public static final String TYPE_SEND = "send",
-			TYPE_RECEIVED = "received",
-					TYPE_POST  = "post",
-							TYPE_COMMENT = "comment";
+	public static final String QQ = "QQ";
+	public static final String WEIBO = "Weibo";
+	public static final String MAIL = "Mail";
+
+	public static final String TYPE_SEND = "send";
+	public static final String TYPE_RECEIVED = "received";
+	public static final String TYPE_POST = "post";
+	public static final String TYPE_COMMENT = "comment";
 	
 	public static final String CHANEL_NAME_GMAIL = "email_gmail";//type _name
 	public static final String CHANEL_NAME_MAILQQ = "email_qq";

@@ -1,6 +1,11 @@
 package com.original.service.people;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -17,6 +22,7 @@ import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.core.ChannelService;
+import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.core.ThreadManager;
 
 public class PeopleManager {
@@ -24,6 +30,7 @@ public class PeopleManager {
 	private Mongo mongo;
 	private Morphia morphia;
 	private Datastore ds;
+	ChannelService cs;
 
 
 	/**
@@ -32,8 +39,9 @@ public class PeopleManager {
 	 * @param morphia
 	 * @param ds
 	 */
-	public PeopleManager(Morphia morphia, Mongo mongo, Datastore ds)
+	public PeopleManager(ChannelService cs, Morphia morphia, Mongo mongo, Datastore ds)
 	{
+		this.cs = cs;
 		this.mongo = mongo;
 		this.morphia = morphia;
 		this.ds = ds;
@@ -59,7 +67,7 @@ public class PeopleManager {
 	/**
 	 * 通过Service获取联系人。
 	 */
-	private void loadContracts()
+	public void loadContracts()
 	{
 		//1 调用各自的渠道服务ChannelService 获得联系人。
 		ChannelService cs  = ChannelService.getInstance();
@@ -67,6 +75,10 @@ public class PeopleManager {
 		for (Account ac : all)
 		{
 			String chName = ac.getChannelName();
+			if (chName == null)
+			{
+				continue;
+			}
 			//2 调用PeopleManager获取所有的人员
 			People pp = ds.find(People.class).field("accountMap." + chName +".user").endsWith(ac.getUser()).get();
 			//不存在
@@ -135,38 +147,6 @@ public class PeopleManager {
 
 
 	
-
-	//	获取所有联系人（按照名称，按照消息的ReceivedTime先后顺序）排序	Song	2013/2/6	2013-2-7
-	
-	/**
-	 * get 获取所有联系人 by Name
-	 * 
-	 * 
-	 * @return
-	 */
-	public List<People> getPeople() {
-		Query<People> chmsgQuery = ds.find(People.class).order(
-				"name");
-		List<People> chmsgs = chmsgQuery.asList();
-
-		return chmsgs;
-	}
-	
-	/**
-	 * get 获取所有联系人 by Name
-	 * //	获取一个联系人的所有消息，按照时间排序。	Song	2013-2-7	2013-2-8.
-	 * 方法1. 获得联系人，找他他们的某个消息，每个消息的时间时间序列，然后排序。
-	 * 方法2、获取消息，逐个消息过滤，找出联系人。
-	 * 方法3、建立MessagePeople Collection。？
-	 * 
-	 * 
-	 * @return
-	 */
-	public List<People> getPeopleByMessageDate() {
-
-		throw  null;
-	}
-	
 	/**
 	 * get All Messages
 	 * 
@@ -198,7 +178,14 @@ public class PeopleManager {
 			{
 				if (ca.getChannel() != null && ca.getAccount() != null)
 				{
-					return q.field("accountMap." + ca.getChannel().getName() + "." +"name").equal(chm.getFromAddr()).get();
+					if (chm.isReceived() && chm.getFromAddr() != null)
+					{
+						return q.field("accountMap." + ca.getChannel().getName() + "." +"name").equal(chm.getFromAddr()).get();
+					}
+					if (!chm.isReceived() && chm.getToAddr() != null)
+					{
+						return q.field("accountMap." + ca.getChannel().getName() + "." +"name").equal(chm.getToAddr()).get();
+					}
 				}
 			}
 		}
@@ -230,66 +217,80 @@ public class PeopleManager {
 	 * @param chMsg
 	 */
 	public People savePeople(ChannelMessage chMsg) {
-		if (chMsg == null) {
-			return null;
-		}
-
-		// Franz Song<franzsong@gmail.com>
-		Channel ch = chMsg.getChannelAccount().getChannel();
-		if (ch.getType().equals(Constants.Channel_Type_Email)) {
-			String fromAddr = chMsg.getFromAddr();
-			if (fromAddr != null && fromAddr.lastIndexOf("<") != -1) {
-				int dimi = fromAddr.lastIndexOf("<");
-				String name = fromAddr.substring(0, dimi);
-				String addr = fromAddr.substring(dimi + 1, fromAddr.length() - 1);
-
-				// how to get by one sentence
-				People qp = getPeopleByChannel(chMsg.getChannelAccount().getChannel().getName(), addr);//getPeople(name);
-				if (qp != null && qp.getAccountMap() != null)
-				{
-					Collection<Account> accs = qp.getAccountMap().values();
-					if (accs != null) {
-						for (Account ac : accs) {
-							// 已经加入了
-							if (ac.getChannelName() != null
-									&& ac.getChannelName().equals(ch.getName())
-									&& ac.getUser().equalsIgnoreCase(addr)) {
-								return qp;
-							}
+		try {
+			if (chMsg == null) {
+				return null;
+			}
+			boolean isReceived = chMsg.isReceived();
+			String addr = isReceived ? chMsg.getFromAddr() : chMsg.getToAddr();
+			// by name (same as addr)
+			if (addr != null) {
+				People qp = getPeopleByChannel(chMsg.getChannelAccount()
+						.getChannel().getName(), addr);
+				if (qp != null) {
+					return qp;
+				}
+			}
+			String name = addr;
+			// Franz Song<franzsong@gmail.com>
+			Channel ch = chMsg.getChannelAccount().getChannel();
+			if (ch.getType().equals(Constants.Channel_Type_Email)) {
+				String emailAddr = addr;
+				if (emailAddr != null && emailAddr.lastIndexOf("<") != -1) {
+					int dimi = emailAddr.lastIndexOf("<");
+					name = emailAddr.substring(0, dimi);
+					addr = emailAddr
+							.substring(dimi + 1, emailAddr.length() - 1);
+				}
+			}
+			// search account[]
+			People qp = getPeopleByChannel(chMsg.getChannelAccount()
+					.getChannel().getName(), addr);
+			if (qp != null && qp.getAccountMap() != null) {
+				Collection<Account> accs = qp.getAccountMap().values();
+				if (accs != null) {
+					for (Account ac : accs) {
+						// 已经加入了
+						if (ac.getChannelName() != null
+								&& ac.getChannelName().equals(ch.getName())
+								&& ac.getUser().equalsIgnoreCase(addr)) {
+							return qp;
 						}
 					}
 				}
-
-				People p = new People();
-				p.setName(name);
-				Account ac = new Account();
-				ac.setUser(addr);
-				ac.setChannelName(chMsg.getChannelAccount().getChannel()
-						.getName());
-//				p.addAccount(ac);
-//				people.setName(ac.getName());
-//				people.setAvatar(ac.getAvatar());
-				HashMap <String, Account> acMap = new HashMap<String, Account>();
-				acMap.put(ac.getChannelName(), ac);
-				p.setAccountMap(acMap);	
-				
-				ds.save(p);
-				return p;
 			}
+
+			People p = new People();
+			p.setName(name);
+			Account ac = new Account();
+			ac.setUser(addr);
+			ac.setChannelName(chMsg.getChannelAccount().getChannel().getName());
+			HashMap<String, Account> acMap = new HashMap<String, Account>();
+			acMap.put(ac.getChannelName(), ac);
+			p.setAccountMap(acMap);
+			ds.save(p);
+			return p;
+
+		} catch (Exception exp) {
+			exp.printStackTrace();
 		}
-		else
-		{
-			People qp = getPeopleByChannel(chMsg.getChannelAccount().getChannel().getName(), chMsg.getFromAddr());
-			return qp;
-		}
-		
 		return null;
 	}
-
-
-
-	
-
+//	/**
+//	 * 
+//	 * @param chMsgs
+//	 */
+//	public void savePeople(ChannelMessage[] chMsgs)
+//	{		
+//		//save Message
+//		if (chMsgs != null && chMsgs.length > 0)
+//		{
+//			for (ChannelMessage chmsg : chMsgs)
+//			{
+//				savePeople(chmsg);
+//			}
+//		}
+//	}
 	
 	// /////////////////////////////
 	
@@ -314,5 +315,144 @@ public class PeopleManager {
 			}
 			
 		}
+		
+		//////////////For Later Tasks//////////////
+		
+	//		获取所有联系人（按照名称，按照消息的ReceivedTime先后顺序）排序
+	//		获取一个联系人的所有消息，按照时间排序。
+	//		获取消息按照分页（参数页面、每页数量）
+
+		/**
+		 * 获取联系人的数量。
+		 * 
+		 * @return
+		 */
+		public long getPeopleCount() {
+			return ds.getCount(People.class);
+		}
+
+		/**
+		 * 获取所有的联系人，按照姓名排序。
+		 * 
+		 * @return
+		 */
+		public List<People> getPeople() {
+			Query<People> chmsgQuery = ds.find(People.class).order(
+					"name");
+			List<People> chmsgs = chmsgQuery.asList();
+
+			return chmsgs;
+		}
+		
+		/**
+		 * 按照分页，每个页面的数量，获取的联系人。
+		 * 		
+		 * 
+		 * @param page
+		 * @param pageCount
+		 * @return
+		 */
+		public List<People> getPeople(int page, int pageCount) {
+			Query<People> chmsgQuery = ds.find(People.class).order(
+					"name");
+			
+			//offset(1000);
+			int offset = page * pageCount;
+			if (offset > 0)
+			{
+				chmsgQuery = chmsgQuery.offset(offset).limit(pageCount);
+			}
+			else
+			{
+				chmsgQuery = chmsgQuery.limit(pageCount);
+			}
+			List<People> chmsgs = chmsgQuery.asList();
+
+			return chmsgs;
+		}
+		
+		/**
+		 * pending 按照消息的ReceivedTime先后顺序.
+		 * 
+		 * 1、该数据是变化，不应该时时调用
+		 * 2、数据没有按照人来分类管理，获取的性能不高
+		 * 3、Client初始化化可以调用。
+//		 * 4、后面设计需要考虑，是否建立一个Collection表。PeopleMessages 
+		 * 
+		 * Pending Song Xueyong: Message received by time sequence, but not by people.
+		 * So to getting Messages by people has not good performance!
+		 * 
+		 * @return
+		 */
+		/**
+		 * 获取所有的联系人，按照收到信息的先后排序。
+		 * @return
+		 */
+	public List<People> getPeopleByDate() {
+		// 由于消息多，联系人少，因此按照先联系人来获取。获取联系人后去取第一个消息，按照时间排序（默认消息都是时间存储，猜想应该快）。
+		List<People> people = getPeople();
+		MessageManager mm = cs.getMsgManager();
+
+		// Pending 做法好复杂
+		HashMap<ChannelMessage, People> maps = new HashMap<ChannelMessage, People>();
+		for (People p : people) {
+			List<ChannelMessage> msg = mm.getMessageByPeople(p);
+			if (msg != null && msg.size() > 0) {
+				maps.put(msg.get(0), p);
+			}
+		}
+
+		//排序
+		ChannelMessage[] cms = new ChannelMessage[maps.size()];
+		maps.keySet().toArray(cms);
+		List<ChannelMessage> msgList = Arrays.asList(cms);
+
+		Collections.sort(msgList, new Comparator<ChannelMessage>() {
+			public int compare(ChannelMessage o1, ChannelMessage o2) {
+				Date a = o1.getReceivedDate();
+				Date b = o2.getReceivedDate();
+				//逆序
+				return b.compareTo(a);
+			}
+		});
+		//太复杂了
+		people = new ArrayList<People>();
+		for (ChannelMessage cm : msgList)
+		{
+			people.add(maps.get(cm));			
+		}		
+		return people;
+
+	}
+	
+	/**
+	 * pending 按照消息的ReceivedTime先后顺序.
+	 * 
+	 * 1、该数据是变化，不应该时时调用 2、数据没有按照人来分类管理，获取的性能不高 3、Client初始化化可以调用。 // *
+	 * 4、后面设计需要考虑，是否建立一个Collection表。PeopleMessages
+	 * 
+	 * Pending Song Xueyong: Message received by time sequence, but not by
+	 * people. So to getting Messages by people has not good performance!
+	 * 
+	 * @return
+	 */
+	/**
+	 * 获取所有的联系人，按照分页和每页数量，按照收到信息的先后排序，。
+	 * 
+	 * @return
+	 */	
+	public List<People> getPeopleByDate(int page, int pageCount) {
+		
+		List<People> people = getPeopleByDate();
+
+		if (page * pageCount < people.size()) {
+			return people.subList(page * pageCount,
+					Math.min(people.size(), page * pageCount +pageCount));
+		}
+		return EMPTY;
+
+	}
+
+	private List<People> EMPTY = new ArrayList<People>();
 
 }

@@ -6,7 +6,6 @@
 	"accounts" : [
 	              {"user": "franzsoong@gmail.com","password" : "syzb1234", "channelName" :  "email_gmail"},
 	               {"user": "franzsong@qq.com","password" : "syzb%1234%", "channelName" :  "email_qq"},
-	               {"user": "1878606006","password" : "syzb1234", "channelName" :  "im_qq"},
 	              {"user": "franzsong@163.com","password" :"syzb1234$","channelName" :  "sns_weibo"}
 	              ]
 }

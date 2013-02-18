@@ -24,8 +24,11 @@ import com.mongodb.Mongo;
 import com.original.service.channel.Account;
 import com.original.service.channel.Channel;
 import com.original.service.channel.Constants;
+import com.original.service.channel.SeriveManager;
+import com.original.service.channel.Service;
 import com.original.service.channel.event.ChannelEvent;
 import com.original.service.channel.event.ChannelListener;
+
 
 /**
  * 渠道事例管理器。
@@ -36,12 +39,13 @@ import com.original.service.channel.event.ChannelListener;
  * @version 1.0
  * @create 2012-11-11 20:17:13
  */
-public class ChannelManager implements Constants{
+public class ChannelManager implements SeriveManager, Constants{
 	java.util.logging.Logger logger ;
 	private HashMap<String, Channel> channelMap = new HashMap<String, Channel>();
 	Mongo mongo;
 	Morphia morphia;
 	Datastore ds;
+	ChannelService cs;
 
 	
 	/**
@@ -50,8 +54,9 @@ public class ChannelManager implements Constants{
 	 * @param morphia
 	 * @param ds
 	 */
-	protected ChannelManager(Mongo mongo, Morphia morphia, Datastore ds)
+	protected ChannelManager(ChannelService cs, Mongo mongo, Morphia morphia, Datastore ds)
 	{
+		this.cs = cs;
 		this.mongo = mongo;
 		this.morphia = morphia;
 		this.ds = ds;
@@ -219,6 +224,103 @@ public class ChannelManager implements Constants{
      * The event listener list for the channel.
      */
     protected EventListenerList listenerList = new EventListenerList();
+
+
+	@Override
+	public void add(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void delelte(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void update(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Service get(String name) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public java.util.Iterator<Service> Iterator() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void start(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void stop(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void suspend(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void resume(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void getStatus(Service svc) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isRunning(Service svc) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void start() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void stop() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void suspend() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void resume() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean isRunning() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 	///////////////////////////event (^_^) 
 	

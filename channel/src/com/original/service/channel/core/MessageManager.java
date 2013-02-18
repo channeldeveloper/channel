@@ -18,6 +18,8 @@ import com.google.code.morphia.Morphia;
 import com.google.code.morphia.query.Query;
 import com.mongodb.Mongo;
 import com.original.service.channel.ChannelMessage;
+import com.original.service.people.People;
+import com.sun.istack.internal.NotNull;
 
 /**
  * 渠道消息管理器。
@@ -35,6 +37,7 @@ public class MessageManager {
 	private Mongo mongo;
 	private Morphia morphia;
 	private Datastore ds;
+	ChannelService cs;
 
 
 	/**
@@ -43,8 +46,9 @@ public class MessageManager {
 	 * @param morphia
 	 * @param ds
 	 */
-	public MessageManager(Morphia morphia, Mongo mongo, Datastore ds)
+	public MessageManager(ChannelService cs, Morphia morphia, Mongo mongo, Datastore ds)
 	{
+		this.cs = cs;
 		this.mongo = mongo;
 		this.morphia = morphia;
 		this.ds = ds;
@@ -541,5 +545,113 @@ public class MessageManager {
 	    return copy;
 	}
 	
+	/**
+	 * get All Messages
+	 * 
+	 * @return
+	 */
+	public List<ChannelMessage> getMessagesByPeople(People p) {
+		
+		if (p == null || p.getId() == null)
+		{
+			return EMPTY;
+		}
+		
+		Query<ChannelMessage> chmsgQuery = ds.find(ChannelMessage.class)
+				.field("peopleId").equal(p.getId())
+				.order(OrderbyDateField);
+		List<ChannelMessage> chmsgs = chmsgQuery.asList();
+		return chmsgs;
+	}
+	
+	//////////////For Later Tasks//////////////
+	
+	/**
+	 * 获取消息的数量。
+	 * 
+	 * @return
+	 */
+	public long getMessageCount() {
+		return ds.getCount(ChannelMessage.class);
+	}
+	
+	/**
+	 * 按照联系人获取消息，请分页。
+	 * 
+	 * 
+	 * @param p
+	 * @param page
+	 * @param pageCount
+	 * @return
+	 */
+	public List<ChannelMessage> getMessageByPeople(People p, int page, int pageCount) {
+		
+		if (p == null || p.getId() == null)
+		{
+			return EMPTY;
+		}		
+		int offset = page * pageCount;
+		return ds.find(ChannelMessage.class)
+				.field("peopleId").equal(p.getId())
+				.order(OrderbyDateField).offset(offset).limit(pageCount).asList();
+	}
+	
+	/**
+	 * 按照联系人获取消息。
+	 * 
+	 * 
+	 * @param p
+	 * @return
+	 */
+	public List<ChannelMessage> getMessageByPeople(People p) {
+		
+		if (p == null || p.getId() == null)
+		{
+			return EMPTY;
+		}
+		
+		return ds.find(ChannelMessage.class)
+				.field("peopleId").equal(p.getId())
+				.order(OrderbyDateField).asList();
+	}
+	
+	/**
+	 * 按照联系人获取消息。
+	 * 
+	 * 
+	 * @param p
+	 * @param cls 分类
+	 * @return
+	 */
+	public long getMessageCountByPeople(People p, @NotNull String cls) {
+		
+		if (p == null || p.getId() == null)
+		{
+			return 0;
+		}
+		
+		return ds.find(ChannelMessage.class)
+				.field("peopleId").equal(p.getId()).filter("clazz", cls).countAll();
+	}
+	
+	/**
+	 * 按照联系人获取消息。
+	 * 
+	 * 
+	 * @param p
+	 * @param cls 分类
+	 * @return
+	 */
+	public List<ChannelMessage> getMessageByPeople(People p, @NotNull String cls) {
+		
+		if (p == null || p.getId() == null)
+		{
+			return EMPTY;
+		}
+		
+		return ds.find(ChannelMessage.class)
+				.field("peopleId").equal(p.getId()).filter("clazz", cls).order(OrderbyDateField).asList();
+	}
+
 
 }

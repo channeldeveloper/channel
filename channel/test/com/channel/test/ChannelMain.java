@@ -1,3 +1,4 @@
+package com.channel.test;
 import java.util.List;
 
 import com.original.service.channel.Account;
@@ -8,6 +9,7 @@ import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
+import com.original.service.people.People;
 
 
 
@@ -24,6 +26,8 @@ public class ChannelMain {
 //		
 //		//1 启动服务
 		ChannelService csc = ChannelService.getInstance();
+		
+		List<People> pp = csc.getPeopleManager().getPeople();
 //		
 //		//加入自己的监听
 //		csc.addMessageListener(listner);

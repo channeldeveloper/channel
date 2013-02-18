@@ -17,22 +17,16 @@ import com.original.service.channel.event.MessageListner;
 public interface Service {
 	
 	public final static int CREATED = 0x0001;
-	public final static int STARTED = 0x0002;	
+	public final static int AUTHPENDING = 0x0002;	
+	public final static int STARTED = 0x0003;	
 	public final static int SUSPEND = 0x0004;
-	public final static int STOPPING = 0x0008;
-	public final static int CLOSED = 0x000F;
+	public final static int STOPPING = 0x0005;
+	public final static int CLOSED = 0x0006;
 	public final static int FAILED = 0xFFFF;
 	
 	public int getStatus();
 
-	//crud
-//	public abstract List<ChannelMessage> delete(String action, String query);
-	
-//	public abstract List<ChannelMessage> get(String action, String query);
 
-//	public abstract void put(String action, List<ChannelMessage> msg);
-	
-//	public abstract void post(String action, List<ChannelMessage> msg);
 	
 	public abstract void put(String action, ChannelMessage msg) throws Exception;
 	
@@ -88,6 +82,8 @@ public interface Service {
 
 	public abstract void start();
 	
+	
+	
 	//listener
 	
     /**
@@ -128,6 +124,9 @@ public interface Service {
      * @return
      */    
     public List<Account> getContacts();
+    
+    
+    
     
 	
 

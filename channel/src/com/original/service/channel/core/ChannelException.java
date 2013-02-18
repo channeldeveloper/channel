@@ -1,6 +1,7 @@
 package com.original.service.channel.core;
 
 import com.original.service.channel.ChannelAccount;
+import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants.CHANNEL;
 
 /**
@@ -8,6 +9,7 @@ import com.original.service.channel.Constants.CHANNEL;
  * @author WMS
  *
  */
+//Pending Exception definition: MessageException ChannelException ServiceException...
 public class ChannelException extends Exception
 {
 	private static final long serialVersionUID = -5429176779569508997L;
@@ -17,6 +19,12 @@ public class ChannelException extends Exception
 	
 	/** 异常类型 */
 	public CHANNEL channel = null;
+	/** 异常类型 */
+	public ChannelMessage msg = null;
+	
+	public ChannelException(ChannelMessage msg) {
+		this.msg = msg;      
+    }	
 	
 	public ChannelException(ChannelAccount ca, CHANNEL channel, String msg) {
         super(msg);

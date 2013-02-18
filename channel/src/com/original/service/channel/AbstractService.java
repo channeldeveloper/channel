@@ -141,5 +141,10 @@ public abstract class AbstractService implements Service{
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	public void close()
+	{
+		
+	}
 
 }
