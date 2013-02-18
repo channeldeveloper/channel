@@ -40,16 +40,21 @@ import java.util.concurrent.Executors;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractButton;
 import javax.swing.Box;
+import javax.swing.Box.Filler;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPopupMenu;
 import javax.swing.JRootPane;
 import javax.swing.JScrollBar;
+import javax.swing.ListCellRenderer;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.Box.Filler;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -75,7 +80,9 @@ import com.original.client.ui.widget.FilePreviewer;
 import com.original.client.ui.widget.ImagePane;
 import com.original.client.ui.widget.MessageBox;
 import com.original.client.ui.widget.ToolTip;
+import com.original.widget.OButton;
 import com.original.widget.OScrollBar;
+import com.original.widget.model.LevelButtonModel.BUTTONLEVEL;
 import com.seaglasslookandfeel.widget.SGButton;
 import com.seaglasslookandfeel.widget.SGColorChooser;
 import com.seaglasslookandfeel.widget.SGFileChooser;
@@ -83,7 +90,6 @@ import com.seaglasslookandfeel.widget.SGMenuItem;
 import com.seaglasslookandfeel.widget.SGOptionPane;
 import com.seaglasslookandfeel.widget.SGPanel;
 import com.seaglasslookandfeel.widget.SGScrollPane;
-import com.sun.rmi.rmid.ExecOptionPermission;
 
 /**
  * 一些通用算法，目前主要用于客户端界面应用，服务端类请勿使用。
@@ -251,6 +257,14 @@ public class ChannelUtil implements ChannelConstants
 	{
 		return createAbstractButton(item, SGButton.class);
 	}
+	public static OButton createApplicationButton(AbstractButtonItem item)
+	{
+		OButton button = createAbstractButton(item, OButton.class);
+		button.setLevel(BUTTONLEVEL.APPLICATION);
+//		button.getModel().getButtonEffect().setDrawBorder(false);
+		button.getModel().getButtonEffect().setHasShadow(false);
+		return button;
+	}
 	public static <T extends AbstractButton> T  createAbstractButton(AbstractButtonItem item, Class<T> clazz)
 	{
 		if(item != null) {
@@ -275,6 +289,7 @@ public class ChannelUtil implements ChannelConstants
 			if(item.getText() == null) {//如果是图片按钮
 				button.setMargin(new Insets(0, 0, 0, 0));
 				button.setContentAreaFilled(false);
+//				button.setBorderPainted(false);
 				button.setCursor(HAND_CURSOR);
 				
 				if(item.getSize() == null && item.getIcon() != null) { //如果没有设置大小，则用图片大小
@@ -971,26 +986,111 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		return jsp;
 	}
 	
-	public static void showToolTip(final Component c, final String tipText) {
+	/**
+	 * 为控件添加提示提示窗
+	 * @param c 控件
+	 * @param tipText 提示文本
+	 */
+	public static void addToolTip(final Component c, final String tipText) {
 		final ToolTip toolTip = new ToolTip();
-		c.addFocusListener(new FocusListener() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				if (!toolTip.isInvokerShow()) {
-					toolTip.setToolTipText(tipText);
-					toolTip.show(c, 0, c.getY() + 25);
-				} else {
-					toolTip.removeInvoker(c);
-				}
-			}
-
-			@Override
-			public void focusGained(FocusEvent e) {
-
-			}
-		});
+		toolTip.setToolTipText(tipText);
+		c.addFocusListener(new ToolTipFocusListener(toolTip));
 	}
 	
+	/**
+	 * 显示控件的提示文本，如果控件已添加提示窗(见{@link #addToolTip(Component, String)})，则会弹出该提示窗，否则新建一个提示窗
+	 * @param c 控件
+	 * @param tipText 提示文本，如果为null，则使用原有已添加的提示窗中的文本
+	 * @param tipColor 提示文本颜色
+	 */
+	public static void showToolTip(final Component c, String tipText, Color tipColor) {
+		ToolTipFocusListener ttListener = getToolTipFocusListener(c);
+		ToolTip tt = null;
+		if (ttListener == null) {
+			tt = new ToolTip();
+		} else {
+			tt = ttListener.tt;
+			if (tipText == null) 
+				tipText = tt.getToolTipText();
+		}
+		
+		if (!tt.isInvokerShow()) {
+			tt.setToolTipText(tipText);
+			tt.setToolTipColor(tipColor);
+			tt.show(c, 0, 30);
+		} else {
+			tt.removeInvoker(c);
+		}
+	}
+	
+	private static ToolTipFocusListener getToolTipFocusListener(Component c) {
+		FocusListener[] listeners = c.getFocusListeners();
+		if(listeners != null && listeners.length > 0) {
+			for(FocusListener listener : listeners) {
+				if(listener instanceof ToolTipFocusListener)
+					return (ToolTipFocusListener)listener;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * 获取水平或垂直方向对应的表格渲染器
+	 * @param alignment 对齐方向，见{@link SwingConstants}
+	 * @return
+	 */
+	public static ListCellRenderer getAliginCellRenderer(final int alignment)
+	{
+		return new DefaultListCellRenderer() {
+			@Override
+			public Component getListCellRendererComponent(JList list,
+					Object value, int index, boolean isSelected,
+					boolean cellHasFocus) {
+				// TODO 自动生成的方法存根
+				JLabel cell = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected,
+						cellHasFocus);
+				switch(alignment) {
+				case TOP:
+				case BOTTOM:
+					cell.setVerticalAlignment(alignment);
+					break;
+					
+				case LEFT:
+				case RIGHT:
+					cell.setHorizontalAlignment(alignment);
+					break;
+				}
+				return cell;
+			}
+		};
+	}
+	
+	public static class ToolTipFocusListener implements FocusListener
+	{
+		ToolTip tt = null;
+		ToolTipFocusListener(ToolTip toolTip)
+		{
+			tt = toolTip;
+		}
+		@Override
+		public void focusGained(FocusEvent e) {
+			if (!tt.isInvokerShow()) {
+				tt.show((Component)e.getSource(), 0, 30);
+			} else {
+				tt.removeInvoker((Component)e.getSource());
+			}
+		}
+
+		@Override
+		public void focusLost(FocusEvent e) {
+
+		}
+	}
+	
+	/**
+	 * 执行线程，这里用于客户端界面
+	 * @param command 可执行对象
+	 */
 	public static void exec(Runnable command) {
 		executor.execute(command);
 	}

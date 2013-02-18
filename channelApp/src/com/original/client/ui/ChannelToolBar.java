@@ -28,7 +28,6 @@ import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
 import javax.swing.JToggleButton;
 import javax.swing.event.SwingPropertyChangeSupport;
 import javax.swing.plaf.basic.BasicMenuItemUI;
@@ -40,7 +39,6 @@ import com.original.client.ui.data.MenuItem;
 import com.original.client.ui.setting.ChannelSettingPane;
 import com.original.client.util.ChannelConfig;
 import com.original.client.util.ChannelConstants;
-import com.original.client.util.ChannelUtil;
 import com.original.client.util.ChannelUtil;
 import com.original.client.util.GraphicsHandler;
 import com.original.client.util.IconFactory;
@@ -495,25 +493,6 @@ public class ChannelToolBar extends SGPanel implements ActionListener, EventCons
 			return owner;
 		}
 
-		@Override
-		protected void paintComponent(Graphics g)
-		{
-//			Graphics2D g2d = GraphicsHandler.optimizeGraphics(g);
-			
-//			int width = owner.getBounds().width, height = getHeight();
-//			
-//			//绘制3px阴影效果(要想绘制理想的阴影效果，就需要反复调试。目前阴影的厚度控制在3px以上较理想)
-//			GraphicsHandler.fillShadow(g2d, 4, width, height, 7);
-//			
-//			//绘制背景
-//			g2d.setColor(background);
-//			g2d.fillRoundRect(3, 3, width-2*3, height-2*3, 5*2, 5*2);
-//			
-//			g2d.setRenderingHints(GraphicsHandler.DEFAULT_RENDERING_HINT_OFF);
-//			super.paintComponent(g2d);
-			super.paintComponent(g);
-		}
-
 		//菜单项点击触发事件
 		public void actionPerformed(ActionEvent e)
 		{
@@ -576,7 +555,7 @@ public class ChannelToolBar extends SGPanel implements ActionListener, EventCons
 		//点击用户头像触发事件
 		public void doClick()
 		{
-			JOptionPane.showConfirmDialog(this, "Pending:回到首页!");
+			
 		}
 	}
 }

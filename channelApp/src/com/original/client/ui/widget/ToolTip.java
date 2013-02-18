@@ -3,12 +3,10 @@ package com.original.client.ui.widget;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.util.Hashtable;
 
-import com.original.client.util.GraphicsHandler;
-import com.original.client.util.Utilities;
+import com.original.client.util.ChannelUtil;
 import com.seaglasslookandfeel.widget.SGMenuItem;
 import com.seaglasslookandfeel.widget.SGPopupMenu;
 
@@ -21,9 +19,6 @@ public class ToolTip extends SGPopupMenu{
 	public static final String SHOW_STATUS_PROPERTY = "show status"; //invoker的显示状态，如果有其他属性，待可以扩充。
 	private static Hashtable<Component, Hashtable<String, Object>> clientProperties = 
 			new Hashtable<Component, Hashtable<String,Object>>();
-	
-	private static Hashtable<Component, ToolTip> clientBindsToolTips = 
-			new Hashtable<Component, ToolTip>();
 	
 	private SGMenuItem menu = new SGMenuItem();
 	private Component invoker = null;
@@ -47,7 +42,7 @@ public class ToolTip extends SGPopupMenu{
 	
 	public void setLocation(int x, int y) {
 		// TODO 自动生成的方法存根
-		Point point = Utilities.checkComponentLocation(x, y, this);
+		Point point = ChannelUtil.checkComponentLocation(x, y, this);
 		super.setLocation(point.x, point.y);
 	}
 

@@ -97,7 +97,7 @@ public class MemberService {
     }
 
     public ImageIcon getFace(AuthInfo ai) throws Exception {
-        String path = QQEnvironment.getMemberDir() + "face" + File.separator + "face.jpg";
+        String path = QQEnvironment.getMemberDir(ai.getMember().getAccount()) + "face" + File.separator + "face.jpg";
         QQEnvironment.mkdir(path);
         String urlStr = "http://face10.qun.qq.com/cgi/svr/face/getface?cache=1&type=1&fid=0&uin=" + ai.getMember().getAccount() 
         		+ "&vfwebqq=" + ai.getVfwebqq() + "&t=" + System.currentTimeMillis();
@@ -120,8 +120,8 @@ public class MemberService {
             Log.println("下载会员信息不能为空！！");
             return null;
         }
-        String path = QQEnvironment.getMemberDir() + "face" + File.separator + member.getAccount() + ".jpg";
-        String destpath = QQEnvironment.getMemberDir() + "face" + File.separator + "status" + File.separator + member.getAccount();
+        String path = QQEnvironment.getMemberDir(ai.getMember().getAccount()) + "face" + File.separator + member.getAccount() + ".jpg";
+        String destpath = QQEnvironment.getMemberDir(ai.getMember().getAccount()) + "face" + File.separator + "status" + File.separator + member.getAccount();
         QQEnvironment.mkdir(path);
         QQEnvironment.mkdir(destpath);
         File srcFile = new File(path);
@@ -203,7 +203,7 @@ public class MemberService {
     }
 
     public ImageIcon loadDefFace(Member member) throws Exception {
-        String destpath = QQEnvironment.getMemberDir() + "face" + File.separator + "status" + File.separator + member.getAccount();
+        String destpath = QQEnvironment.getMemberDir(member.getAccount()) + "face" + File.separator + "status" + File.separator + member.getAccount();
 
         String statusRes = member.getStatus();
         String statusWatermark = member.getStatus() + ".png";

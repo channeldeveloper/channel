@@ -31,7 +31,6 @@ import org.apache.log4j.Logger;
 import org.bson.types.ObjectId;
 
 import weibo4j.Friendships;
-import weibo4j.Users;
 import weibo4j.model.User;
 import weibo4j.model.UserWapper;
 import weibo4j.model.WeiboException;
@@ -357,15 +356,14 @@ public class WeiboService extends AbstractService {
 		{
 			return null;
 		}
-		Users um = new Users();
-		try {
-			um.setToken(token);
-			User profile = um.showUserById(uid);
-			System.out.println("profile:" + profile);
-		} catch (WeiboException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+//		Users um = new Users();
+//		try {
+//			um.setToken(token);
+//			User profile = um.showUserById(uid);
+//		} catch (WeiboException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
 		
 		//1 Pending Song How to get Self Profile
 		List<Account> allAccount = new ArrayList<Account>();
@@ -401,13 +399,13 @@ public class WeiboService extends AbstractService {
 		Account ac = new Account();
 		ac.setUser(u.getId());				
 		ac.setName(u.getScreenName());		
-		saveAvadar(ac, u);
 		ac.setStatus(u.getStatusId());		
 		ac.setChannelName(ca.getChannel().getName());
 		//others		
 		ac.setGender(u.getGender());
 		ac.setUserId(u.getId());	
 		ac.setDescription(u.getDescription());
+		saveAvadar(ac, u);
 		return ac;
 	}
 
@@ -430,12 +428,8 @@ public class WeiboService extends AbstractService {
 			 }
 
 			 ImageIcon avadar = new ImageIcon(profile);
-			 File faceFile = new File(SNS_WEIBO_TEMPDIR, user.getId() + "_profile.png");
-//			 if (!faceFile.exists()) {
-//				 System.out.println("No ex");
-//			 } else {
-//				 System.out.println(" ex");
-//			 }
+			 File faceFile = new File(SNS_WEIBO_TEMPDIR, ac.getUserId() + "_face.png");
+			 if(faceFile.exists()) return;
 
 			 ImageIO.write(toBufferedImage(avadar.getImage()), "png", faceFile);
 			 ac.setAvatar((ObjectId) GridFSUtil.getGridFSUtil().saveFile(
@@ -446,4 +440,11 @@ public class WeiboService extends AbstractService {
 			 e.printStackTrace();
 		 }
 	}
+	 
+	 public static String getAvadarPath(Account ac) {
+		 if(ac != null && ac.getUserId() != null) {
+			 return new File(SNS_WEIBO_TEMPDIR, ac.getUserId() + "_face.png").getPath();
+		 }
+		 return null;
+	 }
 }

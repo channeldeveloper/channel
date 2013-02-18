@@ -67,7 +67,7 @@ public class GroupUtil {
     }
 
     public String load() {
-        String jsonStr = this.readFile(QQEnvironment.getMemberDir() + CONFIG_FILE_NAME);
+        String jsonStr = this.readFile(QQEnvironment.getMemberDir(null) + CONFIG_FILE_NAME);
         Log.println(jsonStr);
         return jsonStr;
     }
@@ -96,7 +96,7 @@ public class GroupUtil {
             }
             listCache = array;
             String groups = array.toString();
-            newFile(QQEnvironment.getMemberDir() + CONFIG_FILE_NAME, groups);
+            newFile(QQEnvironment.getMemberDir(null) + CONFIG_FILE_NAME, groups);
         } catch (JSONException ex) {
             Logger.getLogger(GroupUtil.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -128,7 +128,7 @@ public class GroupUtil {
             }
             listCache = array;
             String groups = array.toString();
-            newFile(QQEnvironment.getMemberDir() + CONFIG_FILE_NAME, groups);
+            newFile(QQEnvironment.getMemberDir(null) + CONFIG_FILE_NAME, groups);
 
         } catch (JSONException ex) {
             Logger.getLogger(GroupUtil.class.getName()).log(Level.SEVERE, null, ex);

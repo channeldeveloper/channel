@@ -7,8 +7,10 @@ import weibo4j.http.AccessToken;
 import weibo4j.model.WeiboException;
 
 import com.original.service.channel.Account;
+import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.core.MessageManager;
+import com.original.service.channel.protocols.im.iqq.QQService;
 import com.original.service.channel.protocols.sns.weibo.WeiboService;
 import com.original.service.people.PeopleManager;
 
@@ -82,5 +84,21 @@ public class ChannelAccesser
 	
 	public static List<Account> getAccounts() {
 		return cs.getAccounts();
+	}
+	
+	public static String getAvadarPath(Account acc, ChannelMessage msg) {
+		String avadarPath = null;
+		if(acc != null && msg != null) {
+			
+			if(msg.isQQ()) {
+				avadarPath = QQService.getAvatarPath(acc);
+			}
+			else if(msg.isWeibo()) {
+				avadarPath = WeiboService.getAvadarPath(acc);
+			}
+			
+			//对于邮件，暂时不至于头像
+		}
+		return avadarPath;
 	}
 }

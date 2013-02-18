@@ -300,7 +300,7 @@ public class QQImageUtil {
             String filename = obj.getString("name");
             String url = "http://web3.qq.com/cgi-bin/get_group_pic?type=0&gid=" + gid + "&uin=" + uin + "&rip=" + ip + "&rport=" + port + "&fid=" + fid + "&pic=" + filename + "&vfwebqq=" + ai.getVfwebqq() + "&t=" + System.currentTimeMillis();
 
-            String path = QQEnvironment.getMemberDir() + "temp" + File.separator + filename;
+            String path = QQEnvironment.getMemberDir(ai.getMember().getAccount()) + "temp" + File.separator + filename;
             QQEnvironment.mkdir(path);
             try {
                 download(url, path);

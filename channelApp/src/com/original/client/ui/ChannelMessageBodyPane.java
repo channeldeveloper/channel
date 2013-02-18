@@ -715,7 +715,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			sheet.addRule("a {text-decoration: none; color: blue; }");
 			this.setFont(ChannelConstants.DEFAULT_FONT);
 			
-//			setEditable(false);//不可编辑
+			setEditable(false);//不可编辑
 			setOpaque(false);
 			setBackground(new Color(0, 0, 0, 0));//当上面透明无效时，这是唯一的办法
 			setBorder(new EmptyBorder(0, 45, 0, 10));
@@ -753,7 +753,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			
 			//如果文本的长度超出面板的宽度，则多余的部分会被截断，以“…”代替。
 			FontMetrics fm = getFontMetrics(getFont());
-			text = ChannelUtil.cutString(text, fm, SIZE.width-fm.stringWidth("…"));
+			text = ChannelUtil.cutString(text, fm, SIZE.width-fm.stringWidth("…")*2);
 			super.setText(text);
 		}
 		
@@ -776,6 +776,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		{
 			if(msg != null) {
 				setText(msg.getShortMsg());
+				setCaretPosition(0);
 			}
 		}		
 	}

@@ -122,8 +122,6 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 			SeaGlassLookAndFeel sglaf = SeaGlassLookAndFeel.getInstance();
 			SeaGlassLookAndFeel.setDefaultFont(DEFAULT_FONT);
 			sglaf.initialize();
-			JDialog.setDefaultLookAndFeelDecorated(false);
-			
 		} catch (Exception exp) {
 			exp.printStackTrace();
 		}

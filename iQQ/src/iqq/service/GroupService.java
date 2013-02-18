@@ -75,7 +75,7 @@ public class GroupService {
         if (groupList != null) {
             return groupList;
         }
-        String path = QQEnvironment.getMemberDir() + "face" + File.separator + "group" + File.separator;
+        String path = QQEnvironment.getMemberDir(ai.getMember().getAccount()) + "face" + File.separator + "group" + File.separator;
         QQEnvironment.mkdir(path);
         File file = null;
         try {

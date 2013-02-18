@@ -10,7 +10,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.AbstractButton;
+import javax.swing.JButton;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import javax.swing.text.html.HTMLEditorKit;
 
 import com.original.channel.ChannelNativeCache;
@@ -18,6 +25,7 @@ import com.original.client.EventConstants;
 import com.original.client.layout.ChannelGridBagLayoutManager;
 import com.original.client.layout.ChannelGridLayout;
 import com.original.client.ui.data.AbstractButtonItem;
+import com.original.client.ui.widget.EditorHandler;
 import com.original.client.util.ChannelConfig;
 import com.original.client.util.ChannelHyperlinkListener;
 import com.original.client.util.ChannelUtil;
@@ -106,6 +114,33 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 				title.setVisible(false);
 				
 				parseWeibo(msg);
+			}
+			
+			final StyledDocument doc = content.getStyledDocument();
+			
+			MutableAttributeSet attri = new SimpleAttributeSet();
+			final SGButton btnOK = new SGButton("OK");
+			btnOK.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					btnOK.setVisible(false);
+					btnOK.setPreferredSize(new Dimension(0, 0));
+					btnOK.setSize(0, 0);
+					btnOK.setMaximumSize(new Dimension(0, 0));
+					btnOK.setMinimumSize(new Dimension(0, 0));
+				}
+			});
+			StyleConstants.setComponent(attri, btnOK);
+			
+		
+			try {
+				doc.insertString(doc.getLength()-2, " ", attri);
+//				EditorHandler.insertHTML(content, "<div id=\"111\" style=\"display:block;\">", -1);
+//				EditorHandler.insertHTML(content, "</div>", -1);
+			} catch (BadLocationException e1) {
+				// TODO 自动生成的 catch 块
+				e1.printStackTrace();
 			}
 			
 			if (msg.hasProcessed()) {// 已经回复，不再显示回复按钮

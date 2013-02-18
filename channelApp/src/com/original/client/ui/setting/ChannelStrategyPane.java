@@ -20,7 +20,7 @@ import com.original.client.EventConstants;
 import com.original.client.layout.ChannelGridBagLayoutManager;
 import com.original.client.ui.data.AbstractButtonItem;
 import com.original.client.util.ChannelConstants;
-import com.original.client.util.Utilities;
+import com.original.client.util.ChannelUtil;
 import com.original.widget.OButton;
 import com.original.widget.OCheckBox;
 import com.original.widget.OComboBox;
@@ -46,8 +46,8 @@ new ChannelGridBagLayoutManager(this);
 			rbReceiptEnabled = new ORadioButton("启动"), //回执
 			rbReceiptDisabled = new ORadioButton("禁用");
 	
-	private OButton btnOK = Utilities.createApplicationButton(new AbstractButtonItem("确定", CONFIRM, null)),
-			btnCancel = Utilities.createApplicationButton(new AbstractButtonItem("取消", CANCEL, null));
+	private OButton btnOK = ChannelUtil.createApplicationButton(new AbstractButtonItem("确定", CONFIRM, null)),
+			btnCancel = ChannelUtil.createApplicationButton(new AbstractButtonItem("取消", CANCEL, null));
 	
 	private ChannelProfilePane profile = null; //主面板
 	
@@ -111,7 +111,8 @@ new ChannelGridBagLayoutManager(this);
 		layoutMgr.addComToModel(lbMaxVolumn,2,1,GridBagConstraints.HORIZONTAL);
 		JPanel maxVolumnPane = new JPanel(new BorderLayout(10,0));
 		maxVolumnPane.add(comMaxVolumn, BorderLayout.CENTER);
-		comMaxVolumn.setRenderer(Utilities.getAliginCellRenderer(JLabel.RIGHT));
+		comMaxVolumn.setRenderer(ChannelUtil.getAliginCellRenderer(JLabel.RIGHT));
+		comMaxVolumn.setEditable(true);
 		maxVolumnPane.add(new JLabel("MB"), BorderLayout.EAST);
 		layoutMgr.addComToModel(maxVolumnPane,2,1,GridBagConstraints.HORIZONTAL);
 		layoutMgr.newLine();
@@ -126,7 +127,8 @@ new ChannelGridBagLayoutManager(this);
 		layoutMgr.addComToModel(lbMaxAttachVolumn,2,1,GridBagConstraints.HORIZONTAL);
 		JPanel maxAttachVolumnPane = new JPanel(new BorderLayout(10,0));
 		maxAttachVolumnPane.add(comMaxAttachSize, BorderLayout.CENTER);
-		comMaxAttachSize.setRenderer(Utilities.getAliginCellRenderer(JLabel.RIGHT));
+		comMaxAttachSize.setRenderer(ChannelUtil.getAliginCellRenderer(JLabel.RIGHT));
+		comMaxAttachSize.setEditable(true);
 		maxAttachVolumnPane.add(new JLabel("MB"), BorderLayout.EAST);
 		layoutMgr.addComToModel(maxAttachVolumnPane,2,1,GridBagConstraints.HORIZONTAL);
 		layoutMgr.newLine();

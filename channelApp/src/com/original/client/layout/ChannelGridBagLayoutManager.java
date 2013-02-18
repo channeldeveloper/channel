@@ -12,7 +12,7 @@ import javax.swing.JComponent;
 import javax.swing.text.JTextComponent;
 
 import com.original.client.border.SingleLineBorder;
-import com.original.client.util.Utilities;
+import com.original.client.util.ChannelUtil;
 
 /**
  * Channel网格包布局管理器
@@ -54,7 +54,7 @@ public class ChannelGridBagLayoutManager
 	
 	public void addFillerToModel(int horizonWidth, int verticalHeight)
 	{
-		addComToModel(Utilities.createBlankFillArea(horizonWidth, verticalHeight),
+		addComToModel(ChannelUtil.createBlankFillArea(horizonWidth, verticalHeight),
 				1, 1, GridBagConstraints.NONE);
 	}
 	
@@ -65,7 +65,7 @@ public class ChannelGridBagLayoutManager
 		addHorizonLineToModel(lineThickness, lineColor, gridWidth, 0);
 	}
 	public void addHorizonLineToModel(int lineThickness, Color lineColor, int gridWidth, int nextLineGridX) {
-		Filler filler = Utilities.createBlankFillArea(1, lineThickness < 1 ? 1 : lineThickness);
+		Filler filler = ChannelUtil.createBlankFillArea(1, lineThickness < 1 ? 1 : lineThickness);
 		filler.setBorder(new SingleLineBorder(SingleLineBorder.BOTTOM, lineColor, false, lineThickness));
 		addComToModel(filler, gridWidth, 1, GridBagConstraints.HORIZONTAL);
 		newLine(nextLineGridX);

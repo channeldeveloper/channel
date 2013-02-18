@@ -22,7 +22,7 @@ import com.original.client.EventConstants;
 import com.original.client.layout.ChannelGridBagLayoutManager;
 import com.original.client.ui.data.AbstractButtonItem;
 import com.original.client.util.ChannelConstants;
-import com.original.client.util.Utilities;
+import com.original.client.util.ChannelUtil;
 import com.original.service.channel.Account;
 import com.original.widget.OButton;
 import com.original.widget.OPasswordField;
@@ -57,8 +57,8 @@ new ChannelGridBagLayoutManager(this);
 			rbImap= new ORadioButton("IMAP"),
 			rbSmtp = new ORadioButton("SMTP");
 	
-	private OButton btnOK = Utilities.createApplicationButton(new AbstractButtonItem("确定", CONFIRM, null)),
-			btnCancel = Utilities.createApplicationButton(new AbstractButtonItem("取消", CANCEL, null));
+	private OButton btnOK = ChannelUtil.createApplicationButton(new AbstractButtonItem("确定", CONFIRM, null)),
+			btnCancel = ChannelUtil.createApplicationButton(new AbstractButtonItem("取消", CANCEL, null));
 	
 	private ChannelProfilePane profile = null; //主面板
 	
@@ -91,7 +91,7 @@ new ChannelGridBagLayoutManager(this);
 		JLabel lbUserName = new JLabel("用  户  名：");
 		layoutMgr.addComToModel(lbUserName);
 		txtName.setColumns(24);
-		Utilities.addToolTip(txtName, "可输入任意的名称，不可为空！");
+		ChannelUtil.addToolTip(txtName, "可输入任意的名称，不可为空！");
 		layoutMgr.addComToModel(txtName, 4, 1, GridBagConstraints.HORIZONTAL);
 		layoutMgr.newLine();
 		
@@ -99,7 +99,7 @@ new ChannelGridBagLayoutManager(this);
 		layoutMgr.addFillerToModel(30, 0);
 		layoutMgr.addComToModel(lbLoginAccount);
 		txtAccount.setColumns(24);
-		Utilities.addToolTip(txtAccount, channel==CHANNEL.QQ ? 
+		ChannelUtil.addToolTip(txtAccount, channel==CHANNEL.QQ ? 
 				"您登录的QQ账号，注意不支持手机和邮件地址！" : 
 				"您登录时的账户，如微博账号、邮箱地址等");
 		layoutMgr.addComToModel(txtAccount, 4, 1, GridBagConstraints.HORIZONTAL);
@@ -109,7 +109,7 @@ new ChannelGridBagLayoutManager(this);
 		layoutMgr.addFillerToModel(30, 0);
 		layoutMgr.addComToModel(lbLoginPassword);
 		txtPassword.setColumns(24);
-		Utilities.addToolTip(txtPassword, "登陆账户对应的密码，输入时请注意大小写键有没有打开！");
+		ChannelUtil.addToolTip(txtPassword, "登陆账户对应的密码，输入时请注意大小写键有没有打开！");
 		layoutMgr.addComToModel(txtPassword, 4, 1, GridBagConstraints.HORIZONTAL);
 		
 		//下面是服务器信息，只对邮件有效：
@@ -137,7 +137,7 @@ new ChannelGridBagLayoutManager(this);
 			layoutMgr.addComToModel(new JLabel("端口："));
 			layoutMgr.addComToModel(txtRecvPort, 1, 1, GridBagConstraints.HORIZONTAL);
 			txtRecvPort.setInputVerifier(new IntegerVerifier());
-			Utilities.addToolTip(txtRecvPort, "邮件接受服务器的端口号，整数值！");
+			ChannelUtil.addToolTip(txtRecvPort, "邮件接受服务器的端口号，整数值！");
 			layoutMgr.newLine();
 
 			layoutMgr.addFillerToModel(30, 0);
@@ -148,7 +148,7 @@ new ChannelGridBagLayoutManager(this);
 			layoutMgr.addComToModel(new JLabel("端口："));
 			layoutMgr.addComToModel(txtSendPort, 1, 1, GridBagConstraints.HORIZONTAL);
 			txtSendPort.setInputVerifier(new IntegerVerifier());
-			Utilities.addToolTip(txtSendPort, "邮件发送服务器的端口号，整数值！");
+			ChannelUtil.addToolTip(txtSendPort, "邮件发送服务器的端口号，整数值！");
 			layoutMgr.newLine(4);
 		} else {
 			layoutMgr.newLine(2);
@@ -261,7 +261,7 @@ new ChannelGridBagLayoutManager(this);
 			boolean isValid = verify(input);
 			if(!isValid) { //下面注意顺序：
 				input.requestFocus();
-				Utilities.showToolTip(input, null, Color.red);
+				ChannelUtil.showToolTip(input, null, Color.red);
 			}
 			return isValid;
 		}

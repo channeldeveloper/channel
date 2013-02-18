@@ -281,7 +281,6 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 		Account ac = new Account();
 		ac.setUser(m.getUin()+"");				
 		ac.setName(m.getNickname());		
-		saveAvadar(m, ac); 		
 		ac.setStatus(m.getStatus());		
 		ac.setChannelName(ca.getChannel().getName());
 
@@ -290,13 +289,16 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 		ac.setGender(m.getGender());
 		ac.setUserId(m.getAccount());	
 		ac.setDescription(m.getMarkname());
+		saveAvadar(m, ac); 
 		return ac;
 	}
 
 	private void saveAvadar(Member m, Account ac) {
 		ImageIcon avadar = m.getFace();		
-        String path = QQEnvironment.getMemberDir()  + m.getUin()  + "face.jpg";
+        String path = QQEnvironment.getMemberDir(m.getAccount())  + ac.getUserId()  + "_face.jpg";
         File faceFile = new File(path);
+        if(faceFile.exists()) 	return;
+        
 		try {
 			ImageIO.write(toBufferedImage(avadar.getImage()), "jpg", faceFile);
 			ac.setAvatar((ObjectId)GridFSUtil.getGridFSUtil().saveFile(faceFile));
@@ -307,6 +309,14 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public static String getAvatarPath(Account ac) {
+		if(ac != null && ac.getUserId() != null) {
+			String account = ac.getUserId() + "@qq.com";
+			return QQEnvironment.getMemberDir(account)  + ac.getUserId()  + "_face.jpg";
+		}
+		return null;
 	}
 
 	 private static BufferedImage toBufferedImage(Image img){  

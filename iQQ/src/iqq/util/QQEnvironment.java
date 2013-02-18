@@ -44,16 +44,6 @@ public class QQEnvironment {
         return configPath;
     }
 
-    public static String getMemberDir() {
-    	AuthInfo loginAI = Auth.getSingleAccountInfo();
-        String dir = getConfigPath() + loginAI.getMember().getAccount() + File.separator;
-        File f = new File(dir);
-        if (!f.exists()) {
-            f.mkdir();
-        }
-        return dir;
-    }
-
     public static String getConfigTempDir() {
 //        String dir = getConfigPath() + File.separator + "temp" + File.separator;
     	String dir = System.getProperty("user.dir") + File.separator + "temp" + File.separator;
@@ -65,6 +55,8 @@ public class QQEnvironment {
     }
 
     public static String getMemberDir(String account) {
+    	if(account != null && !account.contains("@qq.com"))
+    		account += "@qq.com";
         String dir = getConfigPath() + account + File.separator;
         File f = new File(dir);
         if (!f.exists()) {

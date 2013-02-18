@@ -1,7 +1,5 @@
 ﻿package com.original.client.ui;
 
-import iqq.util.QQEnvironment;
-
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -206,6 +204,8 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 			
 			body.initMessage(msg);
 		} else if (uid.equals(uName)) {
+			refreshUid();
+			
 			body.initMessage(msg);
 		}
 	}
@@ -226,6 +226,8 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 			body.addMessage(msg, toFirst);
 			isAdd = true;
 		} else if (uid.equals(uName)) {
+			refreshUid();
+			
 			body.addMessage(msg, toFirst);
 			if(showDirection) {
 				changeMsgLayoutIfNeed(msg); // 检查是否要改变消息布局方向
@@ -283,6 +285,9 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 			header.setContactName(uid); // 目前设置联系人用户名即为Uid
 			header.setHeadImageIcon(msg); //设置联系人头像
 		}
+	}
+	public void refreshUid() {
+		header.repaint();
 	}
 
 	/**
@@ -567,19 +572,17 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 						{		
 							String chn = msg.getChannelAccount().getChannel().getName();
 							Account acc = pm.getAccountMap().get(chn);
-							if (chn != null && acc.getAvatar() != null)
+							if ( chn != null )
 							{
 								try {
 									ObjectId avatar = acc.getAvatar();
 									String avatarPath = null;
-									if(avatar != null) {
-										File file = new File( QQEnvironment.getConfigTempDir() , avatar.toString());
-										if (file.exists()) { // 查找有文件缓存记录
-											avatarPath = file.getPath();
-										} else {
+									if((avatarPath = ChannelAccesser.getAvadarPath(acc, msg)) != null) {
+										File file = new File( avatarPath );
+										if (! file.exists()) { 
 											// 如果没有缓存记录，则查找数据库
 											GridFSDBFile dbfile = null;
-											if ((dbfile = GridFSUtil.getGridFSUtil().getFile(avatar)) != null) { // 有记录！
+											if (avatar != null && (dbfile = GridFSUtil.getGridFSUtil().getFile(avatar)) != null) { // 有记录！
 												dbfile.writeTo(file);
 												avatarPath = file.getPath();
 											}

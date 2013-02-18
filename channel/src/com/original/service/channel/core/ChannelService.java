@@ -13,12 +13,15 @@ import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -89,6 +92,8 @@ public final class ChannelService extends AbstractService {
 	
 	private static ChannelService singleton;
 //	private static ThreadManager threadPool;
+	
+	private static Lock serviceLock = new ReentrantLock();//synchronized HashMap, for map is not thread safe!!
 	
 	/**
 	 * 
@@ -339,21 +344,28 @@ public final class ChannelService extends AbstractService {
 				}
 				
 				HashMap<String, ChannelAccount> cas = channelServer.getChannelAccounts();
-				for (String key : cas.keySet()) {
-					ChannelAccount ca = cas.get(key);
-					if (serviceMap.containsKey(ca))
-						continue; 
+				try {
+					serviceLock.lock(); //放于for循环外面！
 
-					try {
-						Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
-						if (sc != null) {
-							serviceMap.put(ca, sc);
-							sc.addMessageListener(new ChannelServiceListener());
+					for (String key : cas.keySet()) {
+						ChannelAccount ca = cas.get(key);
+						if (serviceMap.containsKey(ca))
+							continue; 
+
+						try {
+							Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
+							if (sc != null) {
+								serviceMap.put(ca, sc);
+								sc.addMessageListener(new ChannelServiceListener());
+							}
+						}
+						catch(Exception ex) {
+							failedServiceAccounts.add(ca);
 						}
 					}
-					catch(Exception ex) {
-						failedServiceAccounts.add(ca);
-					}
+				}
+				finally {
+					serviceLock.unlock();
 				}
 				
 				//立即启动，不能外部调用，否则起不来！
@@ -384,7 +396,7 @@ public final class ChannelService extends AbstractService {
 	 * @param ca
 	 * @return
 	 */
-	public synchronized static Service createService(ChannelAccount ca)
+	public static Service createService(ChannelAccount ca)
 			throws Exception {
 		if (ca.getChannel().getName().startsWith("email_")) {
 			return new EmailService("Cydow", ca);
@@ -402,18 +414,24 @@ public final class ChannelService extends AbstractService {
 	 * 对于未启动成功的服务可以再次重启
 	 * @throws Exception
 	 */
-	public synchronized void restartService() throws Exception {
+	public void restartService() throws Exception {
 		if(!failedServiceAccounts.isEmpty()) {
 			ChannelAccount ca = failedServiceAccounts.firstElement();
 			restartService(ca);
 		}
 	}
-	public synchronized void restartService(ChannelAccount ca) throws Exception {
-		Service sc = createService(ca);
-		if (sc != null) {
-			serviceMap.put(ca, sc);
-			failedServiceAccounts.remove(ca);
-			sc.addMessageListener(new ChannelServiceListener());
+	public void restartService(ChannelAccount ca) throws Exception {
+		try {
+			serviceLock.lock();
+			Service sc = createService(ca);
+			if (sc != null) {
+				serviceMap.put(ca, sc);
+				failedServiceAccounts.remove(ca);
+				sc.addMessageListener(new ChannelServiceListener());
+			}
+		}
+		finally {
+			serviceLock.unlock();
 		}
 	}
 	
@@ -648,11 +666,13 @@ isStart = true;
 			}
 			
 			if (cha != null) {
-				Service sc = serviceMap.get(cha);
-				//预处理消息的发送id，防止出现id一致，无法保存的情况。(消息id是唯一索引！)
-				preSendProcess(action, msg);
-				
 				try {
+					serviceLock.lock();
+					
+					Service sc = serviceMap.get(cha);
+					//预处理消息的发送id，防止出现id一致，无法保存的情况。(消息id是唯一索引！)
+					preSendProcess(action, msg);
+					
 					if (msg.getFromAddr() == null) {
 						msg.setFromAddr(cha.getAccount().getUser());
 					}
@@ -688,6 +708,9 @@ isStart = true;
 				catch(Exception ex) {
 					ex.printStackTrace();
 				}
+				finally {
+					serviceLock.unlock();
+				}
 			}
 		}
 	}
@@ -696,15 +719,20 @@ isStart = true;
 	public void post(String action, ChannelMessage msg) {
 		if (msg != null) {
 			
-			preSendProcess(action, msg);
-			
-			ChannelAccount cha = msg.getChannelAccount();
-			if (cha != null) {
-				Service sc = serviceMap.get(cha);
-				sc.post(action, msg);
+			try {
+				serviceLock.lock();
+				
+				preSendProcess(action, msg);
+				ChannelAccount cha = msg.getChannelAccount();
+				if (cha != null) {
+					Service sc = serviceMap.get(cha);
+					sc.post(action, msg);
+				}
+			}
+			finally {
+				serviceLock.unlock();
 			}
 		}
-
 	}
 
 	/**
@@ -1141,15 +1169,16 @@ isStart = true;
 	@Override
 	public  List<Account> getContacts() {
 		// TODO Auto-generated method stub
-		synchronized (serviceMap) {
-			ArrayList<Account> all = new ArrayList<Account>();
-			Collection<Service> scm = serviceMap.values();		
-			for (Service sc : scm)
+		ArrayList<Account> all = new ArrayList<Account>();
+		try {
+			serviceLock.lock();
+			for (Map.Entry<ChannelAccount, Service> entry : serviceMap.entrySet())
 			{			
 				try
 				{
+					Service sc = entry.getValue();
 					if (sc != null && sc.getContacts() != null ){
-					all.addAll(sc.getContacts());
+						all.addAll(sc.getContacts());
 					}
 				}
 				catch(Exception exp)
@@ -1157,8 +1186,11 @@ isStart = true;
 					exp.printStackTrace();
 				}			
 			}
-			return all;
 		}
+		finally {
+			serviceLock.unlock();
+		}
+		return all;
 	}
 	
 	/**

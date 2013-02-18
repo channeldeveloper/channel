@@ -28,7 +28,7 @@ import com.original.client.ui.data.AbstractButtonItem;
 import com.original.client.util.ChannelConstants;
 import com.original.client.util.IconFactory;
 import com.original.client.util.LocationIcon;
-import com.original.client.util.Utilities;
+import com.original.client.util.ChannelUtil;
 import com.original.service.channel.Account;
 import com.original.widget.OCheckBox;
 import com.original.widget.OTabbedPane;
@@ -134,7 +134,7 @@ public class ChannelProfilePane extends JPanel implements ChannelConstants, Even
 				if (csp != null)
 					csp.addProfileAccount(acc);
 			} catch (Exception ex) {
-				Utilities.showMessageDialog(this, "错误", ex.getMessage());
+				ChannelUtil.showMessageDialog(this, "错误", ex.getMessage());
 				return false;
 			}
 			
@@ -193,7 +193,7 @@ if(body != null && body.account != null) {
 				if (csp != null)
 					csp.removeProfileAccount(body.account);
 			} catch (Exception ex) {
-				Utilities.showMessageDialog(this, "错误", ex.getMessage());
+				ChannelUtil.showMessageDialog(this, "错误", ex.getMessage());
 				return false;
 			}
 			
@@ -222,7 +222,7 @@ if(body != null && body.account != null) {
 				profAccount = new JLabel();
 		
 		private ImageIcon delIcon = IconFactory.loadIconByConfig("fileDelIcon");
-		private JButton profDelButton = Utilities.createAbstractButton(
+		private JButton profDelButton = ChannelUtil.createAbstractButton(
 				new AbstractButtonItem(null, DEL_PROFILE, delIcon));
 		
 		Account account = null; //当前账户
@@ -274,7 +274,7 @@ if(body != null && body.account != null) {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(e.getSource() == profDelButton)			 {
-				if(Utilities.confirm(null, "确认删除", "是否删除此账户？")) {
+				if(ChannelUtil.confirm(null, "确认删除", "是否删除此账户？")) {
 				removeProfileBody(this);
 				}
 			}

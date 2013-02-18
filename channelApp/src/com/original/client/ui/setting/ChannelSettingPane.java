@@ -7,6 +7,9 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -15,19 +18,23 @@ import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 
 import com.original.channel.ChannelAccesser;
+import com.original.channel.ChannelNativeCache;
 import com.original.client.EventConstants;
 import com.original.client.border.TitleLineBorder;
 import com.original.client.layout.VerticalGridLayout;
+import com.original.client.ui.ChannelDesktopPane;
 import com.original.client.util.ChannelConstants;
 import com.original.client.util.GraphicsHandler;
-import com.original.client.util.Utilities;
+import com.original.client.util.IconFactory;
+import com.original.client.util.LocationIcon;
+import com.original.client.util.ChannelUtil;
 import com.original.service.channel.Account;
 import com.original.service.channel.core.ChannelService;
 
 public class ChannelSettingPane extends JPanel implements ChannelConstants, EventConstants
 {
 	//测试用关闭按钮：
-//	private LocationIcon closeIcon = new LocationIcon(IconFactory.loadIconByConfig("closeIcon"));
+	private LocationIcon closeIcon = new LocationIcon(IconFactory.loadIconByConfig("closeIcon"));
 	
 	private ChannelProfilePane mailProfile = new ChannelProfilePane(CHANNEL.MAIL),
 			qqProfile = new ChannelProfilePane(CHANNEL.QQ),
@@ -41,30 +48,31 @@ public class ChannelSettingPane extends JPanel implements ChannelConstants, Even
 		setLayout(cardLayMgr);
 		setFont(DEFAULT_FONT);
 		setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(20, 40, 20, 40), 
-				new TitleLineBorder("渠道设置", null, null, LIGHT_TEXT_COLOR, Color.BLACK, TitleLineBorder.TOP, 2)));
+				new TitleLineBorder("渠道设置", null, closeIcon, LIGHT_TEXT_COLOR, Color.BLACK, TitleLineBorder.TOP, 2)));
 		
 		this.installMouseListeners();//添加鼠标监听事件
 		this.installComponents();//添加初始控件
 	}
 	
 	private void installMouseListeners() {
-//		this.addMouseListener(new MouseAdapter() {
-//			public void mouseClicked(MouseEvent e) {
-//				if(closeIcon.contains(e.getPoint())) {
-//					
-//				}
-//			}
-//		});
-//		
-//		this.addMouseMotionListener(new MouseMotionAdapter() {
-//			public void mouseMoved(MouseEvent e) {
-//				if (closeIcon.contains(e.getPoint())) {
-//					setCursor(HAND_CURSOR);
-//				} else {
-//					setCursor(DEFAULT_CURSOR);
-//				}
-//			}
-//		});
+		this.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if(closeIcon.contains(e.getPoint())) { //回退
+					ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
+					desktop.removeShowComp(PREFIX_SETTING);
+				}
+			}
+		});
+		
+		this.addMouseMotionListener(new MouseMotionAdapter() {
+			public void mouseMoved(MouseEvent e) {
+				if (closeIcon.contains(e.getPoint())) {
+					setCursor(HAND_CURSOR);
+				} else {
+					setCursor(DEFAULT_CURSOR);
+				}
+			}
+		});
 	}
 	
 	private void installComponents() {
@@ -81,7 +89,7 @@ public class ChannelSettingPane extends JPanel implements ChannelConstants, Even
 		qqProfile.setSettingPane(this);
 		weiboProfile.setSettingPane(this);
 		
-		JScrollPane jsp  = Utilities.createScrollPane(mainPane, Color.gray);
+		JScrollPane jsp  = ChannelUtil.createScrollPane(mainPane, Color.gray);
 		jsp.setPreferredSize(new Dimension(SETTINGPANEWIDTH, DESKTOPHEIGHT-60));
 		jsp.setName("DEFAULT");
 		add("DEFAULT", jsp);
@@ -97,7 +105,7 @@ public class ChannelSettingPane extends JPanel implements ChannelConstants, Even
 		otherPane.setOpaque(false);
 		otherPane.add(c);
 		
-		JScrollPane jsp  = Utilities.createScrollPane(otherPane, Color.gray);
+		JScrollPane jsp  = ChannelUtil.createScrollPane(otherPane, Color.gray);
 		jsp.setPreferredSize(new Dimension(SETTINGPANEWIDTH, DESKTOPHEIGHT-60));
 		jsp.setName(name);
 		add(name, jsp);
@@ -175,13 +183,13 @@ public class ChannelSettingPane extends JPanel implements ChannelConstants, Even
 	}
 	
 	public boolean checkProfileAccount(Account acc) throws Exception {
-		if (acc == null || Utilities.isEmpty(acc.getName(), true))
+		if (acc == null || ChannelUtil.isEmpty(acc.getName(), true))
 			throw new IllegalArgumentException("用户名不能为空，请检查！");
 
-		if (Utilities.isEmpty(acc.getUser(), true))
+		if (ChannelUtil.isEmpty(acc.getUser(), true))
 			throw new IllegalArgumentException("登录账户不能为空！");
 
-		if (Utilities.isEmpty(acc.getChannelName()))
+		if (ChannelUtil.isEmpty(acc.getChannelName()))
 			throw new IllegalArgumentException("未知账户类型~");
 
 		CHANNEL channel = analyzeAccountChannel(acc);
@@ -199,14 +207,14 @@ public class ChannelSettingPane extends JPanel implements ChannelConstants, Even
 				acc.setChannelName("email_" + vendor);
 			}
 			
-			if (Utilities.isEmpty(acc.getRecvServer()))
+			if (ChannelUtil.isEmpty(acc.getRecvServer()))
 				throw new IllegalArgumentException("未设置邮件接受服务器(POP3\\IMAP)地址~");
-			if (Utilities.isEmpty(acc.getRecvPort()))
+			if (ChannelUtil.isEmpty(acc.getRecvPort()))
 				throw new IllegalArgumentException("未设置邮件接受服务器(POP3\\IMAP)端口号~");
 
-			if (Utilities.isEmpty(acc.getSendServer()))
+			if (ChannelUtil.isEmpty(acc.getSendServer()))
 				throw new IllegalArgumentException("未设置邮件发送服务器(SMTP)地址~");
-			if (Utilities.isEmpty(acc.getSendPort()))
+			if (ChannelUtil.isEmpty(acc.getSendPort()))
 				throw new IllegalArgumentException("未设置邮件发送服务器(SMTP)端口号~");
 		}
 		

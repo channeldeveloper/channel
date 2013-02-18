@@ -287,4 +287,49 @@ public class EditorHandler {
         }
         return text;
 	}
+	
+	public static void insertHTML(JEditorPane editor, String text, int pos)
+	{
+		EditorKit kit = editor.getEditorKit();
+		if(!(kit instanceof HTMLEditorKit))
+		{
+			kit = new HTMLEditorKit();
+			editor.setEditorKit(kit);
+		}
+		
+		HTMLEditorKit htmlKit = (HTMLEditorKit)kit;
+		HTMLDocument htmlDoc = (HTMLDocument)editor.getDocument();
+		
+		if(pos < 0)
+			pos = htmlDoc.getLength();
+		
+		StringReader reader = new StringReader(text);
+		try {
+			htmlKit.read(reader, htmlDoc, pos);
+		}
+		catch (Exception ex) {
+			// TODO: handle exception
+		}
+	}
+	
+	public static void updateHTML(JEditorPane editor, String text, int pos)
+	{
+		EditorKit kit = editor.getEditorKit();
+		if(!(kit instanceof HTMLEditorKit))
+		{
+			kit = new HTMLEditorKit();
+			editor.setEditorKit(kit);
+		}
+		
+		HTMLEditorKit htmlKit = (HTMLEditorKit)kit;
+		HTMLDocument htmlDoc = (HTMLDocument)editor.getDocument();
+		
+		try {
+//			htmlDoc.replace(pos, text.length(), text, htmlKit.getInputAttributes());
+			htmlDoc.remove(pos, text.length());
+			htmlKit.read(new StringReader(text), htmlDoc, pos);
+		} catch (Exception ex) {
+			// TODO 自动生成的 catch 块
+		}
+	}
 }
