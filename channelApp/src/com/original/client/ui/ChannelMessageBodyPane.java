@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
+import java.awt.Font;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,8 +17,6 @@ import java.util.Date;
 import java.util.Vector;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -32,6 +30,7 @@ import javax.swing.text.html.StyleSheet;
 
 import com.original.channel.ChannelAccesser;
 import com.original.channel.ChannelNativeCache;
+import com.original.client.ChannelEvent;
 import com.original.client.EventConstants;
 import com.original.client.border.DottedLineBorder;
 import com.original.client.border.SingleLineBorder;
@@ -60,7 +59,7 @@ import com.seaglasslookandfeel.widget.SGTextPane;
  */
 public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 {
-	private Vector<ChannelMessage> messageBodyList = new Vector<ChannelMessage>();
+	protected Vector<ChannelMessage> messageBodyList = new Vector<ChannelMessage>();
 	
 	private MessageContainer container = null; //当前面板的载体，即父面板
 	private PropertyChangeSupport changeSupport =
@@ -359,7 +358,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	}
 	
 	//主体部分，即下面3个部分的整合。
-	public class Body extends SGPanel implements EventConstants
+	public class Body extends SGPanel implements ChannelEvent, EventConstants
 	{
 		//上中下3个子控件(面板)
 		Top top = new Top();
@@ -432,7 +431,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		 * 打开或关闭快速回复功能
 		 * @param isOn 若为true，则是打开；否则为关闭
 		 */
-		public void doQuickReply(boolean isOn) {
+		public void doQuickReply(ActionEvent ae, boolean isOn) {
 			if(isOn) {
 				top.setVisible(QUICK_REPLY, false);
 				top.setVisible(SHOW_COMPLETE, true);
@@ -452,8 +451,13 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			}
 		}
 		
+		public ChannelMessage getBodyMessage() {
+			// TODO 自动生成的方法存根
+			return iMsg;
+		}
+		
 		//编辑
-		public void doEdit() {
+		public void doEdit(ActionEvent ae) {
 			ChannelMessage msg = iMsg.clone();
 			
 			ChannelMessagePane cmp = null;
@@ -471,12 +475,12 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		}
 		
 		//保存
-		public void doSave() {
+		public void doSave(ActionEvent ae) {
 			
 		}
 		
 		//删除
-		public void doDelete() {
+		public void doDelete(ActionEvent ae) {
 			if (ChannelUtil.confirm(null, "确认删除", "是否删除该消息？")) {
 				try {
 					channelService.trashMessage(iMsg); //先从数据库里面删除
@@ -490,7 +494,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		}
 		
 		//完整信息
-		public void doShowComplete() {
+		public void doShowComplete(ActionEvent ae) {
 			ChannelMessage newMsg = iMsg.clone();
 			ChannelMessagePane nw =  new ChannelMessagePane(new ShowMessageTopBar(newMsg));
 			nw.showMessage(newMsg);
@@ -517,6 +521,10 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 				btnShowAll = createCtrlButton("完整信息", SHOW_COMPLETE);
 		
 		public Top() { setOpaque(false); }
+		
+		public ChannelEvent getChannelEvent() {
+			return (Body)this.getParent();
+		}
 		
 		/**
 		 * 设置消息头部内容，同时显示在标签中
@@ -680,22 +688,19 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 
 		@Override
 		public void actionPerformed(ActionEvent e)
-		{
-			Body body = (Body)this.getParent();
-			if(QUICK_REPLY == e.getActionCommand()) { //快速回复
-				body.doQuickReply(true);
-			}
-			else if(SAVE == e.getActionCommand())  { //保存
-				body.doSave();
-			}
-			else if(EDIT == e.getActionCommand()) { //编辑
-				body.doEdit();
-			}
-			else if(DELETE == e.getActionCommand()) { //删除
-				body.doDelete();
-			}
-			else if(SHOW_COMPLETE == e.getActionCommand()) { //完整显示
-				body.doShowComplete();
+		{			
+			ChannelEvent ce = this.getChannelEvent();
+			
+			if (QUICK_REPLY == e.getActionCommand()) { // 快速回复
+				ce.doQuickReply(e, true);
+			} else if (SAVE == e.getActionCommand()) { // 保存
+				ce.doSave(e);
+			} else if (EDIT == e.getActionCommand()) { // 编辑
+				ce.doEdit(e);
+			} else if (DELETE == e.getActionCommand()) { // 删除
+				ce.doDelete(e);
+			} else if (SHOW_COMPLETE == e.getActionCommand()) { // 完整显示
+				ce.doShowComplete(e);
 			}
 		}
 	}
@@ -743,26 +748,20 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		 */
 		public void setText(String text)
 		{
-			text = cutText(getFontMetrics(getFont()), text);
+			text = cutText(getFont(), text);
 			super.setText(text);
 		}
 		
-		@Deprecated //效率太慢
-		public static String cutText(FontMetrics fm, String text) 
+		public static String cutText(Font font, String text) 
 		{
 			if(text == null || text.isEmpty()) return text;
 			//清除换行符：\r \n <BR>等
-			text = text.replaceAll("\r|\n|\\<BR\\>|\\<br\\>|<p>|</p>", "").trim();
-			
-			Matcher matcher = Pattern.compile("<img.*?>").matcher(text);
-			while(matcher.find()) {
-				text = text.replace(matcher.group(), "[图片]");//不要使用replaceAll
-			}
+			text = text.replaceAll("\r|\n|\\<BR\\>|\\<br\\>|<p>|</p>", "");
+			text = text.replaceAll("<img.*?>", "[图片]");
 			
 			//如果文本的长度超出面板的宽度，则多余的部分会被截断，以“…”代替。
-//			text = ChannelUtil.cutString(text, fm, SIZE.width-fm.stringWidth("…")*2);
 			//假设全部是中文，每个中文字14px，面板宽度≈700px，所以最多只显示50个中文字。
-			text = text.length() <= 50 ? text : text.substring(0, 50-1)+"…";
+			text = text.length() <= 50 ? text : ChannelUtil.cutString(text, font, SIZE.width-14*2);
 			return text;
 		}
 		
@@ -798,9 +797,10 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		private SGButton btnReply = new SGButton("发送"), btnCancel = new SGButton("取消");
 		private OTextField replyTextField = new OTextField();
 		
-		public Bottom() 
-		{
-			setVisible(false);//默认不可见
+		public Bottom()  {setVisible(false);}//默认不可见
+		
+		public ChannelEvent getChannelEvent() {
+			return (Body)this.getParent();
 		}
 		
 		public void showMessageReplyArea()
@@ -839,33 +839,36 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		//回复和取消事件
 		public void actionPerformed(ActionEvent e)
 		{
-			Body body = (Body)this.getParent();
+			ChannelEvent ce = this.getChannelEvent();
+			
 			if(e.getSource() == btnCancel) { //取消
-				body.doQuickReply(false);
+				ce.doQuickReply(e, false);
 			}
 			else if(e.getSource() == btnReply) {//回复
 				String replyContent = getReplyContent().trim();
 				if(!ChannelUtil.isEmpty(replyContent, true)) //检查回复内容是否为空
 				{
 					//首先开闭回复
-					body.doQuickReply(false);
+					ce.doQuickReply(e, false);
 					
 					//再新建消息
-					ChannelMessage newMsg = body.iMsg.clone();
+					ChannelMessage oldMsg = ce.getBodyMessage();
+					ChannelMessage newMsg = oldMsg.clone();
+					
 					newMsg.setId(null); //注意，这里是关键
 					newMsg.setType(ChannelMessage.TYPE_SEND);
 					newMsg.setSentDate(new Date());
 					newMsg.setReceivedDate(newMsg.getSentDate());//设置和发送时间一样
 					newMsg.setBody(replyContent);
-					newMsg.setToAddr(body.iMsg.getFromAddr()); //交换一下发送和接受人的顺序
-					newMsg.setFromAddr(body.iMsg.getToAddr());
+					newMsg.setToAddr(oldMsg.getFromAddr()); //交换一下发送和接受人的顺序
+					newMsg.setFromAddr(oldMsg.getToAddr());
 					newMsg.setProcessed(true);//设置已处理状态
 					
 					//邮件单独处理：
 					if(newMsg.isMail()) {
-						newMsg.setSubject("Re：" + body.iMsg.getSubject());
+						newMsg.setSubject("Re：" + oldMsg.getSubject());
 						newMsg.setBody(replyContent + Utilies.getSeparatorFlags()
-								+ Utilies.parseMail(body.iMsg, false));
+								+ Utilies.parseMail(oldMsg, false));
 					}
 					
 					try {

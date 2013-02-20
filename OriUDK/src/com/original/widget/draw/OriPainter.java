@@ -58,6 +58,8 @@ public class OriPainter  {
                 RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setPaint(clr);
         g2d.fill(area);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_OFF);
     }
 
     /**

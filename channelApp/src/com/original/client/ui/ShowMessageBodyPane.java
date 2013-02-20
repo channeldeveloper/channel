@@ -188,7 +188,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 		ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
 		if (DELETE == e.getActionCommand()) {// 删除
 			if (origin != null) {
-				origin.doDelete();
+				origin.doDelete(e);
 			}
 			desktop.removeShowComp(PREFIX_SHOW + newMsg.getContactAddr());
 		} else if (REPLY == e.getActionCommand()) {// 回复

@@ -12,12 +12,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box.Filler;
 import javax.swing.ImageIcon;
 import javax.swing.JEditorPane;
-import javax.swing.Box.Filler;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.AbstractDocument;
-import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.EditorKit;
@@ -26,17 +25,15 @@ import javax.swing.text.ElementIterator;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledEditorKit;
 import javax.swing.text.html.HTML;
 import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
-import javax.swing.text.html.StyleSheet;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.jsoup.Jsoup;
+import org.jsoup.select.Elements;
 
 import com.original.client.border.DottedLineBorder;
-import com.original.client.border.SingleLineBorder;
-import com.original.client.util.ChannelConstants;
 import com.original.client.util.ChannelUtil;
 
 /**
@@ -44,7 +41,7 @@ import com.original.client.util.ChannelUtil;
  * @author WMS
  *
  */
-public class EditorHandler implements ChannelConstants{
+public class EditorHandler {
 	
 	public static final String IMAGE_PATTERN = 
 			"<img src=\"%s\" width=\"%d\" height=\"%d\" border=\"0\">",
@@ -54,6 +51,10 @@ public class EditorHandler implements ChannelConstants{
 	
 	private JEditorPane editor = null;
 	private boolean supportMultiImages = true; //是否支持多张图片
+	
+	private static final Dimension MIN_DIMENSION = new Dimension();
+	
+	
 	
 	public EditorHandler(JEditorPane editor)
 	{
@@ -110,14 +111,9 @@ public class EditorHandler implements ChannelConstants{
 	{
 		if (iconURL == null || width < 0 || height < 0)
 			return;
-
-		Document doc = editor.getDocument();
-		EditorKit kit = editor.getEditorKit();
-		if(!(kit instanceof HTMLEditorKit)) //注意这里强制HTMLEditorKit
-		{
-			kit = new HTMLEditorKit();
-			editor.setEditorKit(kit);
-		}
+		
+		HTMLDocument doc = ensureHTMLDocument();
+		HTMLEditorKit kit = ensureHTMLEditorKit();
 
 		if (pos < 0)
 			pos = 0;
@@ -160,62 +156,65 @@ public class EditorHandler implements ChannelConstants{
 		}
 	}
 	
-	public void insertText(String text) {
-		Document doc = editor.getDocument();
-		EditorKit kit = editor.getEditorKit();
-		if(!(kit instanceof HTMLEditorKit)) //注意这里强制HTMLEditorKit
-		{
-			kit = new HTMLEditorKit();
-			editor.setEditorKit(kit);
-		}
-		
-		String style = String.format("style=\"font-family:%s;font-size:%s;margin-left:%s;\"",
-				DEFAULT_FONT_FAMILY, "11px", "35px");
-		
-		StringBuffer sb = new StringBuffer("<div ").append(style).append(">");
-		sb.append(text).append("</div>");
-		
+	/**
+	 * 插入文本，支持css样式
+	 * @param text 文本内容
+	 * @param styleCss 文本样式
+	 */
+	public void insertText(int paragraphIndex, String text, String styleCss) {
+insertText(-1, paragraphIndex, text, styleCss);
+	}
+	public void insertText(int offset, int paragraphIndex, String text, String styleCss) {
+		HTMLDocument doc = ensureHTMLDocument();
+		HTMLEditorKit kit = ensureHTMLEditorKit();
+
+		StringBuffer sb = new StringBuffer("<div><div id=\"text_" + paragraphIndex + "\" style=\"").append(styleCss)
+				.append("\">");
+		sb.append(text).append("</div></div>");
+
+		StringReader sr = new StringReader(sb.toString());
 		try {
-//			doc.insertString(doc.getLength(), sb.toString(), null);
-			kit.read(new StringReader(sb.toString()), doc, doc.getLength());
-		}
-		 catch (BadLocationException ex) {
-				ex.printStackTrace();
-			}
-		catch(IOException ex) {
+			kit.read(sr, doc, offset == -1 ? doc.getLength() : offset);
+		} catch (BadLocationException ex) {
 			ex.printStackTrace();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			sr.close();//关闭是一种好习惯
 		}
 	}
 	
-	public static void main(String[] args) {
-		String style = String.format("style=\"font-family:%s;font-size:%s;margin-left:%s;\"",
-				DEFAULT_FONT_FAMILY, "11px", "35px");
-		System.out.println(style);
+	public void updateText(int paragraphIndex, String text, String styleCss) {
+        
+        String id = "text_" + paragraphIndex;
+        int find = clearParagraph(id);
+        
+        if(find != -1) {
+        	
+insertText(find, paragraphIndex, text, styleCss);
+
+        }
+		
+		
 	}
 	
 	/**
 	 * 插入swing控件至文本面板中，该控件占一个段的位置。
 	 * @param comp
 	 */
-	public void insertCompParagraph(int paragraphIndex, Component comp) 
+	public void insertCompParagraph(int offset, int paragraphIndex, Component comp) 
 	{
-		Document doc = editor.getDocument();
-		EditorKit kit = editor.getEditorKit();
-		if(!(kit instanceof HTMLEditorKit)) //注意这里强制HTMLEditorKit
-		{
-			kit = new HTMLEditorKit();
-			editor.setEditorKit(kit);
-		}
+		HTMLDocument doc = ensureHTMLDocument();
+		HTMLEditorKit kit = ensureHTMLEditorKit();
 		
-		StringReader sr = new StringReader("<div id=\"1\"></div>");
+		StringReader sr = new StringReader("<div id=\"" + comp.getName() + "_" + paragraphIndex + "\" ></div>");
 		try {
-			int offset = doc.getLength();
+			if(offset == -1) offset = doc.getLength();
 			kit.read(sr, doc, offset);
 
-			int length = doc.getLength();
 			MutableAttributeSet attribute = new SimpleAttributeSet();
 			StyleConstants.setComponent(attribute, comp);
-			doc.insertString(offset == 0 ? length : length - 1, " ", attribute);
+			doc.insertString(offset == 0 ? 1 : offset, " ", attribute);
 		} catch (BadLocationException ex) {
 			ex.printStackTrace();
 		} catch (IOException ex) {
@@ -236,15 +235,81 @@ public class EditorHandler implements ChannelConstants{
 		filler.setBorder(BorderFactory.createCompoundBorder(
 				new EmptyBorder(0, 10, 0, 20), 
 				new DottedLineBorder(DottedLineBorder.BOTTOM, new Color(213, 213, 213), new float[]{3f,4f})));
-		insertCompParagraph(-1, filler);
+		insertCompParagraph(-1, -1, filler);
+	}
+	
+	/**
+	 * 删除文本中的某一段，同时返回该段的起始offset
+	 * @param paragraphId
+	 */
+	public int clearParagraph(String paragraphId)
+	{
+		HTMLDocument doc = ensureHTMLDocument();
+		HTMLEditorKit kit = ensureHTMLEditorKit();
+		
+		ElementIterator it = new ElementIterator(doc);
+        Element element;
+        
+		 int find = -1;
+	        
+	        while ((element = it.next()) != null) {
+	            if (element.getName().equals(HTML.Tag.DIV.toString())) {
+	            	
+	            	 try {
+	                     int start = element.getStartOffset();
+	                     int end    = element.getEndOffset();
+	                     
+	                     boolean isEqual = 
+	                    		 paragraphId.equals(element.getAttributes().getAttribute(HTML.Attribute.ID));
+	                    		 if(isEqual) {
+	                     
+	                     doc.remove(start, end-start);
+
+	                     find = start;
+	                     break;
+	                    		 }
+	                 } catch (BadLocationException ex) {
+	                 	
+	                 }
+	            }
+	        }
+	        
+	        return find;
+	}
+	
+	public int findParentParagraph(String paragraphId)
+	{
+		HTMLDocument doc = ensureHTMLDocument();
+		HTMLEditorKit kit = ensureHTMLEditorKit();
+		
+		ElementIterator it = new ElementIterator(doc);
+        Element element;
+        
+		 int find = -1;
+	        
+	        while ((element = it.next()) != null) {
+	            if (element.getName().equals(HTML.Tag.DIV.toString())) {
+	            	
+	            	boolean isEqual = 
+                   		 paragraphId.equals(element.getAttributes().getAttribute(HTML.Attribute.ID));
+                   		 if(isEqual) {
+                    
+
+                    find = element.getParentElement().getEndOffset();
+                    break;
+	            }
+	        }
+	        }
+	        
+	        return find;
 	}
 	
 	/**
 	 * 删除文本中的图片标签
 	 */
 	public void clearAllImageTags() {
-		HTMLDocument doc = (HTMLDocument)editor.getDocument();
-		HTMLEditorKit kit = (HTMLEditorKit)editor.getEditorKit();
+		HTMLDocument doc = ensureHTMLDocument();
+		HTMLEditorKit kit = ensureHTMLEditorKit();
 		
 		ElementIterator it = new ElementIterator(doc);
         Element element;
@@ -266,8 +331,8 @@ public class EditorHandler implements ChannelConstants{
 	 * 删除光标后的第一个图片标签
 	 */
 	public void clearFirstImageTags() {
-		HTMLDocument doc = (HTMLDocument)editor.getDocument();
-		HTMLEditorKit kit = (HTMLEditorKit)editor.getEditorKit();
+		HTMLDocument doc = ensureHTMLDocument();
+		HTMLEditorKit kit = ensureHTMLEditorKit();
 		
 		ElementIterator it = new ElementIterator(doc);
         Element element;
@@ -316,8 +381,8 @@ public class EditorHandler implements ChannelConstants{
 	 */
 	public void removeFirstImageTag() {
 		
-		Document doc = editor.getDocument();
-		StyledEditorKit kit = (StyledEditorKit)editor.getEditorKit();
+		HTMLDocument doc = ensureHTMLDocument();
+		HTMLEditorKit kit = ensureHTMLEditorKit();
 		
 		String text = null;
 		int offset = editor.getCaretPosition();
@@ -382,22 +447,15 @@ public class EditorHandler implements ChannelConstants{
 	
 	public static void insertHTML(JEditorPane editor, String text, int pos)
 	{
-		EditorKit kit = editor.getEditorKit();
-		if(!(kit instanceof HTMLEditorKit))
-		{
-			kit = new HTMLEditorKit();
-			editor.setEditorKit(kit);
-		}
-		
-		HTMLEditorKit htmlKit = (HTMLEditorKit)kit;
-		HTMLDocument htmlDoc = (HTMLDocument)editor.getDocument();
+		HTMLDocument doc = ensureHTMLDocument(editor);
+		HTMLEditorKit kit = ensureHTMLEditorKit(editor);
 		
 		if(pos < 0)
-			pos = htmlDoc.getLength();
+			pos = doc.getLength();
 		
 		StringReader reader = new StringReader(text);
 		try {
-			htmlKit.read(reader, htmlDoc, pos);
+			kit.read(reader, doc, pos);
 		}
 		catch (Exception ex) {
 			// TODO: handle exception
@@ -406,22 +464,38 @@ public class EditorHandler implements ChannelConstants{
 	
 	public static void updateHTML(JEditorPane editor, String text, int pos)
 	{
-		EditorKit kit = editor.getEditorKit();
-		if(!(kit instanceof HTMLEditorKit))
-		{
-			kit = new HTMLEditorKit();
-			editor.setEditorKit(kit);
-		}
-		
-		HTMLEditorKit htmlKit = (HTMLEditorKit)kit;
-		HTMLDocument htmlDoc = (HTMLDocument)editor.getDocument();
+		HTMLDocument doc = ensureHTMLDocument(editor);
+		HTMLEditorKit kit = ensureHTMLEditorKit(editor);
 		
 		try {
 //			htmlDoc.replace(pos, text.length(), text, htmlKit.getInputAttributes());
-			htmlDoc.remove(pos, text.length());
-			htmlKit.read(new StringReader(text), htmlDoc, pos);
+			doc.remove(pos, text.length());
+			kit.read(new StringReader(text), doc, pos);
 		} catch (Exception ex) {
 			// TODO 自动生成的 catch 块
 		}
+	}
+	
+	private HTMLEditorKit ensureHTMLEditorKit() {
+		return ensureHTMLEditorKit(editor);
+	}
+
+	private HTMLDocument ensureHTMLDocument() {
+		return ensureHTMLDocument(editor);
+	}
+	
+	private static HTMLEditorKit ensureHTMLEditorKit(JEditorPane editor) {
+		EditorKit kit = editor.getEditorKit();
+		if (!(kit instanceof HTMLEditorKit)) {
+			kit = new HTMLEditorKit();
+			editor.setEditorKit(kit);
+		}
+		return (HTMLEditorKit) kit;
+	}
+
+	private static HTMLDocument ensureHTMLDocument(JEditorPane editor) {
+		Document doc = editor.getDocument();
+		ensureHTMLEditorKit(editor);
+		return (HTMLDocument) doc;
 	}
 }

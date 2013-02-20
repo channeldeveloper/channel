@@ -103,17 +103,18 @@ public class OScrollBarUI extends MetalScrollBarUI
         RoundRectangle2D r2d = null;
         g.translate( thumbBounds.x, thumbBounds.y );
 
+        //这里的参数不一定固定，可以自己调整
         if(scrollbar.getOrientation()==JScrollBar.VERTICAL){
             r2d = new RoundRectangle2D.Double(
-                thumbBounds.x+thumbBounds.width/2, model.getBarwidth()+2,
-                model.getBarwidth(), thumbBounds.height - 1,
+                thumbBounds.x+thumbBounds.width/2-2, 2,
+                model.getBarwidth(), thumbBounds.height - 2,
                 model.getBarwidth(),model.getBarwidth());
         }
         else  { // HORIZONTAL
             r2d = new RoundRectangle2D.Double(
                 thumbBounds.x,
                 thumbBounds.y + thumbBounds.height/2-2,
-                thumbBounds.width-1,
+                thumbBounds.width-2,
                 model.getBarwidth(),
                 model.getBarwidth(),model.getBarwidth());
             //OriGraphics.fillRoundRectangle(g, thumbBounds.x, thumbBounds.height/2-2, thumbBounds.width-1, 5,

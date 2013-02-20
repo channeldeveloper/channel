@@ -2,12 +2,14 @@ package com.original.client.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
+import java.awt.event.ActionEvent;
 
+import javax.swing.JButton;
 import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.html.HTMLEditorKit;
 
+import com.original.client.ChannelEvent;
 import com.original.client.ui.widget.EditorHandler;
 import com.original.client.util.ChannelConfig;
 import com.original.client.util.ChannelConstants;
@@ -27,7 +29,7 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane
 {
 	Body body = new Body();
 	EditorHandler handler = new EditorHandler(body);
-	Dimension size = new Dimension(ChannelConfig.getIntValue("msgBodyWidth"), 350);
+	Dimension size = new Dimension(ChannelConfig.getIntValue("msgBodyWidth"), 400);
 	
 	public ListMessageBodyPane() {
 		this.setLayout(new BorderLayout());
@@ -48,31 +50,41 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane
 	 */
 	@Override
 	public void addMessage(ChannelMessage msg, boolean toFirst) {
-		Top top = new Top();
-		top.createMessageHeader(msg);
-		
 		try {
-			handler.insertCompParagraph(0, top);
-		} catch (Exception e) {
-			// TODO 自动生成的 catch 块
-			e.printStackTrace();
+			channelLock.lock();
+			
+			int paragraphIndex = messageBodyList.size(); //段落索引号，每插入一个消息，就视为一段
+			if(paragraphIndex > 0) {
+				handler.insertHorizontalLine(size.width,1); //分割线
+			}			
+			
+			//头部
+			LTop top = new LTop(); 
+			top.createMessageHeader(msg);
+			handler.insertCompParagraph(-1, paragraphIndex, top);
+			
+			//中间
+			handler.insertText(paragraphIndex, 
+					Center.cutText(body.getFont(), msg.getShortMsg()), body.getStyleCss());
+			
+			messageBodyList.add(msg);
+			
+			//底部
+			LBottom bottom = new LBottom();
+			//设置关联：
+			top.paragraphIndex = paragraphIndex;
+			top.bottom = bottom;
+			
+			bottom.paragraphIndex = paragraphIndex;
+			bottom.top = top;
 		}
-		
-		handler.insertText(Center.cutText(body.getFontMetrics(), msg.getShortMsg()));
-		
-		Bottom bottom = new Bottom();
-		bottom.showMessageReplyArea();
-		try {
-			handler.insertCompParagraph(0, bottom);
-		} catch (Exception e) {
-			// TODO 自动生成的 catch 块
-			e.printStackTrace();
+		finally {
+			channelLock.unlock();
 		}
-		
-		handler.insertHorizontalLine(size.width,1);
+	
 	}
 
-	class Body extends JTextPane implements ChannelConstants
+	class Body extends JTextPane implements ChannelEvent, ChannelConstants
 	{
 		public Body() {
 			this.setEditorKit(new HTMLEditorKit());//设置html编辑器
@@ -80,9 +92,133 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane
 			this.setFont(DEFAULT_FONT);
 		}
 		
-		public FontMetrics getFontMetrics() {
-			return this.getFontMetrics(DEFAULT_FONT);
+		public String getStyleCss() {
+			return String.format("font-family:%s; " +
+					"font-size:%s; " +
+					"margin-left:%s; ",
+					DEFAULT_FONT_FAMILY, "11px", "35px");
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void doQuickReply(ActionEvent ae, boolean isON) {
+			// TODO 自动生成的方法存根
+			JButton source = (JButton)ae.getSource();
+			LTop top = null;
+		LBottom bottom = null;
+		
+		if(source.getParent() instanceof LTop)
+		{
+			top = (LTop)source.getParent();
+			bottom = top.bottom;
+		}
+		else if(source.getParent() instanceof LBottom)
+		{
+			bottom = (LBottom)source.getParent();
+			top = bottom.top;
+		}
+		
+		int paragraphIndex = top.paragraphIndex;
+		ChannelMessage msg = messageBodyList.elementAt(paragraphIndex);
+		if(isON) {
+			top.setVisible(QUICK_REPLY, false);
+			top.setVisible(SHOW_COMPLETE, true);
+			top.notifyStatusChange(msg,  STATUS_READ, true); //通知已读
+			
+			//更新显示内容：
+			handler.updateText(paragraphIndex, msg.getCompleteMsg(), body.getStyleCss());
+			
+			//显示回复框：
+			int find = handler.findParentParagraph("text_"+paragraphIndex);
+			bottom.showMessageReplyArea();
+			handler.insertCompParagraph(find, paragraphIndex, bottom);
+		}
+		else {
+			top.setVisible(QUICK_REPLY, true);
+			top.setVisible(SHOW_COMPLETE, false);
+		}
+			
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void doSave(ActionEvent ae) {
+			// TODO 自动生成的方法存根
+			
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void doEdit(ActionEvent ae) {
+			// TODO 自动生成的方法存根
+			
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void doDelete(ActionEvent ae) {
+			// TODO 自动生成的方法存根
+			
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void doShowComplete(ActionEvent ae) {
+			// TODO 自动生成的方法存根
+			
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public ChannelMessage getBodyMessage() {
+			// TODO 自动生成的方法存根
+			return null;
+		}
+		
+	}
+	
+	class LTop extends Top
+	{
+		LBottom bottom = null;
+		int paragraphIndex = -1;
+		public String getName() {
+			// TODO 自动生成的方法存根
+			return "top";
+		}
+
+		@Override
+		public ChannelEvent getChannelEvent() {
+			// TODO 自动生成的方法存根
+			return body;
+		}
+		
+	}
+	
+	class LBottom extends Bottom
+	{
+		LTop top = null;
+		int paragraphIndex = -1;
+		public String getName() {
+			// TODO 自动生成的方法存根
+			return "bottom";
+		}
+		
+		@Override
+		public ChannelEvent getChannelEvent() {
+			// TODO 自动生成的方法存根
+			return body;
 		}
 	}
-
 }

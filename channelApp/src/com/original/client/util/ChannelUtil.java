@@ -7,6 +7,7 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dialog;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.HeadlessException;
@@ -58,7 +59,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import sun.swing.SwingUtilities2;
 import weibo4j.http.AccessToken;
 import weibo4j.model.WeiboException;
 import chrriis.dj.nativeswing.swtimpl.NativeInterface;
@@ -172,19 +172,35 @@ public class ChannelUtil implements ChannelConstants
 	 * 截取指定长度subLength(单位px)的字符串
 	 * @param text 字符串
 	 * @param fm 字体测量工具
-	 * @param cutLength 截取长度
+	 * @param limitLength 截取长度
 	 * @return
 	 */
-	public static String cutString(String text, FontMetrics fm, int cutLength)
+	public static String cutString(String text, Font font, int limitLength)
 	{
-		if(text != null && fm.stringWidth(text) > cutLength)
+		if(text == null || text.isEmpty())
+			return text;
+		
+//		if(text != null && fm.stringWidth(text) > cutLength)
 		{
-			int len = 0;
+			int totalLength = 0, fontSize = font.getSize();
+			boolean isDoubleByteChar = false;//是否是双字节字符
+			
 			for(int i=0 ; i<text.length(); i++)
 			{
-				len += fm.charWidth(text.charAt(i));
-				if(len >= cutLength) {
-					return text.substring(0, i-1) + "…";
+				char c = text.charAt(i);
+				
+				//通过判断某一位的字符是否大于0x80，如果大于则为双字节字符，否则为单字节字符
+				if(c > 0x80) {
+					isDoubleByteChar = true;
+				}
+				else {
+					isDoubleByteChar = false;
+				}
+				
+				totalLength += isDoubleByteChar ? fontSize : fontSize /2 ;
+				if(totalLength >= limitLength) {
+					return ( isDoubleByteChar ? text.substring(0, i-1) : 
+							text.substring(0, i-2) )+ "…";
 				}
 			}
 		}
@@ -193,9 +209,8 @@ public class ChannelUtil implements ChannelConstants
 	public static String cutString(String text, JComponent comp)
 	{
 		if(comp != null && !isEmpty(text)) {
-			FontMetrics fm = SwingUtilities2.getFontMetrics(comp, comp.getFont());
-			int cutLength = comp.getPreferredSize().width - fm.stringWidth("...");
-			return cutString(text, fm, cutLength);
+//			FontMetrics fm = SwingUtilities2.getFontMetrics(comp, comp.getFont());
+			return cutString(text, comp.getFont(), comp.getPreferredSize().width);
 		}
 		return null;
 	}
@@ -978,6 +993,7 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		jsp.setOpaque(false);
 		
 		JScrollBar vsb = new OScrollBar(JScrollBar.VERTICAL, barColor);
+//		JScrollBar vsb = new JScrollBar(JScrollBar.VERTICAL);
 		vsb.setUnitIncrement(100);
 		jsp.setVerticalScrollBar(vsb);
 		jsp.setViewportBorder(null);
