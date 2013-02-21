@@ -151,15 +151,15 @@ public class EditorHandler {
 	 * @param text 文本内容
 	 * @param styleCss 文本样式
 	 */
-	public void insertText(int paragraphIndex, String text, String styleCss) {
-insertText(-1, paragraphIndex, text, styleCss);
+	public void insertText(int paragraphIndex, String text, String textCss) {
+insertText(-1, paragraphIndex, text, "background-color:#ffffff;", textCss);
 	}
-	public void insertText(int offset, int paragraphIndex, String text, String styleCss) {
+	public void insertText(int offset, int paragraphIndex, String text, String backgroundCss, String textCss) {
 		HTMLDocument doc = ensureHTMLDocument();
 		HTMLEditorKit kit = ensureHTMLEditorKit();
 
-		StringBuffer sb = new StringBuffer("<div><div id=\"text_" + paragraphIndex + "\" style=\"").append(styleCss)
-				.append("\">");
+		StringBuffer sb = new StringBuffer("<div style=\"").append(backgroundCss).append("\"><div id=\"text_" + paragraphIndex + "\" style=\"")
+				.append(textCss).append("\">");
 		sb.append(text).append("</div></div>");
 
 		StringReader sr = new StringReader(sb.toString());
@@ -174,14 +174,18 @@ insertText(-1, paragraphIndex, text, styleCss);
 		}
 	}
 	
-	public void updateText(int paragraphIndex, String text, String styleCss) {
+	public void updateText(int paragraphIndex, String text, String textCss) {
+updateText(paragraphIndex, textCss, "background-color:#ffffff;", textCss);		
+	}
+	
+	public void updateText(int paragraphIndex, String text, String backgroundCss, String textCss) {
         
         String id = "text_" + paragraphIndex;
         int find = clearParagraph(id);
         
         if(find != -1) {
         	
-insertText(find, paragraphIndex, text, styleCss);
+insertText(find, paragraphIndex, text, backgroundCss, textCss);
 editor.setCaretPosition(find);
 
         }
@@ -192,7 +196,7 @@ editor.setCaretPosition(find);
 	public void removeText(int paragraphIndex) {
        int find =  clearParagraph("text_" + paragraphIndex);
        if(find != -1) {
-    	   editor.setCaretPosition(find);
+//    	   editor.setCaretPosition(find);
        }
 	}
 	
@@ -202,14 +206,15 @@ editor.setCaretPosition(find);
 	 */
 	public void insertCompParagraph(int paragraphIndex, Component comp) 
 	{
-		insertCompParagraph(-1, paragraphIndex, comp);
+		insertCompParagraph(-1, paragraphIndex, comp, "background-color:#ffffff;");
 	}
-	public void insertCompParagraph(int offset, int paragraphIndex, Component comp) 
+	public void insertCompParagraph(int offset, int paragraphIndex, Component comp, String styleCss) 
 	{
 		HTMLDocument doc = ensureHTMLDocument();
 		HTMLEditorKit kit = ensureHTMLEditorKit();
 		
-		StringReader sr = new StringReader("<div><div id=\"" + comp.getName() + "_" + paragraphIndex + "\" ></div></div>");
+		StringReader sr = new StringReader("<div style=\"" + styleCss + 
+				"\"><div id=\"" + comp.getName() + "_" + paragraphIndex + "\" ></div></div>");
 		try {
 			if(offset == -1) offset = doc.getLength();
 			kit.read(sr, doc, offset);
@@ -233,7 +238,7 @@ editor.setCaretPosition(find);
 
 		if(find != -1) {
 			comp = null; //垃圾回收：Let gc collect it!!!
-			editor.setCaretPosition(find);
+//			editor.setCaretPosition(find);
 		}
 	}
 	
@@ -244,18 +249,23 @@ editor.setCaretPosition(find);
 	 */
 	public void insertHorizontalLine(int paragraphIndex, int width, int height)
 	{
+insertHorizontalLine(-1, paragraphIndex, width, height);
+	}
+	public void insertHorizontalLine(int offset, int paragraphIndex, int width, int height)
+	{
 		Filler filler = ChannelUtil.createBlankFillArea(width, height);
 		filler.setBorder(BorderFactory.createCompoundBorder(
 				new EmptyBorder(0, 10, 0, 20), 
 				new DottedLineBorder(DottedLineBorder.BOTTOM, new Color(213, 213, 213), new float[]{3f,4f})));
 		filler.setName("hr");
-		insertCompParagraph(paragraphIndex, filler);
+		insertCompParagraph(offset, paragraphIndex, filler, "background-color:#ffffff;");
 	}
 	public void removeHorizontalLine(int paragraphIndex)
 	{
 		int find = clearParagraph("hr_"+paragraphIndex);
-		if(find != -1)
-		editor.setCaretPosition(find);
+		if(find != -1) {
+//		editor.setCaretPosition(find);
+		}
 	}
 	
 	/**
@@ -265,7 +275,7 @@ editor.setCaretPosition(find);
 	public int clearParagraph(String paragraphId)
 	{
 		HTMLDocument doc = ensureHTMLDocument();
-		HTMLEditorKit kit = ensureHTMLEditorKit();
+//		HTMLEditorKit kit = ensureHTMLEditorKit();
 		
 		ElementIterator it = new ElementIterator(doc);
         Element element;
@@ -297,10 +307,10 @@ editor.setCaretPosition(find);
 	        return find;
 	}
 	
-	public int findParentParagraph(String paragraphId)
+	public int[] findParentParagraph(String paragraphId)
 	{
 		HTMLDocument doc = ensureHTMLDocument();
-		HTMLEditorKit kit = ensureHTMLEditorKit();
+//		HTMLEditorKit kit = ensureHTMLEditorKit();
 		
 		ElementIterator it = new ElementIterator(doc);
         Element element;
@@ -315,13 +325,14 @@ editor.setCaretPosition(find);
                    		 if(isEqual) {
                     
 
-                    find = element.getParentElement().getEndOffset();
-                    break;
+                    int startOffset = element.getParentElement().getStartOffset();
+                    int endOffset = element.getParentElement().getEndOffset();
+                    return new int[]{startOffset, endOffset};
 	            }
 	        }
 	        }
 	        
-	        return find;
+	        return new int[]{find, find};
 	}
 	
 	/**

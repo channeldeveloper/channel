@@ -155,7 +155,8 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			this.add(body);
 		}
 		
-		messageBodyList.add(0, msg);
+//		messageBodyList.add(0, msg);
+		messageBodyList.add(msg);
 		fireMessageChange(msg, 1);
 	}
 	
@@ -175,7 +176,9 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			this.add(body);
 			this.validate();
 			
-			messageBodyList.add(msg);
+//			messageBodyList.add(msg);
+			messageBodyList.add(0, msg);
+			
 		}
 		else {
 			if(this.getComponentCount() > 0) { //下余面板的边框，稍微复杂点
@@ -306,7 +309,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 //					ChannelMessagePane originParent = (ChannelMessagePane) originContainer.getParent();
 //					originParent.changeMsgLayoutIfNeed(firstMsg);
 				} else { // 否则只改变原消息数
-					originBody.getChannelMessages().remove(msg);//只从消息List中移除
+					originBody.messageBodyList.remove(msg);//只从消息List中移除
 					
 					originBody.fireMessageChange(firstMsg, -1);
 				}
@@ -328,8 +331,8 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		//只显示最新10条信息：
 		int size = messageBodyList.size();
 		int limit = Math.min(10, size);
-		for (int i = size, j = 0; j < limit; i--, j++) {
-			ChannelMessage msg = messageBodyList.get(i - 1);
+		for (int i = 0; i< limit; i++) {
+			ChannelMessage msg = messageBodyList.get(i);
 			if (newMsg == null) {
 				newMsg = msg;
 			}
@@ -356,9 +359,6 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			}
 		}
 		return null;
-	}
-	public Vector<ChannelMessage> getChannelMessages() {
-		return messageBodyList;
 	}
 
 	//主体部分，即下面3个部分的整合。

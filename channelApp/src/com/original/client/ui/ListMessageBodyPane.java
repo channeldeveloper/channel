@@ -7,6 +7,7 @@ import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.util.List;
 
 import javax.swing.JTextPane;
 import javax.swing.border.EmptyBorder;
@@ -59,35 +60,86 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 	 */
 	@Override
 	public void addMessage(ChannelMessage msg, boolean toFirst) {
+		
+		int paragraphIndex = ++body.endParagraphIndex; //段落索引号，每插入一个消息，就视为一段。
+		insertMessage(false, paragraphIndex, msg);
+		
+		//始终保持滚动条位于顶部显示
+		body.setCaretPosition(0);
+	}
+	
+	private void insertMessage(boolean reverseOrder, int startParagraphIndex, ChannelMessage msg)
+	{
 		try {
 			channelLock.lock();
 			
-			int paragraphIndex = messageBodyList.size(); //段落索引号，每插入一个消息，就视为一段
-			if(paragraphIndex > 0) {
-				handler.insertHorizontalLine(paragraphIndex, size.width,1); //分割线
-			}			
+			if(reverseOrder) { //反序插入
+				//分割线
+				handler.insertHorizontalLine(1, startParagraphIndex, size.width, 1);
+				
+				// 底部：初始不显示
+				
+				// 中间
+				handler.insertText(1, startParagraphIndex,
+						Center.cutText(body.getFont(), msg.getShortMsg()),
+						body.getBackgroundStyleCss(!msg.isReceived()),
+						body.getTextStyleCss());
+				
+				// 头部
+				ParagraphTop top = new ParagraphTop();
+				top.createMessageHeader(msg);
+				top.paragraphIndex = startParagraphIndex;
+				handler.insertCompParagraph(1, startParagraphIndex, top,
+						body.getBackgroundStyleCss(!msg.isReceived()));
+			}
 			
-			//头部
-			ParagraphTop top = new ParagraphTop(); 
-			top.createMessageHeader(msg);
-			top.paragraphIndex = paragraphIndex;
-			handler.insertCompParagraph(paragraphIndex, top);
+			else {
+				// 头部
+				ParagraphTop top = new ParagraphTop();
+				top.createMessageHeader(msg);
+				top.paragraphIndex = startParagraphIndex;
+				handler.insertCompParagraph(-1, startParagraphIndex, top,
+						body.getBackgroundStyleCss(!msg.isReceived()));		
+				
+				// 中间
+				handler.insertText(-1, startParagraphIndex,
+						Center.cutText(body.getFont(), msg.getShortMsg()),
+						body.getBackgroundStyleCss(!msg.isReceived()),
+						body.getTextStyleCss());
+				
+				// 底部：初始不显示
+				
+				//分割线
+				handler.insertHorizontalLine(-1, startParagraphIndex, size.width, 1);
+			}
 			
-			//中间
-			handler.insertText(paragraphIndex, 
-					Center.cutText(body.getFont(), msg.getShortMsg()), body.getStyleCss());
-			
-			//底部：初始不显示
-			
-			//保存此消息：
-			messageBodyList.add(msg);
-			body.setCaretPosition(0);
-		}
-		finally {
+		} finally {
 			channelLock.unlock();
 		}
-	
+		
 	}
+	
+	/**
+	 * 从指定位置删除消息
+	 * @param startParagraphIndex 指定位置 >=0 
+	 * @param count 如果>0,表示向下删count；否则表示向上删count; =0 则立即返回
+	 */
+	private void removeMessage(int startParagraphIndex, int count) {
+		if(startParagraphIndex < 0 
+				|| count == 0)
+			return;
+		
+		for(int i=0; i<Math.abs(count); i++) {
+			int paragraphIndex = startParagraphIndex + (count > 0 ? i : -i);
+			
+			handler.clearParagraph("top_" + paragraphIndex);
+			handler.removeText(paragraphIndex);
+			handler.clearParagraph("bottom_" + paragraphIndex); // delete by force!
+			handler.removeHorizontalLine(paragraphIndex);//if exists, then will be deleted!
+		}
+	}
+	
+	
 	
 	
 //滚动条事件：这里分上翻页和下翻页两种控制
@@ -100,32 +152,90 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 		if (osb.getValue() != 0 && osb.getValue() > osb.getScrollBarValue()
 				&& osb.getValue() == (osb.getMaximum() - osb.getVisibleAmount())) {
 			//底部 -> 下翻页
-			System.out.println("bottom");
-			doLoading();
+			doLoadingNextPage(2);//暂时设置2，不要超过4
 		}
 		
 		if(osb.getValue() == 0 && osb.getScrollBarValue() > 0) {
 			//顶部 -> 上翻页
-			System.out.println("top");
-			doLoading();
+			doLoadingPrevPage(2);//暂时设置2，不要超过4
 		}
 		
 		osb.setScrollBarValue(osb.getValue());
 		
 	}
 	
-	private void doLoading() {
+	//上翻页
+	private void doLoadingPrevPage(final int count) {
+		if (count == 0) return;
+		if (count < 0) {
+			doLoadingNextPage(-count);
+			return;
+		}
+		
 		Runnable joinedTask = new Runnable() {
 			@Override
 			public void run() {
-				System.out.println("joinedTask-start");
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					// TODO 自动生成的 catch 块
-					e.printStackTrace();
+				int total = messageBodyList.size(); //总数
+				if (total == 0
+						|| body.startParagraphIndex == -1) // 没有数据或者没有加载
+					return;
+				  
+				int prevCount = Math.min(count, body.startParagraphIndex+1); 
+				body.endParagraphIndex -= prevCount;
+				body.startParagraphIndex -= prevCount;
+				
+				//获取
+				final List<ChannelMessage> subMsgs = 
+				messageBodyList.subList(body.startParagraphIndex+1, body.startParagraphIndex+prevCount+1);
+				
+				removeMessage(body.endParagraphIndex+1, prevCount);
+				for(int i=prevCount; i>0; i--) { //注意反序
+					insertMessage(true, body.startParagraphIndex+i, subMsgs.get(i-1));
 				}
-				System.out.println("joinedTask-end");
+				
+				try {
+					Thread.sleep(1000);  //sleep 1s
+				} 
+				catch (InterruptedException ex) { }
+			}
+		};
+		painter.repaint(this, joinedTask);
+	}
+	
+	//下翻页
+	private void doLoadingNextPage(final int count) {
+		if (count == 0) return;
+		if (count < 0) {
+			doLoadingPrevPage(-count);
+			return;
+		}
+		
+		Runnable joinedTask = new Runnable() {
+			@Override
+			public void run() {
+				int total = messageBodyList.size(); //总数
+				int available = 0; //剩余数
+				if (total == 0
+						|| (available = total - (body.endParagraphIndex + 1)) == 0) // 没有数据或者已经读完
+					return;
+				
+				int nextCount = Math.min(count, available); 
+				body.endParagraphIndex += nextCount;
+				body.startParagraphIndex += nextCount;
+				
+				//获取
+				final List<ChannelMessage> subMsgs = 
+				messageBodyList.subList(body.endParagraphIndex-nextCount+1, body.endParagraphIndex+1);
+				
+				removeMessage(body.startParagraphIndex, -nextCount);
+				for(int i=1; i<=nextCount; i++) {
+					insertMessage(false, body.endParagraphIndex-nextCount+ i, subMsgs.get(i-1));
+				}
+				
+				try {
+					Thread.sleep(1000);  //sleep 1s
+				} 
+				catch (InterruptedException ex) { }
 			}
 		};
 		painter.repaint(this, joinedTask);
@@ -144,6 +254,9 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 		ParagraphTop top;
 		ParagraphBottom bottom;
 		
+		int startParagraphIndex = -1,
+				endParagraphIndex = -1;
+		
 		public Body() {
 			this.setEditorKit(new HTMLEditorKit());//设置html编辑器
 			this.setEditable(false);
@@ -151,11 +264,17 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 		}
 		
 		//统一的文本样式CSS
-		public String getStyleCss() {
+		public String getTextStyleCss() {
 			return String.format("font-family:%s; " +
 					"font-size:%s; " +
-					"margin-left:%s; ",
-					DEFAULT_FONT_FAMILY, "11px", "35px");
+					"margin-left:%s; " +
+					"margin-bottom:%s; ",
+					DEFAULT_FONT_FAMILY, "11px", "35px", "0px");
+		}
+		
+		public String getBackgroundStyleCss(boolean colored) {//colored是否需要着色
+			return String.format("background-color:%s;", 
+					colored ? "#bad4e5" : "#ffffff");
 		}
 		
 		public void notifyEventOwner(ActionEvent ae) {
@@ -207,19 +326,23 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 
 				// 更新显示内容：
 				handler.updateText(paragraphIndex, msg.getCompleteMsg(),
-						body.getStyleCss());
+						body.getBackgroundStyleCss(!msg.isReceived()),
+						body.getTextStyleCss());
 
 				// 显示回复框：
 				setParagraphBottomVisible(true);
-				int find = handler.findParentParagraph("text_" + paragraphIndex);
-				handler.insertCompParagraph(find, paragraphIndex, bottom);
+				int[] finds = handler.findParentParagraph("text_" + paragraphIndex);
+				handler.insertCompParagraph(finds[1], paragraphIndex, bottom, 
+						body.getBackgroundStyleCss(!msg.isReceived()) );
 			} else {
 				top.setVisible(QUICK_REPLY, true);
 				top.setVisible(SHOW_COMPLETE, false);
 				
 				// 更新显示内容：
 				handler.updateText(paragraphIndex, 
-						Center.cutText(body.getFont(), msg.getShortMsg()), body.getStyleCss());
+						Center.cutText(body.getFont(), msg.getShortMsg()), 
+						body.getBackgroundStyleCss(!msg.isReceived()),
+						body.getTextStyleCss());
 				
 				//隐藏底部：
 				setParagraphBottomVisible(false);
@@ -282,7 +405,7 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 					} else {
 						handler.clearParagraph("bottom_" + paragraphIndex); // delete by force!
 					}
-					handler.removeHorizontalLine(paragraphIndex+1);//if exists, then will be deleted!
+					handler.removeHorizontalLine(paragraphIndex);//if exists, then will be deleted!
 					
 					//同时改变原有消息数：
 					notifyToChangeMessage(msg, false);
