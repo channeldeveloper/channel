@@ -14,6 +14,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.text.html.HTMLEditorKit;
 
 import com.original.channel.ChannelNativeCache;
+import com.original.client.ChannelEvent;
 import com.original.client.EventConstants;
 import com.original.client.layout.ChannelGridBagLayoutManager;
 import com.original.client.layout.ChannelGridLayout;
@@ -41,7 +42,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 	private SGTextPane content = new SGTextPane();//文本面板
 	
 	private ChannelMessage newMsg = null;
-	private ChannelMessageBodyPane.Body origin = null;
+	private ChannelEvent origin = null;
 	
 	public ShowMessageBodyPane() 
 	{
@@ -122,8 +123,8 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 		return this.newMsg;
 	}
 	
-	public void setOriginMessageBody(ChannelMessageBodyPane.Body body) {
-		this.origin = body;
+	public void setOriginChannelEvent(ChannelEvent origin) {
+		this.origin = origin;
 	}
 
 	/**
@@ -188,7 +189,7 @@ public class ShowMessageBodyPane extends ChannelMessageBodyPane implements Actio
 		ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
 		if (DELETE == e.getActionCommand()) {// 删除
 			if (origin != null) {
-				origin.doDelete(e);
+				origin.doDelete();
 			}
 			desktop.removeShowComp(PREFIX_SHOW + newMsg.getContactAddr());
 		} else if (REPLY == e.getActionCommand()) {// 回复

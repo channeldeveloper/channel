@@ -10,27 +10,27 @@ public interface ChannelEvent {
 	 * 快速回复
 	 * @param isON 打开或者关闭快速回复
 	 */
-	public void doQuickReply(ActionEvent ae, boolean isON);
+	public void doQuickReply(boolean isON);
 	
 	/**
 	 * 保存
 	 */
-	public void doSave(ActionEvent ae);
+	public void doSave();
 	
 	/**
 	 * 编辑
 	 */
-	public void doEdit(ActionEvent ae);
+	public void doEdit();
 	
 	/**
 	 * 删除
 	 */
-	public void doDelete(ActionEvent ae);
+	public void doDelete();
 	
 	/**
 	 * 显示完整信息
 	 */
-	public void doShowComplete(ActionEvent ae);
+	public void doShowComplete();
 	
 	/**
 	 * 当前面板显示的消息

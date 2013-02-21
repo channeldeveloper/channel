@@ -249,7 +249,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	 * 通知父面板改变当前消息的显示，以及消息的状态属性等等。用在removeMessageBody()之后
 	 * @param msg 消息对象
 	 */
-	private void notifyToChangeMessage(ChannelMessage msg, boolean toFirst)
+	public void notifyToChangeMessage(ChannelMessage msg, boolean toFirst)
 	{
 		ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
 		if (toFirst) { // 如果只显示一条，即顶部显示
@@ -321,11 +321,15 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	public void showAllMessage()
 	{
 		ChannelMessage newMsg = null;
-//		ChannelMessagePane nw = new ChannelMessagePane(new ChannelMessageTopBar());
+//		ChannelMessagePane nw = new ChannelMessagePane(new ChannelMessageTopBar());//deprecated!!
 		ChannelMessagePane nw = new ChannelMessagePane(new ListMessageTopBar());
 		nw.showDirection = false; //不显示消息方向
 		
-		for (ChannelMessage msg : messageBodyList) {
+		//只显示最新10条信息：
+		int size = messageBodyList.size();
+		int limit = Math.min(10, size);
+		for (int i = size, j = 0; j < limit; i--, j++) {
+			ChannelMessage msg = messageBodyList.get(i - 1);
 			if (newMsg == null) {
 				newMsg = msg;
 			}
@@ -356,7 +360,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	public Vector<ChannelMessage> getChannelMessages() {
 		return messageBodyList;
 	}
-	
+
 	//主体部分，即下面3个部分的整合。
 	public class Body extends SGPanel implements ChannelEvent, EventConstants
 	{
@@ -431,7 +435,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		 * 打开或关闭快速回复功能
 		 * @param isOn 若为true，则是打开；否则为关闭
 		 */
-		public void doQuickReply(ActionEvent ae, boolean isOn) {
+		public void doQuickReply(boolean isOn) {
 			if(isOn) {
 				top.setVisible(QUICK_REPLY, false);
 				top.setVisible(SHOW_COMPLETE, true);
@@ -457,7 +461,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		}
 		
 		//编辑
-		public void doEdit(ActionEvent ae) {
+		public void doEdit() {
 			ChannelMessage msg = iMsg.clone();
 			
 			ChannelMessagePane cmp = null;
@@ -475,12 +479,12 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		}
 		
 		//保存
-		public void doSave(ActionEvent ae) {
+		public void doSave() {
 			
 		}
 		
 		//删除
-		public void doDelete(ActionEvent ae) {
+		public void doDelete() {
 			if (ChannelUtil.confirm(null, "确认删除", "是否删除该消息？")) {
 				try {
 					channelService.trashMessage(iMsg); //先从数据库里面删除
@@ -494,12 +498,12 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		}
 		
 		//完整信息
-		public void doShowComplete(ActionEvent ae) {
+		public void doShowComplete() {
 			ChannelMessage newMsg = iMsg.clone();
 			ChannelMessagePane nw =  new ChannelMessagePane(new ShowMessageTopBar(newMsg));
 			nw.showMessage(newMsg);
 			((ShowMessageBodyPane)nw.body).setMessageToGUI(newMsg);
-			((ShowMessageBodyPane)nw.body).setOriginMessageBody(this);
+			((ShowMessageBodyPane)nw.body).setOriginChannelEvent(this);
 
 			ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
@@ -692,15 +696,15 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			ChannelEvent ce = this.getChannelEvent();
 			
 			if (QUICK_REPLY == e.getActionCommand()) { // 快速回复
-				ce.doQuickReply(e, true);
+				ce.doQuickReply(true);
 			} else if (SAVE == e.getActionCommand()) { // 保存
-				ce.doSave(e);
+				ce.doSave();
 			} else if (EDIT == e.getActionCommand()) { // 编辑
-				ce.doEdit(e);
+				ce.doEdit();
 			} else if (DELETE == e.getActionCommand()) { // 删除
-				ce.doDelete(e);
+				ce.doDelete();
 			} else if (SHOW_COMPLETE == e.getActionCommand()) { // 完整显示
-				ce.doShowComplete(e);
+				ce.doShowComplete();
 			}
 		}
 	}
@@ -761,7 +765,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			
 			//如果文本的长度超出面板的宽度，则多余的部分会被截断，以“…”代替。
 			//假设全部是中文，每个中文字14px，面板宽度≈700px，所以最多只显示50个中文字。
-			text = text.length() <= 50 ? text : ChannelUtil.cutString(text, font, SIZE.width-14*2);
+			text = text.length() <= 50 ? text : ChannelUtil.cutString(text, font, SIZE.width-25);
 			return text;
 		}
 		
@@ -842,14 +846,14 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			ChannelEvent ce = this.getChannelEvent();
 			
 			if(e.getSource() == btnCancel) { //取消
-				ce.doQuickReply(e, false);
+				ce.doQuickReply(false);
 			}
 			else if(e.getSource() == btnReply) {//回复
 				String replyContent = getReplyContent().trim();
 				if(!ChannelUtil.isEmpty(replyContent, true)) //检查回复内容是否为空
 				{
 					//首先开闭回复
-					ce.doQuickReply(e, false);
+					ce.doQuickReply(false);
 					
 					//再新建消息
 					ChannelMessage oldMsg = ce.getBodyMessage();

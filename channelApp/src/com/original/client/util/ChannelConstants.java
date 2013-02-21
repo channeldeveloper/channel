@@ -33,7 +33,7 @@ public interface ChannelConstants
 	Color LIGHT_TEXT_COLOR = new Color(85,127,196),
 			MENU_BACKGROUND = new Color(46, 156, 202),
 			TITLE_COLOR = new Color(58, 182, 210),
-			TRANSLUCENCE_COLOR = new Color(128,128,128,(int)(255*0.1));
+			TRANSLUCENCE_COLOR = new Color(128,128,128,(int)(255*0.2));
 	
 	//坐标点
 	Point CENTER_POINT = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();

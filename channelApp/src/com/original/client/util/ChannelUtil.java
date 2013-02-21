@@ -79,9 +79,9 @@ import com.original.client.ui.widget.FileChooserListener;
 import com.original.client.ui.widget.FilePreviewer;
 import com.original.client.ui.widget.ImagePane;
 import com.original.client.ui.widget.MessageBox;
+import com.original.client.ui.widget.ScrollBar;
 import com.original.client.ui.widget.ToolTip;
 import com.original.widget.OButton;
-import com.original.widget.OScrollBar;
 import com.original.widget.model.LevelButtonModel.BUTTONLEVEL;
 import com.seaglasslookandfeel.widget.SGButton;
 import com.seaglasslookandfeel.widget.SGColorChooser;
@@ -992,8 +992,7 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		jsp.setBorder(null);
 		jsp.setOpaque(false);
 		
-		JScrollBar vsb = new OScrollBar(JScrollBar.VERTICAL, barColor);
-//		JScrollBar vsb = new JScrollBar(JScrollBar.VERTICAL);
+		JScrollBar vsb = new ScrollBar(JScrollBar.VERTICAL, barColor);
 		vsb.setUnitIncrement(100);
 		jsp.setVerticalScrollBar(vsb);
 		jsp.setViewportBorder(null);

@@ -8,15 +8,12 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box.Filler;
 import javax.swing.ImageIcon;
 import javax.swing.JEditorPane;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.EditorKit;
@@ -30,8 +27,6 @@ import javax.swing.text.html.HTMLDocument;
 import javax.swing.text.html.HTMLEditorKit;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.jsoup.Jsoup;
-import org.jsoup.select.Elements;
 
 import com.original.client.border.DottedLineBorder;
 import com.original.client.util.ChannelUtil;
@@ -45,16 +40,11 @@ public class EditorHandler {
 	
 	public static final String IMAGE_PATTERN = 
 			"<img src=\"%s\" width=\"%d\" height=\"%d\" border=\"0\">",
-			
 			IMAGE_HYBERLINK_PATTERN = 
 			"<a href=\"%s\"><img src=\"%s\" width=\"%d\" height=\"%d\" border=\"0\"></a>";
 	
 	private JEditorPane editor = null;
 	private boolean supportMultiImages = true; //是否支持多张图片
-	
-	private static final Dimension MIN_DIMENSION = new Dimension();
-	
-	
 	
 	public EditorHandler(JEditorPane editor)
 	{
@@ -192,22 +182,34 @@ insertText(-1, paragraphIndex, text, styleCss);
         if(find != -1) {
         	
 insertText(find, paragraphIndex, text, styleCss);
+editor.setCaretPosition(find);
 
         }
 		
 		
+	}
+
+	public void removeText(int paragraphIndex) {
+       int find =  clearParagraph("text_" + paragraphIndex);
+       if(find != -1) {
+    	   editor.setCaretPosition(find);
+       }
 	}
 	
 	/**
 	 * 插入swing控件至文本面板中，该控件占一个段的位置。
 	 * @param comp
 	 */
+	public void insertCompParagraph(int paragraphIndex, Component comp) 
+	{
+		insertCompParagraph(-1, paragraphIndex, comp);
+	}
 	public void insertCompParagraph(int offset, int paragraphIndex, Component comp) 
 	{
 		HTMLDocument doc = ensureHTMLDocument();
 		HTMLEditorKit kit = ensureHTMLEditorKit();
 		
-		StringReader sr = new StringReader("<div id=\"" + comp.getName() + "_" + paragraphIndex + "\" ></div>");
+		StringReader sr = new StringReader("<div><div id=\"" + comp.getName() + "_" + paragraphIndex + "\" ></div></div>");
 		try {
 			if(offset == -1) offset = doc.getLength();
 			kit.read(sr, doc, offset);
@@ -224,18 +226,36 @@ insertText(find, paragraphIndex, text, styleCss);
 		}
 	}
 	
+	public void removeCompParagraph(int paragraphIndex, Component comp)
+	{
+		String id = comp.getName() + "_" + paragraphIndex;
+		int find = clearParagraph(id);
+
+		if(find != -1) {
+			comp = null; //垃圾回收：Let gc collect it!!!
+			editor.setCaretPosition(find);
+		}
+	}
+	
 	/**
-	 * 插入水平分割线，这里目前都是虚线样式。如果有其他样式，待以后优化！
+	 * 插入水平分割线，这里目前都是虚线样式。
 	 * 注意，不要使用css样式，swing支持不好
 	 * @throws Exception
 	 */
-	public void insertHorizontalLine(int width, int height)
+	public void insertHorizontalLine(int paragraphIndex, int width, int height)
 	{
 		Filler filler = ChannelUtil.createBlankFillArea(width, height);
 		filler.setBorder(BorderFactory.createCompoundBorder(
 				new EmptyBorder(0, 10, 0, 20), 
 				new DottedLineBorder(DottedLineBorder.BOTTOM, new Color(213, 213, 213), new float[]{3f,4f})));
-		insertCompParagraph(-1, -1, filler);
+		filler.setName("hr");
+		insertCompParagraph(paragraphIndex, filler);
+	}
+	public void removeHorizontalLine(int paragraphIndex)
+	{
+		int find = clearParagraph("hr_"+paragraphIndex);
+		if(find != -1)
+		editor.setCaretPosition(find);
 	}
 	
 	/**
@@ -352,67 +372,6 @@ insertText(find, paragraphIndex, text, styleCss);
                 }
             }
         }
-	}
-	
-	/**
-	 * 删除文本中的图片标签
-	 * @deprecated 文本中图片标签的属性顺序不一定和{@link #IMAGE_HYBERLINK_PATTERN}
-	 * 或{@link #IMAGE_PATTERN}一致，所以有时匹配不成功，删除失败
-	 */
-	public void removeAllImageTags() {
-		String text = editor.getText();
-		if(text.isEmpty()) return;
-		
-		String regex = (!editor.isEditable() ? IMAGE_HYBERLINK_PATTERN
-				: IMAGE_PATTERN).replaceAll("%s|%d", "(.+?)");
-		
-		Matcher matcher = Pattern.compile(Matcher.quoteReplacement(regex)).matcher(text);
-		while(matcher.find()) {
-			text = text.replace(matcher.group(), "");
-		}
-		
-		editor.setText(text);
-	}
-	
-	/**
-	 * 删除光标后的第一个图片标签
-	 * @deprecated 文本中图片标签的属性顺序不一定和{@link #IMAGE_HYBERLINK_PATTERN}
-	 * 或{@link #IMAGE_PATTERN}一致，所以有时匹配不成功，删除失败
-	 */
-	public void removeFirstImageTag() {
-		
-		HTMLDocument doc = ensureHTMLDocument();
-		HTMLEditorKit kit = ensureHTMLEditorKit();
-		
-		String text = null;
-		int offset = editor.getCaretPosition();
-		int length = doc.getLength() - offset;
-		try {
-			text =  editor.getText(offset, length);
-			if(text.isEmpty()) return;
-		}
-		catch(BadLocationException ex) {
-			return; //出错了，就不做处理了
-		}
-		
-		String regex = (!editor.isEditable() ? IMAGE_HYBERLINK_PATTERN
-				: IMAGE_PATTERN).replaceAll("%s|%d", "(.+?)");
-		
-		Matcher matcher = Pattern.compile(Matcher.quoteReplacement(regex)).matcher(text);
-		if(matcher.find()) {
-			text = text.replace(matcher.group(), "");
-		}
-		
-		try {
-			if(doc instanceof AbstractDocument)
-				((AbstractDocument) doc).replace(offset, length, text, kit.getInputAttributes());
-			else {
-				doc.remove(offset, length);
-				doc.insertString(offset, text, kit.getInputAttributes());
-			}
-		}
-		catch(BadLocationException ex) {
-		}
 	}
 	
 	/**

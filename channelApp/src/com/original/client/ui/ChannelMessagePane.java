@@ -18,6 +18,7 @@ import java.awt.geom.Area;
 import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.IOException;
+import java.util.Vector;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
