@@ -61,6 +61,10 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 	@Override
 	public void addMessage(ChannelMessage msg, boolean toFirst) {
 		
+		if(toFirst) {
+			return;
+		}
+		
 		int paragraphIndex = ++body.endParagraphIndex; //段落索引号，每插入一个消息，就视为一段。
 		insertMessage(false, paragraphIndex, msg);
 		
@@ -80,8 +84,15 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 				// 底部：初始不显示
 				
 				// 中间
+				String text = Center.cutText(body.getFont(), msg.getShortMsg());
 				handler.insertText(1, startParagraphIndex,
-						Center.cutText(body.getFont(), msg.getShortMsg()),
+						text,
+						body.getBackgroundStyleCss(!msg.isReceived()),
+						body.getTextStyleCss());
+				
+				//下面的方法只是修正反序插入时，文本和水平分割线之间存在间接的Bug，待以后有好的方法，再做优化！
+				handler.updateText(startParagraphIndex,
+						text, 	
 						body.getBackgroundStyleCss(!msg.isReceived()),
 						body.getTextStyleCss());
 				
@@ -132,9 +143,9 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 		for(int i=0; i<Math.abs(count); i++) {
 			int paragraphIndex = startParagraphIndex + (count > 0 ? i : -i);
 			
-			handler.clearParagraph("top_" + paragraphIndex);
+			handler.clearParagraph("top" , paragraphIndex);
 			handler.removeText(paragraphIndex);
-			handler.clearParagraph("bottom_" + paragraphIndex); // delete by force!
+			handler.clearParagraph("bottom" , paragraphIndex); // delete by force!
 			handler.removeHorizontalLine(paragraphIndex);//if exists, then will be deleted!
 		}
 	}
@@ -152,12 +163,12 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 		if (osb.getValue() != 0 && osb.getValue() > osb.getScrollBarValue()
 				&& osb.getValue() == (osb.getMaximum() - osb.getVisibleAmount())) {
 			//底部 -> 下翻页
-			doLoadingNextPage(2);//暂时设置2，不要超过4
+			doLoadingNextPage(3);//设置1~4之间
 		}
 		
 		if(osb.getValue() == 0 && osb.getScrollBarValue() > 0) {
 			//顶部 -> 上翻页
-			doLoadingPrevPage(2);//暂时设置2，不要超过4
+			doLoadingPrevPage(3);//设置1~4之间
 		}
 		
 		osb.setScrollBarValue(osb.getValue());
@@ -236,6 +247,7 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 					Thread.sleep(1000);  //sleep 1s
 				} 
 				catch (InterruptedException ex) { }
+				
 			}
 		};
 		painter.repaint(this, joinedTask);
@@ -267,9 +279,8 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 		public String getTextStyleCss() {
 			return String.format("font-family:%s; " +
 					"font-size:%s; " +
-					"margin-left:%s; " +
-					"margin-bottom:%s; ",
-					DEFAULT_FONT_FAMILY, "11px", "35px", "0px");
+					"margin-left:%s; ", 
+					DEFAULT_FONT_FAMILY, "11px", "35px");
 		}
 		
 		public String getBackgroundStyleCss(boolean colored) {//colored是否需要着色
@@ -331,8 +342,8 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 
 				// 显示回复框：
 				setParagraphBottomVisible(true);
-				int[] finds = handler.findParentParagraph("text_" + paragraphIndex);
-				handler.insertCompParagraph(finds[1], paragraphIndex, bottom, 
+				int find = handler.findParentParagraph("text" , paragraphIndex);
+				handler.insertCompParagraph(find, paragraphIndex, bottom, 
 						body.getBackgroundStyleCss(!msg.isReceived()) );
 			} else {
 				top.setVisible(QUICK_REPLY, true);
@@ -349,7 +360,7 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 				if (bottom != null) {
 					handler.removeCompParagraph(paragraphIndex, bottom);
 				} else {
-					handler.clearParagraph("bottom_" + paragraphIndex);
+					handler.clearParagraph("bottom" , paragraphIndex);
 				}
 			}
 			
@@ -403,7 +414,7 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 					if (bottom != null) {
 						handler.removeCompParagraph(paragraphIndex, bottom);
 					} else {
-						handler.clearParagraph("bottom_" + paragraphIndex); // delete by force!
+						handler.clearParagraph("bottom" , paragraphIndex); // delete by force!
 					}
 					handler.removeHorizontalLine(paragraphIndex);//if exists, then will be deleted!
 					
@@ -430,6 +441,14 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 
 			ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
+		}
+		
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void doReply(ChannelMessage msg) {
+			
 		}
 
 		/**

@@ -176,12 +176,12 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 				owner.validate();
 
 				//如果当前显示界面已经切换到<显示全部>面板，则该面板也要添加最新消息
-//				JPanel showComp = (JPanel) currentShowComp();
-//				if (showComp != DEFAULT_PANE && showComp != FILTER_PANE
-//						&& showComp instanceof ChannelMessagePane) {
-//					msgContainer = (ChannelMessagePane) showComp;
-//					msgContainer.addMessage(msg, false);
-//				}
+				JPanel showComp = (JPanel) currentShowComp();
+				if (showComp != DEFAULT_PANE && showComp != FILTER_PANE
+						&& showComp instanceof ChannelMessagePane) {
+					msgContainer = (ChannelMessagePane) showComp;
+					msgContainer.addMessage(msg, true);
+				}
 			}
 		}
 		finally {

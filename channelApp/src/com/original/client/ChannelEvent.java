@@ -1,7 +1,5 @@
 package com.original.client;
 
-import java.awt.event.ActionEvent;
-
 import com.original.service.channel.ChannelMessage;
 
 public interface ChannelEvent {
@@ -31,6 +29,11 @@ public interface ChannelEvent {
 	 * 显示完整信息
 	 */
 	public void doShowComplete();
+	
+	/**
+	 * 回复
+	 */
+	public void doReply(ChannelMessage msg);
 	
 	/**
 	 * 当前面板显示的消息

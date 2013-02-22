@@ -1,5 +1,6 @@
 ﻿package com.original.client.util;
 
+import java.io.File;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,8 +15,8 @@ import javax.swing.ImageIcon;
  */
 public class IconFactory
 {
-	static Map<String, ImageIcon> iconCache = new HashMap<String, ImageIcon>();
-	static final String IMAGE_ROOT = ChannelConfig.getPropValue("iconRoot");
+	private static Map<String, ImageIcon> iconCache = new HashMap<String, ImageIcon>();
+	public static final String IMAGE_ROOT = ChannelConfig.getPropValue("iconRoot");
 	
 	/**
 	 * 加载图标，图标的固定路径为{@link #IMAGE_ROOT}
@@ -50,6 +51,18 @@ public class IconFactory
 	public static URL getIconURL(String iconName)
 	{
 		return IconFactory.class.getResource(IMAGE_ROOT+iconName);
+	}
+	
+	/**
+	 * 获取图标的实际路径，可能为本地或jar包上下文中。和getIconURL(String)作用一样，只是返回参数不一样
+	 * @param iconName 图标名称
+	 * @see #getIconURL(String)
+	 * @return
+	 */
+	public static String getIconPath(String iconPath)
+	{
+		File iconFile = new File(getIconURL(iconPath).getPath());
+		return iconFile.toURI().toString();
 	}
 
 }

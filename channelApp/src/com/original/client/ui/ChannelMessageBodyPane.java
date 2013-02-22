@@ -508,6 +508,21 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
 		}
+		
+		//回复消息
+		public void doReply(ChannelMessage msg) {
+			try {
+				ChannelService cs = 	ChannelAccesser.getChannelService();
+				cs.put(Constants.ACTION_QUICK_REPLY, msg);
+
+				//最后回复消息
+				ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
+				desktop.addMessage(msg);
+			}
+			catch (Exception ex) {
+				ChannelUtil.showMessageDialog(this, "错误", ex);
+			}
+		}
 	}
 	
 	//头部面板
@@ -593,7 +608,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 					}
 				}
 			}
-			
+			messageHeader.setName(icon);
 			messageHeader.setIcon(IconFactory.loadIconByConfig(icon));
 		}
 		
@@ -849,7 +864,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 				ce.doQuickReply(false);
 			}
 			else if(e.getSource() == btnReply) {//回复
-				String replyContent = getReplyContent().trim();
+				String replyContent = getReplyContent();
 				if(!ChannelUtil.isEmpty(replyContent, true)) //检查回复内容是否为空
 				{
 					//首先开闭回复
@@ -875,17 +890,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 								+ Utilies.parseMail(oldMsg, false));
 					}
 					
-					try {
-						ChannelService cs = 	ChannelAccesser.getChannelService();
-						cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
-
-						//最后回复消息
-						ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
-						desktop.addMessage(newMsg);
-					}
-					catch (Exception ex) {
-						ChannelUtil.showMessageDialog(this, "错误", ex);
-					}
+					ce.doReply(newMsg);
 				}
 			}
 		}
