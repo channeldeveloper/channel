@@ -59,17 +59,38 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void addMessage(ChannelMessage msg, boolean toFirst) {
-		
-		if(toFirst) {
-			return;
+	public void addMessage(final ChannelMessage msg, boolean toFirst) {
+		try {
+			channelLock.lock();
+
+			if(toFirst) {
+			Runnable joinedTask = 	new Runnable() {
+					public void run() {
+						body.relativeIndex ++;
+						messageBodyList.add(0, msg);
+						
+			//先删除底部：
+						if(body.count >= 10)
+							removeMessage(body.endParagraphIndex, 1);
+			//再顶部插入：
+						insertMessage(true, --body.startParagraphIndex, msg);
+					}
+				};
+				
+				painter.repaint(this, joinedTask);
+			}
+			else {
+
+				int paragraphIndex = ++body.endParagraphIndex; //段落索引号，每插入一个消息，就视为一段。
+				insertMessage(false, paragraphIndex, msg);
+
+				//始终保持滚动条位于顶部显示
+				body.setCaretPosition(0);
+			}
 		}
-		
-		int paragraphIndex = ++body.endParagraphIndex; //段落索引号，每插入一个消息，就视为一段。
-		insertMessage(false, paragraphIndex, msg);
-		
-		//始终保持滚动条位于顶部显示
-		body.setCaretPosition(0);
+		finally {
+			channelLock.unlock();
+		}
 	}
 	
 	private void insertMessage(boolean reverseOrder, int startParagraphIndex, ChannelMessage msg)
@@ -124,6 +145,8 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 				handler.insertHorizontalLine(-1, startParagraphIndex, size.width, 1);
 			}
 			
+			body.count ++;
+			
 		} finally {
 			channelLock.unlock();
 		}
@@ -136,21 +159,43 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 	 * @param count 如果>0,表示向下删count；否则表示向上删count; =0 则立即返回
 	 */
 	private void removeMessage(int startParagraphIndex, int count) {
-		if(startParagraphIndex < 0 
-				|| count == 0)
-			return;
+		if(count == 0) return;
 		
-		for(int i=0; i<Math.abs(count); i++) {
-			int paragraphIndex = startParagraphIndex + (count > 0 ? i : -i);
+		try {
+			channelLock.lock();
 			
-			handler.clearParagraph("top" , paragraphIndex);
-			handler.removeText(paragraphIndex);
-			handler.clearParagraph("bottom" , paragraphIndex); // delete by force!
-			handler.removeHorizontalLine(paragraphIndex);//if exists, then will be deleted!
+			if(count < 0) //向上删count
+			{
+				for(int i=0; i<-count; i++) {
+					int paragraphIndex = startParagraphIndex - i;
+					
+					handler.removeHorizontalLine(paragraphIndex);//if exists, then will be deleted!
+					handler.clearParagraph("bottom" , paragraphIndex); // delete by force!
+					handler.removeText(paragraphIndex);
+					handler.clearParagraph("top" , paragraphIndex);
+				}
+				
+				body.count -= -count;
+			}
+			else {//向下删count，注意向上删的顺序相反
+				for(int i=0; i<count; i++) {
+					int paragraphIndex = startParagraphIndex + i;
+					
+					handler.clearParagraph("top" , paragraphIndex);
+					handler.removeText(paragraphIndex);
+					handler.clearParagraph("bottom" , paragraphIndex); // delete by force!
+					handler.removeHorizontalLine(paragraphIndex);//if exists, then will be deleted!
+				}
+				
+				body.count -= count;
+			}
+			
 		}
+		finally {
+			channelLock.unlock();
+		}
+		
 	}
-	
-	
 	
 	
 //滚动条事件：这里分上翻页和下翻页两种控制
@@ -188,20 +233,20 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 			public void run() {
 				int total = messageBodyList.size(); //总数
 				if (total == 0
-						|| body.startParagraphIndex == -1) // 没有数据或者没有加载
+						|| body.startParagraphIndex + body.relativeIndex <= 0) // 没有数据或者没有加载
 					return;
 				  
-				int prevCount = Math.min(count, body.startParagraphIndex+1); 
+				int prevCount = Math.min(count, body.startParagraphIndex+ body.relativeIndex ); 
 				body.endParagraphIndex -= prevCount;
 				body.startParagraphIndex -= prevCount;
 				
 				//获取
 				final List<ChannelMessage> subMsgs = 
-				messageBodyList.subList(body.startParagraphIndex+1, body.startParagraphIndex+prevCount+1);
+				messageBodyList.subList(body.startParagraphIndex+body.relativeIndex, body.startParagraphIndex+prevCount+body.relativeIndex);
 				
 				removeMessage(body.endParagraphIndex+1, prevCount);
 				for(int i=prevCount; i>0; i--) { //注意反序
-					insertMessage(true, body.startParagraphIndex+i, subMsgs.get(i-1));
+					insertMessage(true, body.startParagraphIndex+i-1, subMsgs.get(i-1));
 				}
 				
 				try {
@@ -227,7 +272,7 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 				int total = messageBodyList.size(); //总数
 				int available = 0; //剩余数
 				if (total == 0
-						|| (available = total - (body.endParagraphIndex + 1)) == 0) // 没有数据或者已经读完
+						|| (available = total - (body.endParagraphIndex + body.relativeIndex + 1)) == 0) // 没有数据或者已经读完
 					return;
 				
 				int nextCount = Math.min(count, available); 
@@ -236,9 +281,10 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 				
 				//获取
 				final List<ChannelMessage> subMsgs = 
-				messageBodyList.subList(body.endParagraphIndex-nextCount+1, body.endParagraphIndex+1);
+				messageBodyList.subList(body.endParagraphIndex-nextCount+body.relativeIndex + 1, 
+						body.endParagraphIndex+body.relativeIndex+1);
 				
-				removeMessage(body.startParagraphIndex, -nextCount);
+				removeMessage(body.startParagraphIndex-1, -nextCount);
 				for(int i=1; i<=nextCount; i++) {
 					insertMessage(false, body.endParagraphIndex-nextCount+ i, subMsgs.get(i-1));
 				}
@@ -266,8 +312,11 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 		ParagraphTop top;
 		ParagraphBottom bottom;
 		
-		int startParagraphIndex = -1,
+		int startParagraphIndex = 0,
 				endParagraphIndex = -1;
+		
+		int relativeIndex = 0;//相对于messageBodyList原元素的索引。
+		int count = 0;//消息数
 		
 		public Body() {
 			this.setEditorKit(new HTMLEditorKit());//设置html编辑器
@@ -441,14 +490,6 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 
 			ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
-		}
-		
-		/**
-		 * {@inheritDoc}
-		 */
-		@Override
-		public void doReply(ChannelMessage msg) {
-			
 		}
 
 		/**

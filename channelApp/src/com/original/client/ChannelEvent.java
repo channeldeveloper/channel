@@ -31,11 +31,6 @@ public interface ChannelEvent {
 	public void doShowComplete();
 	
 	/**
-	 * 回复
-	 */
-	public void doReply(ChannelMessage msg);
-	
-	/**
 	 * 当前面板显示的消息
 	 * @return
 	 */

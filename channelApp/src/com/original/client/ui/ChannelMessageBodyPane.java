@@ -508,21 +508,6 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
 			desktop.addOtherShowComp(PREFIX_SHOW+newMsg.getContactName(), nw);
 		}
-		
-		//回复消息
-		public void doReply(ChannelMessage msg) {
-			try {
-				ChannelService cs = 	ChannelAccesser.getChannelService();
-				cs.put(Constants.ACTION_QUICK_REPLY, msg);
-
-				//最后回复消息
-				ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
-				desktop.addMessage(msg);
-			}
-			catch (Exception ex) {
-				ChannelUtil.showMessageDialog(this, "错误", ex);
-			}
-		}
 	}
 	
 	//头部面板
@@ -890,7 +875,17 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 								+ Utilies.parseMail(oldMsg, false));
 					}
 					
-					ce.doReply(newMsg);
+					try {
+						ChannelService cs = 	ChannelAccesser.getChannelService();
+						cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
+					}
+					catch (Exception ex) {
+						ChannelUtil.showMessageDialog(this, "错误", ex);
+					}
+					
+					//最后回复消息
+					ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
+					desktop.addMessage(newMsg);
 				}
 			}
 		}

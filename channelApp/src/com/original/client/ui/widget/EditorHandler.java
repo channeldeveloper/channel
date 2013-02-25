@@ -6,7 +6,6 @@ import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -15,7 +14,6 @@ import javax.swing.Box.Filler;
 import javax.swing.ImageIcon;
 import javax.swing.JEditorPane;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.AbstractDocument.BranchElement;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.EditorKit;
@@ -32,7 +30,6 @@ import org.apache.commons.lang.StringEscapeUtils;
 
 import com.original.client.border.DottedLineBorder;
 import com.original.client.util.ChannelUtil;
-import com.original.client.util.IconFactory;
 
 /**
  * 文本编辑器通用处理类，如插入图片、表情等等。
@@ -158,18 +155,14 @@ public class EditorHandler {
 insertText(-1, paragraphIndex, text, null, textCss);
 	}
 	public void insertText(int offset, int paragraphIndex, String text, String backgroundCss, String textCss) {
-insertText(offset, paragraphIndex, text, backgroundCss, textCss, false);
-	}
-	public void insertText(int offset, int paragraphIndex, String text, String backgroundCss, String textCss, boolean isNewest) {
 		HTMLDocument doc = ensureHTMLDocument();
 		HTMLEditorKit kit = ensureHTMLEditorKit();
 		
 		if (backgroundCss == null) 	backgroundCss = ""; //背景色样式
 		if (textCss == null) textCss = "";//文本样式
 		
-		if(isNewest)
-			backgroundCss = "background-image:url('" + IconFactory.getIconPath("new.png") + 
-			      "'); background-repeat:no-repeat; " + backgroundCss;
+//			backgroundCss = "background-image:url('" + IconFactory.getIconPath("new.png") + 
+//			      "'); background-repeat:no-repeat; " + backgroundCss;
 
 		StringBuffer sb = new StringBuffer("<div style=\"").append(backgroundCss).append("\"><div name=\"text\" id=\"" + paragraphIndex + "\" style=\"")
 				.append(textCss).append("\">");
@@ -191,9 +184,6 @@ insertText(offset, paragraphIndex, text, backgroundCss, textCss, false);
 updateText(paragraphIndex, textCss, null, textCss);
 	}
 	public void updateText(int paragraphIndex, String text, String backgroundCss, String textCss) {
-updateText(paragraphIndex, text, backgroundCss, textCss, false);
-	}
-	public void updateText(int paragraphIndex, String text, String backgroundCss, String textCss, boolean isNewest) {
         
         int find = clearParagraph("text", paragraphIndex);
         
@@ -229,8 +219,7 @@ editor.setCaretPosition(find);
 		
 		if(styleCss == null) styleCss = "";
 			
-		StringReader sr = new StringReader("<div style=\"" + styleCss + 
-				"\"><div name=\"" + comp.getName() + "\" id=\"" + paragraphIndex + "\" ></div></div>");
+		StringReader sr = new StringReader("<div><div name=\"" + comp.getName() + "\" id=\"" + paragraphIndex + "\" style=\"" + styleCss + "\" ></div></div>");
 		try {
 			if(offset == -1) offset = doc.getLength();
 			kit.read(sr, doc, offset);
@@ -291,7 +280,7 @@ insertHorizontalLine(-1, paragraphIndex, width, height);
 	public int clearParagraph(String name, int id)
 	{
 		HTMLDocument doc = ensureHTMLDocument();
-		HTMLEditorKit kit = ensureHTMLEditorKit();
+//		HTMLEditorKit kit = ensureHTMLEditorKit();
 		
 		ElementIterator it = new ElementIterator(doc);
         Element element;
@@ -302,26 +291,16 @@ insertHorizontalLine(-1, paragraphIndex, width, height);
 	            if (element.getName().equals(HTML.Tag.DIV.toString())) {
 	            	
 	            	 try {
-	                     int start = element.getStartOffset();
-	                     int end    = element.getEndOffset();
 	                     
 	                     boolean isEqual = 
 	                    		 name.equals(element.getAttributes().getAttribute(HTML.Attribute.NAME))
 	                    		 && id == Integer.parseInt((String) element.getAttributes().getAttribute(HTML.Attribute.ID))  ;
 	                    		 if(isEqual) {
 	                     
-	                    			 try {
-	                    			 StringWriter sw= new StringWriter();
-	        	                     kit.write(sw, doc, start, end-start);
-	        	                     System.out.println(sw.toString());
-	                    			 }
-	                    			 catch(Exception ex) {
-	                    				 ex.printStackTrace();
-	                    			 }
+	                    			   int start = element.getStartOffset();
+	          	                     int end    = element.getEndOffset();
 	        	                     
 	                     doc.remove(start, end-start);
-	                    
-
 	                     find = start;
 	                     break;
 	                    		 }
@@ -332,25 +311,6 @@ insertHorizontalLine(-1, paragraphIndex, width, height);
 	        }
 	        
 	        return find;
-	}
-	
-	public void toHtml() {
-		HTMLDocument doc = ensureHTMLDocument();
-//		HTMLEditorKit kit = ensureHTMLEditorKit();
-		
-		ElementIterator it = new ElementIterator(doc);
-        Element element;
-        
-	        while ((element = it.next()) != null) {
-	            if (element.getName().equals(HTML.Tag.DIV.toString())) {
-	            	try {
-						System.out.println(doc.getText(element.getStartOffset(), element.getEndOffset()-element.getStartOffset()));
-					} catch (BadLocationException e) {
-						// TODO 自动生成的 catch 块
-						e.printStackTrace();
-					}
-	        }
-	        }
 	}
 	
 	public int findParentParagraph(String name, int id)
