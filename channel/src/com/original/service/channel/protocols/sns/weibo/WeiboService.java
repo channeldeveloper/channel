@@ -68,7 +68,10 @@ public class WeiboService extends AbstractService {
 	public static File SNS_WEIBO_OAUTH = new File(System.getProperty("user.dir"), 
 			"sns_weibo_oauth.dat"),
 			 SNS_WEIBO_TEMPDIR = new File(System.getProperty("user.dir"), 
-					"sns_weibo");
+					"sns_weibo"),
+					SNS_WEIBO_THUMBNAIL_TEMPDIR = 
+					new File(SNS_WEIBO_TEMPDIR, "thumbnail");
+	
 	private static Map<Account, String> accessTokens = new HashMap<Account, String>();
 	private static Properties weiboProp = new Properties();
 	
@@ -80,6 +83,9 @@ public class WeiboService extends AbstractService {
 			
 			if(!SNS_WEIBO_TEMPDIR.exists()) {
 				SNS_WEIBO_TEMPDIR.mkdir();
+			}
+			if(!SNS_WEIBO_THUMBNAIL_TEMPDIR.exists()) {
+				SNS_WEIBO_THUMBNAIL_TEMPDIR.mkdir();
 			}
 		}
 		catch(Exception ex) {

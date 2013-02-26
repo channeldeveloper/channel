@@ -19,6 +19,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -102,6 +104,8 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	@Deprecated
 	private Vector<ChannelAccount> failedServiceAccounts = new Vector<ChannelAccount>();
 	
+	private Lock lock = new ReentrantLock(); //lock for serviceMap, for map is not thread safety
+	
 	/**
 	 * 
 	 * @return
@@ -175,24 +179,31 @@ public final class ChannelService extends AbstractService implements SeriveManag
 		
 		Runnable initServiceTask = new Runnable() {
 			public void run() {
-				HashMap<String, ChannelAccount> cas = accountManager.getChAccountMap();
-				for (String key : cas.keySet()) {
-					ChannelAccount ca = cas.get(key);
-					if (serviceMap.containsKey(ca))
-						continue; 
+				try {
+					lock.lock();
+					
+					HashMap<String, ChannelAccount> cas = accountManager.getChAccountMap();
+					for (String key : cas.keySet()) {
+						ChannelAccount ca = cas.get(key);
+						if (serviceMap.containsKey(ca))
+							continue; 
 
-					try {
-						Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
-						if (sc != null) {
-							serviceMap.put(ca, sc);
-							sc.addMessageListener(new ChannelServiceListener());
+						try {
+							Service sc = createService(ca);  //一个账户启动一个相应服务，如果启动不成功，需要记录下该账户！！
+							if (sc != null) {
+								serviceMap.put(ca, sc);
+								sc.addMessageListener(new ChannelServiceListener());
+							}
 						}
-					}
-					catch(Exception ex) {
-						ex.printStackTrace();
-						failedServiceAccounts.add(ca);
-					}
-				}				
+						catch(Exception ex) {
+							System.err.println("Account startup error ：" + ca.getAccount().getName());
+							failedServiceAccounts.add(ca);
+						}
+					}				
+				}
+				finally {
+					lock.unlock();
+				}
 				//立即启动，不能外部调用，否则起不来！
 				start();
 			}
@@ -343,10 +354,18 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 */
 	@Deprecated 
 	public synchronized void restartService() throws Exception {
-		if(!failedServiceAccounts.isEmpty()) {
-			ChannelAccount ca = failedServiceAccounts.firstElement();
-			restartService(ca);
+		try {
+			lock.lock();
+
+			if(!failedServiceAccounts.isEmpty()) {
+				ChannelAccount ca = failedServiceAccounts.firstElement();
+				restartService(ca);
+			}
 		}
+		finally {
+			lock.unlock();
+		}
+		
 	}
 	/**
 	 *  Pending 方法改进为制定具体的服务。
@@ -355,11 +374,18 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 */
 	@Deprecated 
 	public synchronized void restartService(ChannelAccount ca) throws Exception {
-		Service sc = createService(ca);
-		if (sc != null) {
-			serviceMap.put(ca, sc);
-			failedServiceAccounts.remove(ca);
-			sc.addMessageListener(new ChannelServiceListener());
+		try {
+			lock.lock();
+			
+			Service sc = createService(ca);
+			if (sc != null) {
+				serviceMap.put(ca, sc);
+				failedServiceAccounts.remove(ca);
+				sc.addMessageListener(new ChannelServiceListener());
+			}
+		}
+		finally {
+			lock.unlock();
 		}
 	}
 	
@@ -369,14 +395,28 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 */
 	@Deprecated 
 	public void skipService(ChannelAccount ca) {
-		failedServiceAccounts.remove(ca);
+		try {
+			lock.lock();
+			failedServiceAccounts.remove(ca);
+		}
+		finally {
+			lock.unlock();
+		}
+		
+		
 	}	
 	/**
 	 * 
 	 */
 	@Deprecated 
 	public void skipAllService() {
-		failedServiceAccounts.clear();
+		try {
+			lock.lock();
+			failedServiceAccounts.clear();
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 	
 	/**
@@ -384,7 +424,13 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 * @return
 	 */
 	public boolean isStartupAll() {
-		return failedServiceAccounts.isEmpty();
+		try {
+			lock.lock();
+			return failedServiceAccounts.isEmpty();
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
@@ -410,12 +456,20 @@ public final class ChannelService extends AbstractService implements SeriveManag
 		//需要发账号变化事件，每个消息默认都必须有peopleID
 		peopleManager.loadContracts();
 		// weired way, but work anyway
-		for (ChannelAccount key : serviceMap.keySet()) {
-			// System.out.println("Key : " + key.toString() + " Value : "
-			// + serviceMap.get(key));
-			Service service = serviceMap.get(key);
-			service.start();
+		try {
+			lock.lock();
+			
+			for (ChannelAccount key : serviceMap.keySet()) {
+				// System.out.println("Key : " + key.toString() + " Value : "
+				// + serviceMap.get(key));
+				Service service = serviceMap.get(key);
+				service.start();
+			}
 		}
+		finally {
+			lock.unlock();
+		}
+		
 	}
 
 	
@@ -590,16 +644,18 @@ public final class ChannelService extends AbstractService implements SeriveManag
 				cha = getDefaultAccount(msg.getClazz());
 			}			
 			if (cha != null) {
-				Service sc = serviceMap.get(cha);
 				//预处理消息的发送id，防止出现id一致，无法保存的情况。(消息id是唯一索引！)
 				preSendProcess(action, msg);				
 				try {
+					lock.lock();
+
+					Service sc = serviceMap.get(cha);
 					if (msg.getFromAddr() == null) {
 						msg.setFromAddr(cha.getAccount().getUser());
 					}					
 					PutTask task = new PutTask(sc, action, msg);
 					Future monitor = ThreadManager.getInstance().submit(task);
-					
+
 					//1、自己给自己发(特殊情况)，不保存数据库：
 					if(msg.getToAddr().equals(cha.getAccount().getUser()))
 						return;					
@@ -623,6 +679,9 @@ public final class ChannelService extends AbstractService implements SeriveManag
 				catch(Exception ex) {
 					ex.printStackTrace();
 				}
+				finally {
+					lock.unlock();
+				}
 			}
 		}
 	}
@@ -630,13 +689,18 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	@Override
 	public void post(String action, ChannelMessage msg) {
 		if (msg != null) {
-			
-			preSendProcess(action, msg);
-			
-			ChannelAccount cha = msg.getChannelAccount();
-			if (cha != null) {
-				Service sc = serviceMap.get(cha);
-				sc.post(action, msg);
+			try {
+				lock.lock();
+				preSendProcess(action, msg);
+
+				ChannelAccount cha = msg.getChannelAccount();
+				if (cha != null) {
+					Service sc = serviceMap.get(cha);
+					sc.post(action, msg);
+				}
+			}
+			finally {
+				lock.unlock();
 			}
 		}
 
@@ -1065,8 +1129,9 @@ public final class ChannelService extends AbstractService implements SeriveManag
 	 */
 	@Override
 	public  List<Account> getContacts() {
-		// TODO Auto-generated method stub
-		synchronized (serviceMap) {
+		try {
+			lock.lock();
+
 			ArrayList<Account> all = new ArrayList<Account>();
 			Collection<Service> scm = serviceMap.values();		
 			for (Service sc : scm)
@@ -1074,7 +1139,7 @@ public final class ChannelService extends AbstractService implements SeriveManag
 				try
 				{
 					if (sc != null && sc.getContacts() != null ){
-					all.addAll(sc.getContacts());
+						all.addAll(sc.getContacts());
 					}
 				}
 				catch(Exception exp)
@@ -1084,16 +1149,9 @@ public final class ChannelService extends AbstractService implements SeriveManag
 			}
 			return all;
 		}
-	}
-	
-	/**
-	 * 
-	 * @param channelName
-	 * @return
-	 */
-	public Service getService(ChannelAccount ca)
-	{
-		return this.serviceMap.get(ca);
+		finally {
+			lock.unlock();
+		}
 	}
 
 	////////////////////////////////////

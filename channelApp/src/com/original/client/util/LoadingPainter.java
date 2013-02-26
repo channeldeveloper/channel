@@ -108,9 +108,12 @@ public class LoadingPainter implements ChannelConstants
 			if (runnable != null) {
 				isRunning = true;
 				
-				runnable.run(); //wait running completed!
-				
-				isLoading = false;
+				try {
+					runnable.run(); //wait running completed!
+				}
+				finally {
+					isLoading = false; //if error or not, isLoading will be false both!
+				}
 			}
 		}
 

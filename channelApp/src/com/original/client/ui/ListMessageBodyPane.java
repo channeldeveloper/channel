@@ -19,6 +19,7 @@ import com.original.client.ui.widget.EditorHandler;
 import com.original.client.ui.widget.ScrollBar;
 import com.original.client.util.ChannelConfig;
 import com.original.client.util.ChannelConstants;
+import com.original.client.util.ChannelHyperlinkListener;
 import com.original.client.util.ChannelUtil;
 import com.original.client.util.LoadingPainter;
 import com.original.service.channel.ChannelMessage;
@@ -67,7 +68,9 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 			Runnable joinedTask = 	new Runnable() {
 					public void run() {
 						body.relativeIndex ++;
-						messageBodyList.add(0, msg);
+						body.newMsg = msg;
+						
+						//messageBodyList.add(0, msg);
 						
 			//先删除底部：
 						if(body.count >= 10)
@@ -76,11 +79,16 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 						insertMessage(true, --body.startParagraphIndex, msg);
 					}
 				};
-				
+		  
+			//绘制动态添加效果：
 				painter.repaint(this, joinedTask);
+			
+				//最后，改变消息状态数
+				fireMessageStatusChange(msg, 1);
 			}
 			else {
-
+				messageBodyList.add(msg);
+				
 				int paragraphIndex = ++body.endParagraphIndex; //段落索引号，每插入一个消息，就视为一段。
 				insertMessage(false, paragraphIndex, msg);
 
@@ -237,6 +245,9 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 					return;
 				  
 				int prevCount = Math.min(count, body.startParagraphIndex+ body.relativeIndex ); 
+				if(body.newMsg != null) {
+					removeMessage(body.startParagraphIndex, 1);
+				}
 				body.endParagraphIndex -= prevCount;
 				body.startParagraphIndex -= prevCount;
 				
@@ -276,6 +287,9 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 					return;
 				
 				int nextCount = Math.min(count, available); 
+				if(body.newMsg != null) {
+					removeMessage(body.startParagraphIndex, 1);
+				}
 				body.endParagraphIndex += nextCount;
 				body.startParagraphIndex += nextCount;
 				
@@ -309,6 +323,8 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 
 	class Body extends JTextPane implements ChannelEvent, ChannelConstants
 	{
+		ChannelMessage newMsg = null;//记录当前最新消息
+		
 		ParagraphTop top;
 		ParagraphBottom bottom;
 		
@@ -322,6 +338,7 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 			this.setEditorKit(new HTMLEditorKit());//设置html编辑器
 			this.setEditable(false);
 			this.setFont(DEFAULT_FONT);
+			this.addHyperlinkListener(new ChannelHyperlinkListener());
 		}
 		
 		//统一的文本样式CSS
@@ -467,8 +484,11 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 					}
 					handler.removeHorizontalLine(paragraphIndex);//if exists, then will be deleted!
 					
-					//同时改变原有消息数：
+					//更新标题栏的消息状态数
+					fireMessageStatusChange(msg, -1);
+					//同时改变原有消息数
 					notifyToChangeMessage(msg, false);
+					
 				} catch (Exception ex) {
 					ChannelUtil.showMessageDialog(null, "错误", ex);
 				}
@@ -497,7 +517,7 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 		 */
 		@Override
 		public ChannelMessage getBodyMessage() {
-			int paragraphIndex = top.paragraphIndex;
+			int paragraphIndex = top.paragraphIndex + body.relativeIndex;
 			ChannelMessage msg = messageBodyList.elementAt(paragraphIndex);
 			return msg;
 		}

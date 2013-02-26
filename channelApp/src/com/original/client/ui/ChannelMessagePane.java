@@ -16,8 +16,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Area;
 import java.awt.geom.RoundRectangle2D;
+import java.beans.PropertyChangeEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -75,7 +77,7 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 	private Dimension arrowSize = new Dimension(ChannelConfig.getIntValue("arrowWidth"),
 			header.HEADSIZE.height);
 	
-	String uid = null; //联系人账号(用户名)，和ChannelMessagePane一一对应。
+	ObjectId peopleId = null; //联系人id
 	boolean showDirection = true; //是否显示消息方向(即是否改变消息面板的布局方向)，如果为false，则只由receive方向
 	
 	Timer gradientPainter = new Timer(100, this);
@@ -197,13 +199,13 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 	 */
 	public void initMessage(ChannelMessage msg) 
 	{
-		String uName = msg.getContactName();
-		if (uid == null) {// 第一次添加
+		ObjectId pid = msg.getPeopleId();
+		if (peopleId == null) {// 第一次添加
 			setUid(msg);
 			layoutMessage(msg);
 			
 			body.initMessage(msg);
-		} else if (uid.equals(uName)) {
+		} else if (peopleId.equals(pid)) {
 			refreshUid();
 			
 			body.initMessage(msg);
@@ -217,15 +219,15 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 	 */
 	public void addMessage(ChannelMessage msg, boolean toFirst)
 	{
-		String uName = msg.getContactName();
+		ObjectId pid = msg.getPeopleId();//联系人id
 		boolean isAdd = false;
-		if (uid == null) { // 第一次添加，需要设置布局
+		if (peopleId == null) { // 第一次添加，需要设置布局
 			setUid(msg);
 			layoutMessage(msg);
 
 			body.addMessage(msg, toFirst);
 			isAdd = true;
-		} else if (uid.equals(uName)) {
+		} else if (peopleId.equals(pid)) {
 			refreshUid();
 			
 			body.addMessage(msg, toFirst);
@@ -280,6 +282,13 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 				&& (originBody = originContainer.getMessageBody()) != null) {
 			this.body.messageBodyList = originBody.messageBodyList;
 		}
+		
+		//更新状态栏(标题栏)的消息状态数：
+		if(this.statusBar != null && originBody != null) {
+			for(Map.Entry<String, Integer> entry : originBody.messageStatusMap.entrySet()) {
+				this.statusBar.propertyChange(new PropertyChangeEvent(this, entry.getKey(), null, entry.getValue()));
+			}
+		}
 	}
 	
 	/**
@@ -287,10 +296,10 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 	 * @param msg 消息对象
 	 */	
 	public void setUid(ChannelMessage msg) {
-		String uid = msg == null ? null : msg.getContactName();
-		if (this.uid == null || !this.uid.equals(uid)) {
-			this.uid = uid;
-			header.setContactName(uid); // 目前设置联系人用户名即为Uid
+		ObjectId pid = msg == null ? null : msg.getPeopleId();
+		if (this.peopleId == null || !this.peopleId.equals(pid)) {
+			this.peopleId = pid;
+			header.setContactName(msg.getContactName()); // 目前设置联系人用户名即为Uid
 			header.setHeadImageIcon(msg); //设置联系人头像
 		}
 	}
@@ -302,8 +311,8 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 	 * 获取联系人的Uid
 	 * @return
 	 */
-	public String getUid() {
-		return this.uid;
+	public ObjectId getPeopleId() {
+		return this.peopleId;
 	}
 	
 	

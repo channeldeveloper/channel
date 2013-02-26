@@ -16,6 +16,7 @@ public class TitleItem implements Serializable, ChannelConstants
 	private boolean isBold = false;//是否加粗
 	
 	private Color color = LIGHT_TEXT_COLOR; //字体颜色
+	private int value = 0;//用于统计
 	
 	public TitleItem(String title) {
 		this.title = title;
@@ -61,6 +62,16 @@ public class TitleItem implements Serializable, ChannelConstants
 		return this;
 	}
 	
+	public int getValue() {
+		return value;
+	}
+	public void setValue(int value) {
+		this.value = value;
+	}
+	public void addValue(int value) {
+		this.value += value;
+	}
+
 	public Font getFont() {
 		Font font = new Font(fontFamily, isBold ? Font.BOLD : Font.PLAIN,
 				fontSize);

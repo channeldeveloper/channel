@@ -14,6 +14,8 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -60,6 +62,7 @@ import com.seaglasslookandfeel.widget.SGTextPane;
 public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 {
 	protected Vector<ChannelMessage> messageBodyList = new Vector<ChannelMessage>();
+	protected Map<String, Integer> messageStatusMap = new HashMap<String, Integer>();//记录消息状态数，如未读、已读等等
 	
 	private MessageContainer container = null; //当前面板的载体，即父面板
 	private PropertyChangeSupport changeSupport =
@@ -86,6 +89,29 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	public MessageContainer getMessageContainer()
 	{
 		return this.container;
+	}
+	
+	/**
+	 * 获取原始的消息面板的载体面板(父面板)
+	 * @return
+	 */
+	public MessageContainer getOriginContainer()
+	{
+		ChannelMessagePane cmp  = (ChannelMessagePane)container.getParent();
+		MessageContainer originContainer = cmp.getOriginContainer();
+		return originContainer;
+	}
+	
+	/**
+	 * 获取原始的消息面板
+	 * @return
+	 */
+	public ChannelMessageBodyPane getOriginBody()
+	{
+		MessageContainer originContainer = getOriginContainer();
+		if(originContainer != null)
+			return originContainer.getMessageBody();
+		return null;
 	}
 	
 	/**
@@ -133,7 +159,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 					new PropertyChangeEvent(this, changePropertyName, oldValue, newValue));
 		}
 	}
-	public void fireMessageChange(ChannelMessage msg, int value) {
+	public void fireMessageCountChange(ChannelMessage msg, int value) {
 		if (msg.isMail()) {
 			fireMessageChange(MAIL_COUNT_CHANGE_PROPERTY, 0, value);
 		} else if (msg.isQQ()) {
@@ -141,6 +167,38 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		} else if (msg.isWeibo()) {
 			fireMessageChange(WEIBO_COUNT_CHANGE_PROPERTY, 0, value);
 		}
+		
+		fireMessageStatusChange(msg, value);
+	}
+	
+	/**
+	 * 更新消息的状态数，这里只更新消息的未读数。如果有其他状态，再后续添加。
+	 * @param msg
+	 * @param count
+	 */
+	public void fireMessageStatusChange(ChannelMessage msg , int count) {
+		if(msg.hasRead() || msg.hasTrashed() || msg.hasDrafted())
+			return;
+		
+		if (msg.isMail()) {
+			fireMessageChange(MAIL_UNREAD_CHANGE_PROPERTY, 0, count);
+			updatePropertyCount(MAIL_UNREAD_CHANGE_PROPERTY, count);
+		} else if (msg.isQQ()) {
+			fireMessageChange(MAIL_UNREAD_CHANGE_PROPERTY, 0, count);
+			updatePropertyCount(MAIL_UNREAD_CHANGE_PROPERTY, count);
+		} else if (msg.isWeibo()) {
+			fireMessageChange(MAIL_UNREAD_CHANGE_PROPERTY, 0, count);
+			updatePropertyCount(MAIL_UNREAD_CHANGE_PROPERTY, count);
+		}
+	}
+	protected void updatePropertyCount(String propertyName, int count) {
+		Integer statusCount = messageStatusMap.get(propertyName); //只更新未读数
+		if (statusCount == null) {
+			statusCount = new Integer(count);
+		} else {
+			statusCount = new Integer(statusCount.intValue() + count);
+		}
+		messageStatusMap.put(propertyName, statusCount);
 	}
 
 	/**
@@ -155,9 +213,8 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			this.add(body);
 		}
 		
-//		messageBodyList.add(0, msg);
 		messageBodyList.add(msg);
-		fireMessageChange(msg, 1);
+		fireMessageCountChange(msg, 1);
 	}
 	
 
@@ -176,9 +233,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			this.add(body);
 			this.validate();
 			
-//			messageBodyList.add(msg);
-			messageBodyList.add(0, msg);
-			
+			messageBodyList.add(0, msg);//注意和initMessage的顺序相反
 		}
 		else {
 			if(this.getComponentCount() > 0) { //下余面板的边框，稍微复杂点
@@ -196,7 +251,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 				this.validate();
 			}
 		}
-		fireMessageChange(msg, 1);
+		fireMessageCountChange(msg, 1);
 	}
 	
 	/**
@@ -256,7 +311,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	{
 		ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
 		if (toFirst) { // 如果只显示一条，即顶部显示
-			messageBodyList.remove(messageBodyList.size() - 1);
+			messageBodyList.remove(0); //删除第一条消息(最新消息)，即index=0
 			if (messageBodyList.isEmpty()) {
 				
 				Container child = this, parent = container;
@@ -268,11 +323,11 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 				parent.validate();
 				
 			} else {
-				ChannelMessage newMsg = messageBodyList.get(messageBodyList.size() - 1);
+				ChannelMessage newMsg = messageBodyList.get(0); //获取下一条消息，即index=1
 				ChannelMessageBodyPane.Body body = new ChannelMessageBodyPane.Body(newMsg, toFirst);
 				body.setBorder(new EmptyBorder(0, 10, 0, 10));
 
-				//显示倒数第2条消息
+				//显示第2条消息
 					this.removeAll();
 					this.add(body);
 					this.validate();
@@ -282,7 +337,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 				parent.validate();
 				
 				//消息数-1
-				fireMessageChange(newMsg, -1);
+				fireMessageCountChange(newMsg, -1);
 			}
 		} else {
 			Container parent = container;
@@ -297,13 +352,12 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 				desktop.validate();
 			}
 			
-			ChannelMessagePane cmp  = (ChannelMessagePane)container.getParent();
-			MessageContainer originContainer = cmp.getOriginContainer();
-			if(originContainer != null) {
-				ChannelMessageBodyPane originBody = originContainer.getMessageBody();
+			//更新原始消息面板的消息状态数
+			ChannelMessageBodyPane originBody = this.getOriginBody();
+			if(originBody != null) {
 				ChannelMessage firstMsg = originBody.getChannelMessage();
 				if (firstMsg.equals(msg)) { // 是第一条消息
-					originBody.notifyToChangeMessage(firstMsg, true); //从面板和消息List中移除
+					originBody.notifyToChangeMessage(msg, true); //从面板和消息List中移除
 					
 					//同时检查是否需要改变面板的消息方向
 //					ChannelMessagePane originParent = (ChannelMessagePane) originContainer.getParent();
@@ -311,7 +365,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 				} else { // 否则只改变原消息数
 					originBody.messageBodyList.remove(msg);//只从消息List中移除
 					
-					originBody.fireMessageChange(firstMsg, -1);
+					originBody.fireMessageCountChange(msg, -1);
 				}
 			}
 		}
@@ -350,13 +404,7 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	 */
 	public ChannelMessage getChannelMessage() {
 		if (!messageBodyList.isEmpty()) {
-			return messageBodyList.lastElement();
-		} else {
-			int msgCount = this.getComponentCount();
-			if (msgCount > 0) {
-				Body body = (Body) this.getComponent(msgCount - 1);
-				return body.iMsg;
-			}
+			return messageBodyList.firstElement();
 		}
 		return null;
 	}
@@ -583,11 +631,28 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			if(notifyDB) {
 				if(statusConstant == STATUS_READ) {
 					if(!msg.hasRead()) {
+						//先更新消息状态数
+						fireMessageStatusChange(msg, -1);
+						//再更新原始消息面板的消息状态数
+						ChannelMessageBodyPane originBody = getOriginBody();
+						if(originBody != null) {
+							originBody.fireMessageStatusChange(msg, -1);
+							
+							ChannelMessage firstMsg = originBody.getChannelMessage();
+							if(firstMsg.equals(msg)) {//是原始消息面板的第一条消息，也需要更新图标
+								ChannelMessageBodyPane.Body body = (ChannelMessageBodyPane.Body)originBody.getComponent(0);
+								body.top.notifyStatusChange(firstMsg, statusConstant, false);
+							}
+						}
+						
 						channelService.updateMessageFlag(msg, ChannelMessage.FLAG_SEEN, "1");
 						msg.setRead(true);
 					}
 				} else if(statusConstant == STATUS_POST) {
 					if(!msg.hasProcessed()) {
+						//先更新消息状态数
+						//fireMessageStatusChange(msg, -1, true);
+						
 						channelService.updateMessageFlag(msg, ChannelMessage.FLAG_DONE, "1");
 						msg.setProcessed(true);
 					}
@@ -878,14 +943,14 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 					try {
 						ChannelService cs = 	ChannelAccesser.getChannelService();
 						cs.put(Constants.ACTION_QUICK_REPLY, newMsg);
+						
+						//最后回复消息
+						ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
+						desktop.addMessage(newMsg);
 					}
 					catch (Exception ex) {
 						ChannelUtil.showMessageDialog(this, "错误", ex);
 					}
-					
-					//最后回复消息
-					ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
-					desktop.addMessage(newMsg);
 				}
 			}
 		}

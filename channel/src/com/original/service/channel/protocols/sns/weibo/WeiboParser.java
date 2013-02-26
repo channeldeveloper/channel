@@ -10,11 +10,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,8 +29,10 @@ import org.apache.commons.lang.StringEscapeUtils;
 import weibo4j.model.Emotion;
 import weibo4j.model.WeiboException;
 
+import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
+import com.original.service.storage.GridFSUtil;
 
 /**
  * 微博处理消息类，用于将纯文本的Status对象，转换成Html格式的Message对象。
@@ -45,8 +45,8 @@ public class WeiboParser implements Constants
 	private static List<Emotion> emotions = new ArrayList<Emotion>();
 	private static Map<String, Object> cache = new HashMap<String, Object>();
 	
-	private static SimpleDateFormat weiboFormat = 
-			new SimpleDateFormat("MM月dd日 HH:mm");
+//	private static SimpleDateFormat weiboFormat = 
+//			new SimpleDateFormat("MM月dd日 HH:mm");
 	
 	public static final String PREFIX_EMOTION = "emotion_";
 	public static final String IMAGE_PATTERN = "<img .*src=\"@url\".*>";
@@ -167,7 +167,8 @@ public class WeiboParser implements Constants
 				if(emotion.getPhrase().equals(phrase)) {
 					obj = emotion.getUrl();
 					
-					String url = String.format("<img border=\"0\" src=\"%s\" alt=\"%s\" />", obj, phrase);
+//					String url = String.format("<img border=\"0\" src=\"%s\" alt=\"%s\" />", obj, phrase);
+					String url = String.format("<img border=\"0\" src=\"%s\" />", obj);
 					cache.put(PREFIX_EMOTION+phrase, url);
 					return url;
 				}
@@ -212,7 +213,7 @@ public class WeiboParser implements Constants
 	 * @return
 	 */
 	public static String parseImageText(ChannelMessage msg) {
-		HashMap exts = msg.getExtensions();
+		HashMap<String, String> exts = msg.getExtensions();
 		String imgUrl = "";
 		if(exts == null || exts.isEmpty())
 			return imgUrl;
@@ -220,8 +221,27 @@ public class WeiboParser implements Constants
 		String thumbNailPic = (String)exts.get(Weibo_ThumbNail_Pic),
 				middlePic = (String)exts.get(Weibo_Middle_Pic);
 		if (!"".equals(thumbNailPic)) {
-			//这里读取高度
-			Dimension picSize = getImageSize(thumbNailPic);
+			
+			List<Attachment> attachs = msg.getAttachments();
+			if(attachs != null && !attachs.isEmpty())
+			{
+				Attachment attach = attachs.get(0);//顶多只有一个
+				File thumbNail = new File(WeiboService.SNS_WEIBO_THUMBNAIL_TEMPDIR, attach.getFileName());
+				if(thumbNail.exists()) {//1、先读取本地：
+					thumbNailPic  = thumbNail.toURI().toString();
+				}
+				else {//2、读取数据库
+					try {
+						GridFSUtil.getGridFSUtil().writeFile(attach.getFileId(), thumbNail);
+						thumbNailPic  = thumbNail.toURI().toString();
+					} catch (Exception ex) {
+						
+					}
+				}
+			}
+			
+			//3、最后如果上面两个都没有，只能读取http:
+			Dimension picSize = getImageSize(thumbNailPic);//thumbNailPic既可能是Http://也可能是file://
 			
 			imgUrl = "<br/><a href=\"" + middlePic + "\">" +
 					"<img border=\"0\" src=" + thumbNailPic + " width=\"" + picSize.width + "\" height=\"" + picSize.height + "\"/>" +
@@ -236,23 +256,22 @@ public class WeiboParser implements Constants
 	 * @return
 	 */
 	private static Dimension  getImageSize(String imgURL) {
-		java.net.URL url = null;
-		Dimension size = new Dimension();
-		if(imgURL == null || !imgURL.startsWith("http")) {
+		Dimension size = new Dimension(32,32);
+		if(imgURL == null ||
+				(!imgURL.startsWith("http") && !imgURL.startsWith("file")) ) {
 			return size;
-		}
-		
-		try {
-			url = new URL(imgURL);
-		} catch (MalformedURLException e) {
-			System.err.println("载入图片失败 MalformedURLException");
 		}
 		
 		// TODO BufferedImage 子类描述具有可访问图像数据缓冲区的 Image
 		// 使用BufferedImage 才能再未显现图片时知道图片的大小
 		BufferedImage bi = null;
 		try {
-			bi = javax.imageio.ImageIO.read(url);
+			if(imgURL.startsWith("http")) {
+				bi = javax.imageio.ImageIO.read(new URL(imgURL));
+			}
+			else if(imgURL.startsWith("file")) {
+				bi =  javax.imageio.ImageIO.read(new File(new URI(imgURL)));
+			}
 			size.width = bi.getWidth() ;
 			size.height = bi.getHeight();
 			
@@ -260,6 +279,8 @@ public class WeiboParser implements Constants
 			System.err.println("载入图片失败 IOException");
 		} catch (java.lang.IllegalArgumentException e) {
 			System.err.println("载入图片失败 IllegalArgumentException");
+		} catch (URISyntaxException e) {
+			System.err.println("载入图片失败 URISyntaxException");
 		} finally {
 			bi = null;
 		}
@@ -352,15 +373,12 @@ public class WeiboParser implements Constants
 			if(imgURLs != null) {
 				content = content.replace(imgURLs[0], "");//清除图片内容
 				content = content.replaceAll("\r|\n", ""); //清除换行符
-//				imgItem.setContent(parseBytes(imgURLs[1]));//提取图片
 				items[1] = parseBytes(imgURLs[1]);
 			}
 			
 			if (addAt) {
-//				imgItem.setText(parseUTF8("//@" + msg.getToAddr() + ": " + content));
 				items[0] = "//@" + msg.getToAddr() + ": " + parseUTF8( content);
 			} else {
-//				imgItem.setText(parseUTF8(content));
 				items[0] = parseUTF8(content);
 			}
 		}

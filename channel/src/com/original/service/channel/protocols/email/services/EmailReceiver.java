@@ -285,7 +285,7 @@ public class EmailReceiver {
 		att.setContentId(ea.getCId());
 		att.setFileId(ea.getFileID());
 		att.setFileName(ea.getFileName());
-		att.setSize(ea.getSize());
+		att.setSize(ea.getSize()==null?0:ea.getSize().intValue());
 		att.setType(ea.getType());
 		att.setFilePath(ea.getCDir());
 		att.setContentType(ea.getCType());//attachment inline

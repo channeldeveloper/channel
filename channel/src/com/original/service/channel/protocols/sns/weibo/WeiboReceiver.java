@@ -6,11 +6,18 @@
  */
 package com.original.service.channel.protocols.sns.weibo;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.bson.types.ObjectId;
 
 import weibo4j.Timeline;
 import weibo4j.model.Status;
@@ -18,12 +25,14 @@ import weibo4j.model.StatusWapper;
 import weibo4j.model.WeiboException;
 
 import com.original.service.channel.Account;
+import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.event.MessageEvent;
+import com.original.service.storage.GridFSUtil;
 import com.original.util.log.OriLog;
 
 /**
@@ -160,6 +169,77 @@ public class WeiboReceiver {
 		msg.setReceivedDate(status.getCreatedAt());
 		msg.setToAddr(ca.getAccount().getUser());
 		
+		//download thumbnailpi as attachment:
+		Attachment attach = downloadThumbnail(status.getThumbnailPic());
+		if(attach != null) {
+			List<Attachment> attachs = msg.getAttachments();
+			if(attachs == null) {
+				attachs = new ArrayList<Attachment>();
+			}
+			attachs.add(attach);
+			msg.setAttachments(attachs);
+		}
+		
 		return msg;
+	}
+	
+	private Attachment downloadThumbnail(String thumbnailPicURL) {//下载图片，分数据库和本地保存。本地作为缓存
+		if(thumbnailPicURL == null || "".equals(thumbnailPicURL))
+			return null;
+		
+		String thumbnailPicName = null;
+		try {
+			thumbnailPicName = thumbnailPicURL.substring(
+					thumbnailPicURL.lastIndexOf("/")+1, thumbnailPicURL.length());
+		}
+		catch(Exception ex) {
+			return null;
+		}
+		
+		File file = new File(WeiboService.SNS_WEIBO_THUMBNAIL_TEMPDIR, thumbnailPicName);
+		if (file.exists()) {
+			return null;
+		}
+		if (!file.getParentFile().exists()) {
+			file.getParentFile().mkdir();
+		}
+        InputStream is = null;
+        HttpURLConnection httpConnection = null;
+        try {
+            // 构造HTTP连接
+        	URL url = new URL(thumbnailPicURL);
+    		httpConnection = (HttpURLConnection)url.openConnection();
+    		httpConnection.setConnectTimeout(5 * 1000);//set time-out 5s
+ is = httpConnection.getInputStream();
+    		
+            if (is == null) {
+                return null;
+            }
+            
+           ObjectId id = (ObjectId) GridFSUtil.getGridFSUtil().saveFile(is, thumbnailPicName);
+           //保存本地：
+           GridFSUtil.getGridFSUtil().writeFile(id, file);
+           
+           Attachment attach = new Attachment();
+           attach.setFileId(id);
+           attach.setFileName(thumbnailPicName);
+           attach.setFilePath(thumbnailPicURL);
+           return attach;
+           
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            // 完毕，关闭所有链接
+			if (is != null) {
+				try {
+					is.close();
+				} catch (IOException ex) {
+				}
+			}
+			if (httpConnection != null) {
+				httpConnection.disconnect();
+			}
+        }
+        return null;
 	}
 }

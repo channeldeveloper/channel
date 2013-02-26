@@ -27,6 +27,8 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.event.MouseInputListener;
 
+import org.bson.types.ObjectId;
+
 import com.original.channel.ChannelAccesser;
 import com.original.channel.ChannelNativeCache;
 import com.original.client.EventConstants;
@@ -207,9 +209,8 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 			Component comp = owner.getComponent(i);
 			if(comp instanceof ChannelMessagePane)
 			{
-				String uid = ((ChannelMessagePane) comp).uid;
-				String uName = msg.getContactName();
-				if(uid != null && uid.equals(uName))
+				ObjectId pid = ((ChannelMessagePane) comp).peopleId;
+				if(pid != null && pid.equals(msg.getPeopleId()))
 					return (ChannelMessagePane)comp;
 			}
 		}

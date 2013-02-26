@@ -18,6 +18,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 import javax.mail.Message;
@@ -54,10 +58,11 @@ public class EMailParser {
 
     EMailManager manager = null;
     Logger log = OriLog.getLogger(this.getClass());
-    private String userId = "";
+    static ExecutorService executor = Executors.newCachedThreadPool();
+    
 
     public EMailParser(String _userId) {
-        userId = _userId;
+//        userId = _userId;
         manager = new EMailManager(_userId);
     }
 //
@@ -263,12 +268,12 @@ public class EMailParser {
 				// store to db
 				Object fileID = GridFSUtil.getGridFSUtil().saveFile(mpart.getInputStream(), fileName);
 				attachment.setFileID((ObjectId) fileID);
-				attachment.setSize(mpart.getInputStream().available());
+//				attachment.setSize(mpart.getInputStream().available());
 
 				// save to native file
 				String tempDir = Utilies.getTempDir(fileID, fileName); // fileID is unique
 				File tempFile = new File(new URI(tempDir));
-				if(!tempFile.exists() || tempFile.length() != attachment.getSize()) {
+				if(!tempFile.exists() /*|| tempFile.length() != attachment.getSize()*/) {
 					GridFSUtil.getGridFSUtil().writeFile((ObjectId) fileID, tempDir);
 				}
 				if (attachment.getCId() != null) {
@@ -538,9 +543,9 @@ public class EMailParser {
     
     private String parseCidParts(String content, EMail mail) {
     	Map<String, String> attachParts = mail.getAttachParts();
-    	if(attachParts == null ||
-    			attachParts.isEmpty())
-    		return content;
+//    	if(attachParts == null ||
+//    			attachParts.isEmpty())
+//    		return content;
     	
 //    	for(Map.Entry<String, String> entry : attachParts.entrySet())
 //    	{
@@ -607,7 +612,8 @@ public class EMailParser {
 				image = ImageIO.read(new java.net.URL(URL));
 			}
 		} catch (Exception ex) {
-
+System.err.println(ex);
+image = null;
 		}
 		return image;
 	}
@@ -616,14 +622,27 @@ public class EMailParser {
 		prepareTempEmbededFiles(msg);
 		
 		String content = msg.getBody();
+		content = trimHTMLFlag(content);
+
 		if (!showComplete)
 			return content;
 		else
 			return showComplete(content);
 	}
 	
+	//修剪html文本的<html>和</html>标识
+	private static String trimHTMLFlag(String html) {
+		if(html == null || html.isEmpty())
+			return html;
+		
+		Pattern pattern = Pattern.compile("<html>|</html>", Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(html);
+		
+		return matcher.replaceAll("");//全部替换成""，即移除html标识
+	}
+	
 	//如果消息中的图片本地保存失败，可以获取数据库中保存的图片
-	private static void prepareTempEmbededFiles(ChannelMessage msg) {
+	private static void prepareTempEmbededFiles(final ChannelMessage msg) {
 		try {
 			List<Attachment> atts = msg.getAttachments();
 			if (atts != null && atts.size() > 0) {

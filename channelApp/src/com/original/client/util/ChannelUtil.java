@@ -83,6 +83,7 @@ import com.original.client.ui.widget.ScrollBar;
 import com.original.client.ui.widget.ToolTip;
 import com.original.widget.OButton;
 import com.original.widget.model.LevelButtonModel.BUTTONLEVEL;
+import com.seaglasslookandfeel.SeaGlassLookAndFeel;
 import com.seaglasslookandfeel.widget.SGButton;
 import com.seaglasslookandfeel.widget.SGColorChooser;
 import com.seaglasslookandfeel.widget.SGFileChooser;
@@ -969,6 +970,7 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		}
 		
 		dialog.setTextEditor(editor);
+		SeaGlassLookAndFeel.useOurUIs(dialog.getDefautFacePanel());
 	SGPanel body = createCustomedPane(dialog, dialog.getDefautFacePanel(), title);
 	dialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 	dialog.setContentPane(body);

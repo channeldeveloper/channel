@@ -293,19 +293,6 @@ public class Utilies {
 		return html;
 		
 	}
-	
-	public static void main(String[] args) throws Exception {
-		BufferedReader br = new BufferedReader(new InputStreamReader(
-				new FileInputStream("c:/html.txt")));
-		char[] buffer = new char[1024];
-		int read  = -1;
-		StringBuffer sb = new StringBuffer();
-		while((read = br.read(buffer)) != -1) {
-			sb.append(buffer, 0, read);
-		}
-		br.close();
-		System.out.println(getNewAddedBody(sb.toString()));
-	}
 
 	/**
 	 * 处理邮件内容，即显示邮件的完整内容

@@ -484,6 +484,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 								center.clearAll(); //清空所有文本
 								returnToHistory();//同时返回上一面板
 							} catch (Exception ex) {
+								ex.printStackTrace();
 								ChannelUtil.showMessageDialog(NewMessageBodyPane.this, "错误", ex);
 							}
 						}

@@ -1,6 +1,7 @@
 package com.original.client.ui;
 
 import java.awt.Color;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -142,11 +143,14 @@ public class ChannelMessageTopBar extends ChannelMessageStatusBar
 		int width = getWidth(), height = getHeight();
 		g2d.fillRoundRect(0, 0, width, height, 10, 10);
 		
+		FontMetrics fm = g.getFontMetrics();
 		if (titleItems != null) { //标题
-			for (int i = 0, j = 12; i < titleItems.length; i++, j += 5) {
+			for (int i = 0, j = 12; i < titleItems.length; i++) {
 				g2d.setFont(titleItems[i].getFont());
 				g2d.setColor(titleItems[i].getColor());
 				g2d.drawString(titleItems[i].getTitle(), j, (height + titleItems[i].getFontSize()) / 2 - 2); //-2上移微调2px
+				
+				j+=( fm.stringWidth(titleItems[i].getTitle()) + 10 );//10px为间距
 			}
 		}
 		
