@@ -12,6 +12,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
 
+import org.bson.types.ObjectId;
+
 import weibo4j.model.WeiboException;
 
 import com.original.client.ui.ChannelDesktopPane;
@@ -23,7 +25,8 @@ import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.core.ChannelException;
 import com.original.service.channel.core.ChannelService;
-import com.original.service.channel.core.MessageManager;
+import com.original.service.channel.core.QueryItem;
+import com.original.service.people.People;
 import com.seaglasslookandfeel.SeaGlassLookAndFeel;
 
 /**
@@ -160,10 +163,13 @@ public class ChannelIFrame extends JInternalFrame implements ChannelConstants
 		cs.addMessageListener(desktop);
 		
 //开始添加信息：
-MessageManager msm =cs.getMsgManager();
-List<ChannelMessage> msgs = msm.getMessagesByFlags(new String[]{ChannelMessage.FLAG_TRASHED, 
-		ChannelMessage.FLAG_DRAFT}, 
-		new Integer[]{0, 0});
+		List<ObjectId> pids = ChannelAccesser.getPeopleIdList();
+		desktop.setPeopleIdList(pids);
+						
+		List<ChannelMessage> msgs = ChannelAccesser.getMessageByPeopleGroup(pids,
+				new QueryItem(new String[]{ChannelMessage.FLAG_TRASHED,  ChannelMessage.FLAG_DRAFT}, 
+						new Integer[]{0, 0}), 
+						0, 20);
 for (ChannelMessage m : msgs)
 {			
 	desktop.initMessage(m); //注意不要使用addMessage()，用途不一样

@@ -39,6 +39,7 @@ import com.original.client.util.ChannelConstants;
 import com.original.client.util.ChannelUtil;
 import com.original.client.util.GraphicsHandler;
 import com.original.client.util.IconFactory;
+import com.original.client.util.LoadingPainter;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.core.ChannelService;
 import com.original.service.channel.core.MessageFilter;
@@ -72,7 +73,7 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 	public static ScrollBar DEFAULT_SCROLLBAR = 
 			new ScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)), //默认显示面板的滚动条
 			FILTER_SCROLLBAR = 
-			new ScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)); //过滤面板的滚动条，个默认面板一致
+			new ScrollBar(JScrollBar.VERTICAL, new Color(225,240,240)); //过滤面板的滚动条，和默认面板一致
 	
 	public static LayoutManager DEFAULT_DOWN_LAYOUT = //默认布局方式
 			new VerticalGridLayout(VerticalGridLayout.BOTTOM_TO_TOP, 0, 8, new Insets(0, 0, 0, 0)), 
@@ -82,14 +83,22 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 	public static Lock channelLock = new ReentrantLock(); //用于控制消息的添加，即initMessage()和addMessage()的同步
 	
 	//记录上一次选中的类型和状态
-	private String lastSelectedType = VIEW_ALL_TYPE, lastSelectedStatus = VIEW_ALL_STATUS;
+	private String lastSelectedType = VIEW_ALL_TYPE, lastSelectedStatus = VIEW_ALL_STATUS,
+			lastSearchedText = null;//最后一次查找的文本
+	private int lastSearchedOffset = 0;//最后一次查询索引，用于分页查询
 	
 	//显示更新信息和置顶图标的区域
 	private Rectangle showMoreArea = null, topIconArea, homeIconArea = null; 
 	private String showMoreTip = "显示更多信息";
 	
 	//当前显示的面板
-	private Component currentShowComp = DEFAULT_PANE;
+	private SGPanel currentShowPane = DEFAULT_PANE;
+	
+	//加载动画显示面板，用于加载数据后时显示动画效果。
+	private LoadingPainter painter = new LoadingPainter();
+	
+	//联系人Id列表
+	private List<ObjectId> peopleIdList = null;//初始化消息的时候赋值。以后使用时，直接调用，而不需要再次查询数据库！
 	
 	public ChannelDesktopPane() {
 		setLayout(layoutMgr);
@@ -115,28 +124,24 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 	 */
 	public void initMessage(SGPanel owner, ChannelMessage msg)
 	{
-		if(!checkMsgValidity(msg))
+		if(owner == null || !checkMsgValidity(msg))
 			return;
 		
-		boolean isLock = false;
 		try {
-			if(isLock = channelLock.tryLock()) {
-				ChannelMessagePane msgContainer = null;
-
-				if ((msgContainer = findMessage(owner, msg)) == null) {
-					msgContainer = new ChannelMessagePane();
-					msgContainer.initMessage(msg);
-					
-					owner.add(msgContainer);
-					owner.validate();
-				} else {
-					msgContainer.initMessage(msg);
-				}
+			channelLock.lock();
+			
+			ChannelMessagePane msgContainer = null;
+			if ((msgContainer = findMessage(owner, msg)) == null) {
+				msgContainer = new ChannelMessagePane();
+				msgContainer.initMessage(msg);
+				
+				owner.add(msgContainer);
+				owner.validate();
+			} else {
+				msgContainer.initMessage(msg);
 			}
 		} finally {
-			if(isLock) {
-				channelLock.unlock();
-			}
+			channelLock.unlock();
 		}
 	}
 	
@@ -145,7 +150,7 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 	 * @param msg
 	 */
 	public void addMessage(ChannelMessage msg) {
-		if (DEFAULT_PANE != currentShowComp) {
+		if (DEFAULT_PANE != currentShowPane) {
 //			showDefaultComp();
 		}
 		addMessage(DEFAULT_PANE, msg);
@@ -158,38 +163,37 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 	 */
 	public void addMessage(SGPanel owner, ChannelMessage msg)
 	{
-		if (!checkMsgValidity(msg))
+		if (owner == null || !checkMsgValidity(msg))
 			return;
 
-		boolean isLock = false;
 		try {
-			if (isLock = channelLock.tryLock()) {
-				try {
-					Thread.sleep(1000); //设置一个延时
-				} catch (InterruptedException ex) {
-				}
-				
-				ChannelMessagePane msgContainer = null;
-				if ((msgContainer = findMessage(owner, msg)) == null) {
-					msgContainer = new ChannelMessagePane();
-				}
-				msgContainer.addMessage(msg, true);
-				owner.add(msgContainer, 0);
-				owner.validate();
+			channelLock.lock();
+			
+			try {
+				Thread.sleep(1000); //设置一秒延时，使用添加动画效果更好显示(绘制)！
+			} catch (InterruptedException ex) {
+			}
+			
+			checkIfAddPeople(msg);//检查是否需要新增联系人Id
+			
+			ChannelMessagePane msgContainer = null;
+			if ((msgContainer = findMessage(owner, msg)) == null) {
+				msgContainer = new ChannelMessagePane();
+			}
+			msgContainer.addMessage(msg, true);
+			owner.add(msgContainer, 0);
+			owner.validate();
 
-				//如果当前显示界面已经切换到<显示全部>面板，则该面板也要添加最新消息
-				JPanel showComp = (JPanel) currentShowComp();
-				if (showComp != DEFAULT_PANE && showComp != FILTER_PANE
-						&& showComp instanceof ChannelMessagePane) {
-					msgContainer = (ChannelMessagePane) showComp;
-					msgContainer.addMessage(msg, true);
-				}
+			//如果当前显示界面已经切换到<显示全部>面板，则该面板也要添加最新消息
+			JPanel showComp = (JPanel) currentShowComp();
+			if (showComp != DEFAULT_PANE && showComp != FILTER_PANE
+					&& showComp instanceof ChannelMessagePane) {
+				msgContainer = (ChannelMessagePane) showComp;
+				msgContainer.addMessage(msg, true);
 			}
 		}
 		finally {
-			if(isLock) {
-				channelLock.unlock();
-			}
+			channelLock.unlock();
 		}
 	}
 	
@@ -233,6 +237,25 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 		// IllegalArgumentException("Invalid Message! Cause by it or it's ID is null.");
 
 		return true;
+	}
+	
+	/**
+	 * 检查是否增加新的联系人。可能联系人比较多时，比较耗时！
+	 * 注意，一般用在addMessage()时，其他地方最好不要用！
+	 * @param msg
+	 * @return
+	 */
+	public boolean checkIfAddPeople(ChannelMessage msg) {
+		ObjectId peopleId = null;
+		if (peopleIdList == null || 
+				msg == null || (peopleId = msg.getPeopleId()) == null)
+			return false;
+
+		boolean isAdd = !peopleIdList.contains(peopleId);
+		if (isAdd) {
+			peopleIdList.add(0, peopleId);//也可以peopleIdList.add(peopleId)
+		}
+		return isAdd;
 	}
 	
 	/**
@@ -382,27 +405,10 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 				this.putClientProperty(CURRENT_SHOW_COMPONENT, name);
 		
 		//设置当前显示面板
-		currentShowComp = currentShowComp();
-		if(currentShowComp == null) {
-			currentShowComp = DEFAULT_PANE;
-		}
-	}
-	
-	/**
-	 * 获取每个面板的滚动父面板
-	 * @param comp
-	 * @return
-	 */
-	private SGScrollPane getScrollParentComp(Component comp)
-	{
-		if(comp instanceof SGScrollPane)
-			return (SGScrollPane)comp;
-		
-		Component parent = comp.getParent();
-		while (!(parent instanceof SGScrollPane)) {
-			parent = parent.getParent();
-		}
-		return (SGScrollPane) parent;
+			Component 	currentShowComp = currentShowComp();
+			if(!(currentShowComp instanceof SGPanel)) {
+				currentShowPane = DEFAULT_PANE;
+			}
 	}
 	
 	/**
@@ -490,10 +496,10 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 //		g2d.setPaint(paint);
 //		g2d.fill(bounds);
 //		GraphicsHandler.suspendRendering(g2d);
-		g2d.drawImage(BACKGROUND.getImage(), 0, 0, this);
+		g2d.drawImage(BACKGROUND.getImage(), 0, 0, this); //固定背景图片
 		
-		boolean isScrollBarVisible = currentShowComp == DEFAULT_PANE ? DEFAULT_SCROLLBAR.isScrollBarVisible()
-				: (currentShowComp == FILTER_PANE ? FILTER_SCROLLBAR.isScrollBarVisible() : false);
+		boolean isScrollBarVisible = currentShowPane == DEFAULT_PANE ? DEFAULT_SCROLLBAR.isScrollBarVisible()
+				: (currentShowPane == FILTER_PANE ? FILTER_SCROLLBAR.isScrollBarVisible() : false);
 		
 		if(isScrollBarVisible) {
 			g2d.setFont(ChannelConstants.DEFAULT_FONT.deriveFont(16F));
@@ -518,7 +524,7 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 			g2d.drawImage(TOPICON.getImage(), topIconArea.x, topIconArea.y, this);
 		}
 		
-		boolean isHomeVisible = currentShowComp == FILTER_PANE;
+		boolean isHomeVisible = currentShowPane == FILTER_PANE;
 		if(isHomeVisible) {//显示返回首页
 			if (homeIconArea == null) {
 				homeIconArea = new Rectangle(SIZE.width - HOMEICON.getIconWidth() - 65, 
@@ -530,6 +536,7 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 		}
 		
 		GraphicsHandler.suspendRendering(g2d);
+		painter.paint(g, this.getWidth(), this.getHeight());
 	}
 
 	@Override
@@ -562,7 +569,7 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 				}
 
 				// add Message
-				
+				//showMoreMessage(); //后来改成由用户自己点击“显示更多消息”，不由程序自动添加！
 			}
 		}
 	}
@@ -584,14 +591,49 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 	 * 显示更多的消息
 	 */
 	private void showMoreMessage() {
-		System.out.println("show more message!");
+		if(peopleIdList == null || peopleIdList.isEmpty())
+			return;
+		
+		try {
+			channelLock.lock();
+			
+			Runnable showMore = new Runnable() {//置于线程中处理，防止界面出现假死现象！
+				@Override
+				public void run() {
+					//每个联系人再次查询20条：
+					QueryItem qi = createQueryItem(); //这里的查询项，已经记录历史查询项。可以用于DEFAULT_PANE，也可以用于FILTER_PANE。
+					
+					int newSearchedOffset = lastSearchedOffset + 20;
+					List<ChannelMessage> msgs = 
+							ChannelAccesser.getMessageByPeopleGroup(peopleIdList, qi, newSearchedOffset, newSearchedOffset-lastSearchedOffset);
+					
+					System.out.println("showMoreMessageCounts=" + msgs.size());
+					if(msgs != null && !msgs.isEmpty()) {
+						for (ChannelMessage msg : msgs) {
+							initMessage(currentShowPane, msg);
+						}
+						lastSearchedOffset = newSearchedOffset;
+					}
+					
+					try {
+						Thread.sleep(1000); //设置1s延时，来更好地显示动画绘制效果!
+					} catch (InterruptedException ex) {
+					}
+				}
+			};
+			
+			painter.repaint(this, showMore);
+		}
+		finally {
+			channelLock.unlock();
+		}
 	}
 
 	/**
 	 * 滚动条置顶
 	 */
 	private void backToTop() {
-		DEFAULT_SCROLLBAR.setValue(0);
+		DEFAULT_SCROLLBAR.setValue(0); //目前先这样，以后按照客户需求再做调整！
 	}
 	
 	/**
@@ -615,7 +657,14 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 	private QueryItem createQueryItem() {
 		QueryItem qi = new QueryItem();
 		
+		boolean changed = false;
+		if(lastSearchedText != null) {
+			changed = true;
+			qi.setText(lastSearchedText);
+		}
+		
 		if (lastSelectedType != VIEW_ALL_TYPE) {
+			changed = true;
 			qi.setFilters(new MessageFilter("clazz", 
 					lastSelectedType == VIEW_WEIBO ? ChannelMessage.WEIBO : 
 						 (lastSelectedType == VIEW_QQ ? ChannelMessage.QQ : ChannelMessage.MAIL)
@@ -623,6 +672,7 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 		}
 		
 		if(lastSelectedStatus != VIEW_ALL_STATUS) {
+			changed = true;
 			if (lastSelectedStatus == VIEW_DRAFT) {// 草稿箱
 				qi.setKeys(ChannelMessage.FLAG_DRAFT);
 				qi.setValues(1);
@@ -635,9 +685,21 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 			}
 		}
 		
+		if (!changed) { // 默认的查询条件：不是草稿，也不是垃圾
+			qi.setKeys(ChannelMessage.FLAG_DRAFT, ChannelMessage.FLAG_TRASHED);
+			qi.setValues(0, 0);
+		}
+		
 		return qi;
 	}
-	
+
+	public List<ObjectId> getPeopleIdList() {
+		return peopleIdList;
+	}
+	public void setPeopleIdList(List<ObjectId> peopleIdList) {
+		this.peopleIdList = peopleIdList;
+	}
+
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		// TODO 自动生成的方法存根
@@ -694,9 +756,11 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 		
 		//搜索
 		QueryItem qi  = null;
-		if(evt.getPropertyName() == SEARCHTEXT_CHANGE_PROPERTY) {
-			qi  = createQueryItem(); //搜索的查询项
-			qi.setText((String)evt.getNewValue());
+		if (evt.getPropertyName() == SEARCHTEXT_CHANGE_PROPERTY) {
+			lastSearchedText = (String) evt.getNewValue();
+			qi = createQueryItem(); // 搜索的查询项
+		} else {
+			lastSearchedText = null;
 		}
 		
 		//过滤

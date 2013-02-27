@@ -2,6 +2,11 @@ package com.original.service.channel.core;
 
 import java.io.Serializable;
 
+/**
+ * 自定义查询项
+ * @author WMS
+ *
+ */
 public class QueryItem implements Serializable
 {
 	private String[] keys; //flags标识对应的key和value
@@ -11,6 +16,25 @@ public class QueryItem implements Serializable
 	
 	private String text;//查询内容，目前设定查询内容是从ChannelMessage中 的subject\body\fromAddr\toAddr里面查找text
 	//关系是"or"
+	
+	public QueryItem() {
+		
+	}
+
+	public QueryItem(String[] keys, Integer[] values) {
+		this(keys, values, null);
+	}
+	
+	public QueryItem(String[] keys, Integer[] values, Filter[] filters) {
+		this(keys, values, filters, null);
+	}
+
+	public QueryItem(String[] keys, Integer[] values, Filter[] filters, String text) {
+		this.keys = keys;
+		this.values = values;
+		this.filters = filters;
+		this.text = text;
+	}
 
 	public String[] getKeys() {
 		return keys;

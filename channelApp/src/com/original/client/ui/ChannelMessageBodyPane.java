@@ -213,8 +213,10 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 			this.add(body);
 		}
 		
-		messageBodyList.add(msg);
-		fireMessageCountChange(msg, 1);
+		if(!messageBodyList.contains(msg)) {//对重复消息做检查，但是可能会带来效率问题！
+			messageBodyList.add(msg);
+			fireMessageCountChange(msg, 1);
+		}
 	}
 	
 
@@ -227,15 +229,19 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 	{		
 		ChannelMessageBodyPane.Body body = new ChannelMessageBodyPane.Body(msg, toFirst);
 		if(toFirst) {
-			body.setBorder(new EmptyBorder(0, 10, 0, 10));
-			
-			this.removeAll();
-			this.add(body);
-			this.validate();
-			
-			messageBodyList.add(0, msg);//注意和initMessage的顺序相反
+			if(!messageBodyList.contains(msg)) {//对重复消息做检查，但是可能会带来效率问题！
+				body.setBorder(new EmptyBorder(0, 10, 0, 10));
+
+				if(this.getLayout() instanceof VerticalGridLayout) {//程序有时运行时，不知为何变成CardLayout布局
+					this.removeAll();
+					this.add(body);
+					this.validate();
+
+					messageBodyList.add(0, msg);//注意和initMessage的顺序相反
+				}
+			}
 		}
-		else {
+		else {//deprecated!!!
 			if(this.getComponentCount() > 0) { //下余面板的边框，稍微复杂点
 				body.setBorder(BorderFactory.createCompoundBorder(
 						new EmptyBorder(0, 10, 0, 10), 

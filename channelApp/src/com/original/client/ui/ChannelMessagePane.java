@@ -299,7 +299,7 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 		ObjectId pid = msg == null ? null : msg.getPeopleId();
 		if (this.peopleId == null || !this.peopleId.equals(pid)) {
 			this.peopleId = pid;
-			header.setContactName(msg.getContactName()); // 目前设置联系人用户名即为Uid
+			header.setContactName(msg == null ? null : msg.getContactName()); // 目前设置联系人用户名即为Uid
 			header.setHeadImageIcon(msg); //设置联系人头像
 		}
 	}

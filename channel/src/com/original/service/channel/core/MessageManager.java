@@ -489,34 +489,7 @@ public class MessageManager {
 		}
 		
 		Query<ChannelMessage> q = ds.createQuery(ChannelMessage.class);
-		int size = 0;
-		
-		if(filters != null) {
-			size = filters.length;
-			for(int i=0; i<size; i++) {
-				q = q.filter(filters[i].getField(), filters[i].getValue());
-			}
-		}
-		
-		if(keys != null && values != null) {
-			size = Math.min(keys.length, values.length);
-
-			for (int i = 0; i < size; i++) {
-				Integer value = values[i];
-				String key = keys[i];
-				if (key != null && value != null) {
-
-					if (value.intValue() == 0) {
-						q.or( // 或查询
-						        q.criteria("flags." + key).doesNotExist(),
-								q.criteria("flags." + key).equal(value)
-						);
-					} else {
-						q = q.field("flags." + key).equal(value);
-					}
-				}
-			}
-		}
+q = queryItem(q, filters, keys, values);
 		
 		if(text != null) { //再次过滤
 			String value = text.trim();
@@ -584,17 +557,17 @@ public class MessageManager {
 	 * @param pageCount
 	 * @return
 	 */
-	public List<ChannelMessage> getMessageByPeople(People p, int page, int pageCount) {
-		
-		if (p == null || p.getId() == null)
-		{
-			return EMPTY;
-		}		
-		int offset = page * pageCount;
-		return ds.find(ChannelMessage.class)
-				.field("peopleId").equal(p.getId())
-				.order(OrderbyDateField).offset(offset).limit(pageCount).asList();
-	}
+//	public List<ChannelMessage> getMessageByPeople(People p, int page, int pageCount) {
+//		
+//		if (p == null || p.getId() == null)
+//		{
+//			return EMPTY;
+//		}		
+//		int offset = page * pageCount;
+//		return ds.find(ChannelMessage.class)
+//				.field("peopleId").equal(p.getId())
+//				.order(OrderbyDateField).offset(offset).limit(pageCount).asList();
+//	}
 	
 	/**
 	 * 按照联系人获取消息。
@@ -605,14 +578,76 @@ public class MessageManager {
 	 */
 	public List<ChannelMessage> getMessageByPeople(People p) {
 		
-		if (p == null || p.getId() == null)
-		{
-			return EMPTY;
+		return getMessageByPeople(p, 0);
+	}
+	
+	public List<ChannelMessage> getMessageByPeople(People p, int limit) {
+		return getMessageByPeople(p, 0, limit);
+	}
+	
+	public List<ChannelMessage> getMessageByPeople(People p,int offset, int limit) {
+		return getMessageByPeople(p, offset, limit, null);
+	}
+	
+	public List<ChannelMessage> getMessageByPeople(People p,int offset, int limit, QueryItem item) {
+		return p == null ? EMPTY : getMessageByPeople(p.getId(), offset, limit, item);
+	}
+	
+	public List<ChannelMessage> getMessageByPeople(ObjectId pid,int offset, int limit, QueryItem item) {
+		if(limit < 0 || offset < 0)  return EMPTY;
+		
+		Query<ChannelMessage> q = ds.find(ChannelMessage.class)
+				.field("peopleId").equal(pid);
+		
+		q = queryItem(q, item);
+		q = q.order(OrderbyDateField);//按时间排序
+		
+		if(limit == 0)
+			return q.offset(offset).asList();
+		else 
+			return q.offset(offset).limit(limit).asList();
+	}
+	
+	private static  Query<ChannelMessage> queryItem(Query<ChannelMessage> q, QueryItem item) {
+		if(q != null && item != null) {
+			return queryItem(q, item.getFilters(), item.getKeys(), item.getValues());
+		}
+		return q;
+	}
+	
+	private static  Query<ChannelMessage> queryItem(Query<ChannelMessage> q, Filter[] filters, String[] keys, Integer[] values) {
+		if(q != null) {
+			int size = 0;
+			
+			if(filters != null) {
+				size = filters.length;
+				for(int i=0; i<size; i++) {
+					q = q.filter(filters[i].getField(), filters[i].getValue());
+				}
+			}
+			
+			if(keys != null && values != null) {
+				size = Math.min(keys.length, values.length);
+
+				for (int i = 0; i < size; i++) {
+					Integer value = values[i];
+					String key = keys[i];
+					if (key != null && value != null) {
+
+						if (value.intValue() == 0) {
+							q.or( // 或查询
+							        q.criteria("flags." + key).doesNotExist(),
+									q.criteria("flags." + key).equal(value)
+							);
+						} else {
+							q = q.field("flags." + key).equal(value);
+						}
+					}
+				}
+			}
 		}
 		
-		return ds.find(ChannelMessage.class)
-				.field("peopleId").equal(p.getId())
-				.order(OrderbyDateField).asList();
+		return q;
 	}
 	
 	/**
