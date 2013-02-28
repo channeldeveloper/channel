@@ -178,14 +178,21 @@ public class PeopleManager {
 			{
 				if (ca.getChannel() != null && ca.getAccount() != null)
 				{
-					if (chm.isReceived() && chm.getFromAddr() != null)
-					{
-						return q.field("accountMap." + ca.getChannel().getName() + "." +"name").equal(chm.getFromAddr()).get();
-					}
-					if (!chm.isReceived() && chm.getToAddr() != null)
-					{
-						return q.field("accountMap." + ca.getChannel().getName() + "." +"name").equal(chm.getToAddr()).get();
-					}
+//					if (chm.isReceived() && chm.getFromAddr() != null)
+//					{
+//						return q.field("accountMap." + ca.getChannel().getName() + "." +"name").equal(chm.getFromAddr()).get();
+//					}
+//					if (!chm.isReceived() && chm.getToAddr() != null)
+//					{
+//						return q.field("accountMap." + ca.getChannel().getName() + "." +"name").equal(chm.getToAddr()).get();
+//					}
+					String contactName = chm.getContactName();
+					q.or(
+							q.criteria("name").equal(contactName),
+							q.criteria("accountMap." + ca.getChannel().getName() + "." +"name").equal(contactName)
+							);
+					return q.get();
+					
 				}
 			}
 		}

@@ -24,6 +24,7 @@ public interface EventConstants
 	String CANCEL = "cancel";//取消
 	String POST = "post";//发送
 	String REPOST = "repost";//转发
+	String SEARCH = "search";//搜索
 	
 	/* 邮件专用功能 */
 	String SHOW_COMPLETE = "show complete";//查看完整

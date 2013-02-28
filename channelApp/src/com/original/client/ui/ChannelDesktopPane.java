@@ -405,10 +405,12 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 				this.putClientProperty(CURRENT_SHOW_COMPONENT, name);
 		
 		//设置当前显示面板
-			Component 	currentShowComp = currentShowComp();
-			if(!(currentShowComp instanceof SGPanel)) {
-				currentShowPane = DEFAULT_PANE;
-			}
+		Component currentShowComp = currentShowComp();
+		if (!(currentShowComp instanceof SGPanel)) {
+			currentShowPane = DEFAULT_PANE;
+		} else {
+			currentShowPane = (SGPanel) currentShowComp;
+		}
 	}
 	
 	/**

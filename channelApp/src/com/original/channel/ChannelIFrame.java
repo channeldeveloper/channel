@@ -170,10 +170,12 @@ public class ChannelIFrame extends JInternalFrame implements ChannelConstants
 				new QueryItem(new String[]{ChannelMessage.FLAG_TRASHED,  ChannelMessage.FLAG_DRAFT}, 
 						new Integer[]{0, 0}), 
 						0, 20);
-for (ChannelMessage m : msgs)
-{			
-	desktop.initMessage(m); //注意不要使用addMessage()，用途不一样
-}
+		if(msgs != null) {
+			for (ChannelMessage m : msgs)
+			{			
+				desktop.initMessage(m); //注意不要使用addMessage()，用途不一样
+			}
+		}
 	}
 	
 }

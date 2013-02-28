@@ -17,6 +17,8 @@ public class QueryItem implements Serializable
 	private String text;//查询内容，目前设定查询内容是从ChannelMessage中 的subject\body\fromAddr\toAddr里面查找text
 	//关系是"or"
 	
+	private Class queryClass = null;
+	
 	public QueryItem() {
 		
 	}
@@ -64,4 +66,10 @@ public class QueryItem implements Serializable
 		this.text = text;
 	}
 	
+	public <T> Class<T> getQuertClass() {
+		return queryClass;
+	}
+	public <T> void setQueryClass(Class<T> queryClass) {
+		this.queryClass = queryClass;
+	}
 }
