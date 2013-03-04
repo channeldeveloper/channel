@@ -10,6 +10,7 @@ import java.awt.event.AdjustmentListener;
 import java.util.List;
 
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.html.HTMLEditorKit;
 
@@ -393,18 +394,23 @@ public class ListMessageBodyPane extends ChannelMessageBodyPane implements Adjus
 		@Override
 		public void doQuickReply(boolean isON) {
 
-			int paragraphIndex = getBodyMessageIndex();
-			ChannelMessage msg =getBodyMessage();
+			final int paragraphIndex = getBodyMessageIndex();
+			final ChannelMessage msg =getBodyMessage();
 
 			if (isON) {
 				top.setVisible(QUICK_REPLY, false);
 				top.setVisible(SHOW_COMPLETE, true);
 				top.notifyStatusChange(msg, STATUS_READ, true); // 通知已读
 
-				// 更新显示内容：
-				handler.updateText(paragraphIndex, msg.getCompleteMsg(),
-						body.getBackgroundStyleCss(!msg.isReceived()),
-						body.getTextStyleCss());
+				// 更新显示内容，这里可能会在网络不好时加载很慢，故置于线程中处理：
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						handler.updateText(paragraphIndex, msg.getCompleteMsg(),
+								body.getBackgroundStyleCss(!msg.isReceived()),
+								body.getTextStyleCss());
+					}
+				});
 
 				// 显示回复框：
 				setParagraphBottomVisible(true);

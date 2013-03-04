@@ -154,7 +154,6 @@ public class WeiboService extends AbstractService {
 				throw new ChannelException(account, CHANNEL.WEIBO,
 						"Weibo AccessToken has been expired, you need to reauthorize your weibo account again!");
 			} else {
-				ex.printStackTrace();
 				// throw new ChannelException(null, CHANNEL.WEIBO, ex);
 				System.err.println("Weibo Channel service initialize error:  " + (ex.getError() == null ? ex.getMessage() : ex.getError()));
 			}

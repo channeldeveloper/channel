@@ -24,6 +24,7 @@ import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.SwingPropertyChangeSupport;
 import javax.swing.text.EditorKit;
@@ -806,8 +807,8 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		public JScrollPane getCenterScrollPane() {
 			if (centerScrollPane == null) {
 				centerScrollPane = ChannelUtil.createScrollPane(this);
-				centerScrollPane
-						.setPreferredSize(new Dimension(SIZE.width, 185));
+				centerScrollPane.setPreferredSize(
+						new Dimension(SIZE.width, 185));
 			}
 			return centerScrollPane;
 		}
@@ -841,13 +842,27 @@ public class ChannelMessageBodyPane extends SGPanel implements EventConstants
 		}
 		
 		/**
-		 * 显示完整的消息内容
+		 * 显示完整的消息内容。这里由于加载HTML图片可能网络不好时会很慢，严重影响界面的一些操作，故置于线程中处理。
 		 * @param msg 消息对象
 		 */
-		public void showComplete(ChannelMessage msg) {
-			if(msg != null) {				
-				super.setText(msg.getCompleteMsg());
-				setCaretPosition(0);
+		public void showComplete(final ChannelMessage msg) {
+			if(msg != null) {	
+				
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						Center.super.setText(msg.getCompleteMsg());
+						Center.this.setCaretPosition(0); // 设置滚动条的位置，顶部
+
+						// 自动调整大小(这里主要是高度)：
+						Component parent = Center.this.getParent();
+						while (!(parent instanceof Body))
+							parent = parent.getParent();
+
+						Body body = (Body) parent;
+						body.autoAdjustHeight(true);
+					}
+				});
 			}
 		}
 

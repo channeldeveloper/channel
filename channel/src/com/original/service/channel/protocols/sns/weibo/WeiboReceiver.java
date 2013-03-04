@@ -73,8 +73,8 @@ public class WeiboReceiver {
 	public boolean receive() {
 		try {
 			return recceiveMessages();
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Exception ex) {
+			
 		} 
 		return false;
 	}

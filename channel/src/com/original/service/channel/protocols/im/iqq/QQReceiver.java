@@ -58,6 +58,8 @@ public class QQReceiver {
 		
 		try {
 			JSONObject retJ = msgService.openMessageChannel(ai);
+			if(retJ == null) return; //没有响应，可能由于网络故障。
+			
 			int retcode = retJ.getInt("retcode");
 			if (retcode == 0) {
 				JSONArray result = retJ.getJSONArray("result");

@@ -618,7 +618,7 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 					}
 					
 					try {
-						Thread.sleep(1000); //设置1s延时，来更好地显示动画绘制效果!
+						Thread.sleep(2000); //设置2s延时，来更好地显示动画绘制效果!
 					} catch (InterruptedException ex) {
 					}
 				}

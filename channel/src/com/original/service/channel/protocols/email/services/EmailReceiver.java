@@ -163,7 +163,6 @@ public class EmailReceiver {
 			}
 			return true;
 		} catch (Exception ex) {
-			ex.printStackTrace();
 			return false;
 		}
 	}

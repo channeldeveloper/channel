@@ -64,6 +64,7 @@ public class MessageService extends Thread {
     
     public JSONObject openMessageChannel(AuthInfo ai) throws Exception
     {
+    	if(ai == null) return null;
     	String pollUrl = "http://d.web2.qq.com/channel/poll2?clientid=" + ai.getClientid()
     			+ "&psessionid=" + ai.getPsessionid();
 

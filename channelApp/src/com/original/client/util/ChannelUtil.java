@@ -35,8 +35,10 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractButton;
@@ -1110,5 +1112,9 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 	 */
 	public static void exec(Runnable command) {
 		executor.execute(command);
+	}
+	
+	public  static <T> Future<T> exec(Callable<T> call) {
+		return executor.submit(call);
 	}
 }

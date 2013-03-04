@@ -240,9 +240,12 @@ private static CategoryService categoryService = CategoryService.getInstance();/
 	
 	@Override
 	public List<Account> getContacts() {
-		List<Account> allAccount = new ArrayList<Account>();
+		List<Account> allAccount = null;
 		// TODO Auto-generated method stub
 		try {
+			if(memberService == null || ai == null) return allAccount;
+				
+			allAccount = new ArrayList<Account>();
 			//1 profile
 			Member profile = memberService.getMemberInfo(ai, ai.getMember());		
 			//头像
