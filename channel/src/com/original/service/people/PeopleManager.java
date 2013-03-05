@@ -160,6 +160,13 @@ public class PeopleManager {
 		return chmsgs;
 	}
 	
+	public People getPeopleById(ObjectId id) {
+		if (id != null) {
+			return ds.get(People.class, id);
+		}
+		return null;
+	}
+	
 	/**
 	 * get All Messages
 	 * 
@@ -173,27 +180,16 @@ public class PeopleManager {
 		try
 		{
 			Query<People> q= ds.find(People.class);
-			ChannelAccount ca = chm.getChannelAccount();
-			if (ca != null)
+			People p = q.field("name").equal(chm.getContactName()).get(); //一般这里就可以获取到了!!! WMS Pending 2013/3/5
+			if(p != null)  return p;
+			
+			ChannelAccount ca = null;
+			if ((ca = chm.getChannelAccount()) != null
+					&& ca.getChannel() != null)
 			{
-				if (ca.getChannel() != null && ca.getAccount() != null)
-				{
-//					if (chm.isReceived() && chm.getFromAddr() != null)
-//					{
-//						return q.field("accountMap." + ca.getChannel().getName() + "." +"name").equal(chm.getFromAddr()).get();
-//					}
-//					if (!chm.isReceived() && chm.getToAddr() != null)
-//					{
-//						return q.field("accountMap." + ca.getChannel().getName() + "." +"name").equal(chm.getToAddr()).get();
-//					}
-					String contactName = chm.getContactName();
-					q.or(
-							q.criteria("name").equal(contactName),
-							q.criteria("accountMap." + ca.getChannel().getName() + "." +"name").equal(contactName)
-							);
-					return q.get();
-					
-				}
+				p = q.field("accountMap." + ca.getChannel().getName() + "." + "name") //这里获取联系人尚待优化。WMS Pending 2013/3/5
+						.equal(chm.getContactName()).get();			
+				return p;//may be null。
 			}
 		}
 		catch(Exception exp)
@@ -225,7 +221,7 @@ public class PeopleManager {
 	 */
 	public People savePeople(ChannelMessage chMsg) {
 		try {
-			if (chMsg == null) {
+			if (chMsg == null || chMsg.getChannelAccount() == null) {
 				return null;
 			}
 			boolean isReceived = chMsg.isReceived();

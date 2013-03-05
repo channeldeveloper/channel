@@ -39,6 +39,7 @@ import com.original.client.util.GraphicsHandler;
 import com.original.client.util.IconFactory;
 import com.original.client.util.LocationIcon;
 import com.original.service.channel.Account;
+import com.original.service.channel.ChannelAccount;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.people.People;
 import com.original.service.storage.GridFSUtil;
@@ -591,11 +592,13 @@ public class ChannelMessagePane extends SGPanel implements ActionListener
 						People pm =ChannelAccesser.getPeopleManager().getPeopleByMessage(msg) ;		
 						if (pm != null)
 						{		
-							String chn = msg.getChannelAccount().getChannel().getName();
-							Account acc = pm.getAccountMap().get(chn);
+							ChannelAccount ca = msg.getChannelAccount();
+							String chn = ca == null ? null : ca.getChannel().getName();
 							if ( chn != null )
 							{
 								try {
+									Account acc = pm.getAccountMap().get(chn);
+									
 									ObjectId avatar = acc.getAvatar();
 									String avatarPath = null;
 									if((avatarPath = ChannelAccesser.getAvadarPath(acc, msg)) != null) {

@@ -9,10 +9,12 @@ import java.awt.GridBagConstraints;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
@@ -22,16 +24,20 @@ import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.border.EmptyBorder;
 
+import com.original.channel.ChannelNativeCache;
 import com.original.client.EventConstants;
 import com.original.client.layout.ChannelGridBagLayoutManager;
 import com.original.client.layout.ChannelGridLayout;
-import com.original.client.ui.ChannelMessagePane.MessageContainer;
 import com.original.client.ui.data.AbstractButtonItem;
+import com.original.client.ui.data.ComboItem;
+import com.original.client.ui.widget.SearchPopup;
 import com.original.client.util.ChannelConstants;
 import com.original.client.util.ChannelUtil;
 import com.original.client.util.IconFactory;
+import com.original.service.channel.Account;
 import com.original.service.channel.ChannelMessage;
 import com.original.service.channel.Constants.CHANNEL;
+import com.original.service.people.People;
 import com.original.widget.OTextField;
 import com.seaglasslookandfeel.widget.SGButton;
 import com.seaglasslookandfeel.widget.SGLabel;
@@ -42,7 +48,7 @@ import com.seaglasslookandfeel.widget.SGPanel;
  * @author WMS
  *
  */
-public class NewMessageTopBar extends ChannelMessageTopBar implements ActionListener, FocusListener, EventConstants
+public class NewMessageTopBar extends ChannelMessageTopBar implements ActionListener, EventConstants
 {	
 	AbstractButtonItem newMail = new AbstractButtonItem(null, POST_MAIL, 
 			IconFactory.loadIconByConfig("sendMailIcon"),  IconFactory.loadIconByConfig("sendMailSelectedIcon"), IconFactory.loadIconByConfig("sendMailDisabledIcon"), 
@@ -107,7 +113,6 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 			center.add(lbMsgTo, BorderLayout.CENTER);
 		}
 		else {
-			txtMsgTo.addFocusListener(this);
 			center.add(txtMsgTo, BorderLayout.CENTER);
 		}
 		layoutMgr.addComToModel(center,1,1,GridBagConstraints.HORIZONTAL);
@@ -296,33 +301,74 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 			}
 		}
 		else if(SELECT_LINKER == evt.getActionCommand()) {//选择联系人
+			ChannelDesktopPane desktop = ChannelNativeCache.getDesktop();
+			List<People> peopleList = desktop.getPeopleList();
 			
+			if(peopleList != null) {
+				Vector<ComboItem> searchItem = convertToSearchItem(peopleList);
+				PeopleSearchPopup psp = new PeopleSearchPopup(
+						PeopleSearchPopup.SHOW_SEARCH_TEXT_LIST, searchItem);
+				psp.show(btnLinker, 0, btnLinker.getHeight());
+			}
 		}
 	}
 	
-	@Override
-	public void focusGained(FocusEvent e) {
-		// TODO 自动生成的方法存根
-		
-	}
-
-	@Override
-	public void focusLost(FocusEvent e) {
-		// TODO 自动生成的方法存根
-		if(txtMsgTo == e.getComponent()) {
-			NewMessageBodyPane body = (NewMessageBodyPane)getMessageBody();
-			MessageContainer container = body.getMessageContainer();
-			ChannelMessagePane parent = (ChannelMessagePane)container.getParent();
+	/**
+	 * 将联系人列表转换成查询项
+	 * @param peopleList
+	 * @return
+	 */
+	private Vector<ComboItem> convertToSearchItem(List<People> peopleList) {
+		Vector<ComboItem> searchItem = null;
+		if (peopleList != null) {
+			NewMessageBodyPane body = (NewMessageBodyPane) getMessageBody();
+			NewMessageBodyPane child = body.currentChild();
+			CHANNEL channel = child.getChannel(); //当前显示的渠道类型
 			
-//			parent.setUid(ChannelMessage.getContactName(txtMsgTo.getText()));
+			if (channel != null) {
+				searchItem = new Vector<ComboItem>(peopleList.size());
+				for(People p : peopleList) {
+					String name = p.getName();
+					HashMap<String, Account> accounts = p.getAccountMap();
+
+					for(Map.Entry<String, Account> entry : accounts.entrySet()) {
+						String key = entry.getKey();
+						Account account = entry.getValue();
+
+						String id = null, value = null;
+						if (channel == CHANNEL.WEIBO && key.equals("sns_weibo")) {// 微博：注意其构成
+							id = account.getName() == null ? (account.getUser() == null ? name
+									: account.getUser())
+									: account.getName();
+							value = id + (account.getUserId() == null ? "" : "(" + account.getUserId() + ")");
+
+						} else if (channel == CHANNEL.QQ &&key.equals("im_qq")) {// QQ：注意其构成
+							id = account.getName() == null ? name : account.getName();
+							value = id + (account.getUserId() == null ? "" : "(" + account.getUserId() + ")");
+
+						} else if (channel == CHANNEL.MAIL &&key.startsWith("email_")) {// EMail：注意其构成
+							id = (account.getName() == null ? name : account.getName()) + "<" + account.getUser() + ">";
+							value = id;
+						}
+
+						if (id != null && value != null) {
+							ComboItem item = new ComboItem(id + "@" + key, value);// @是分隔符
+							if (!searchItem.contains(item)) {
+								searchItem.add(item);
+							}
+						}
+					}
+				}
+			}
 		}
+		return searchItem;
 	}
 
 	/**
 	 * 自定义消息按钮组，该按钮组具有排他的功能。
 	 * @author WMS
 	 */
-	public class MessageButtonGroup extends ButtonGroup implements ActionListener
+	class MessageButtonGroup extends ButtonGroup implements ActionListener
 	{
 		Hashtable<AbstractButton,Icon> icons = new Hashtable<AbstractButton, Icon>(),
 				selectedIcons = new Hashtable<AbstractButton, Icon>();
@@ -388,4 +434,45 @@ public class NewMessageTopBar extends ChannelMessageTopBar implements ActionList
 			}
 		}
 	}	
+	
+	class PeopleSearchPopup extends SearchPopup {
+		private Vector<ComboItem> peopleSearchItem = null;
+		public PeopleSearchPopup(Vector<ComboItem> searchItem) {
+			this(SHOW_SEARCH_LIST, searchItem);
+		}
+
+		public PeopleSearchPopup(int model, Vector<ComboItem> searchItem) {
+			super(model, searchItem);
+			this.peopleSearchItem = searchItem;
+		}
+
+		@Override
+		protected void fireAction(int selectedIndex) {
+			if (editable) {
+				ComboItem item = (ComboItem) this.getValueAt(selectedIndex);
+				String text = (String)item.getId();
+				txtMsgTo.setText(text.substring(0, text.lastIndexOf("@")));
+				
+				setVisible(false);//隐藏弹窗
+			}
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String search = this.getSearchText();
+			if ( !ChannelUtil.isEmpty(search) ) {
+				Vector<ComboItem> newSearchItem = new Vector<ComboItem>();
+				for(ComboItem item : peopleSearchItem) {
+					String id = (String)item.getId();
+					String name = (String)item.getName();
+					
+					if ((id != null && id.contains(search))
+							|| (name != null && name.contains(search)))
+						newSearchItem.add(item);
+				}
+				
+				initModelData(newSearchItem);
+			}
+		}
+	}
 }

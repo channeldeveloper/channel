@@ -163,7 +163,9 @@ public class ChannelIFrame extends JInternalFrame implements ChannelConstants
 		cs.addMessageListener(desktop);
 		
 //开始添加信息：
-		List<ObjectId> pids = ChannelAccesser.getPeopleIdList();
+		List<People> ps = ChannelAccesser.getPeopleList();
+		desktop.setPeopleList(ps);
+		List<ObjectId> pids = ChannelAccesser.convertToPeopleIdList(ps);
 		desktop.setPeopleIdList(pids);
 						
 		List<ChannelMessage> msgs = ChannelAccesser.getMessageByPeopleGroup(pids,

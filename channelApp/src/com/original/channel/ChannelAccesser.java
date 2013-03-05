@@ -118,21 +118,31 @@ public class ChannelAccesser
 		}
 		return null;
 	}
-	/**
-	 * 获取联系人Id列表。根据需求，是{@link #getPeopleList()}，还是{@link #getPeopleIdList()}
-	 * @return
-	 */
-	public static List<ObjectId> getPeopleIdList() {
-		List<People> pL = getPeopleList();
+	public static List<ObjectId> convertToPeopleIdList(List<People> pL) {
 		List<ObjectId> pidL = null;
 		if (pL != null) {
 			pidL = new ArrayList<ObjectId>();
 			for (People p : pL) {
 				pidL.add(p.getId());
 			}
-			return pidL;
 		}
 		return pidL;
+	}
+	
+	/**
+	 * 获取联系人Id列表。根据需求，是{@link #getPeopleList()}，还是{@link #getPeopleIdList()}
+	 * @return
+	 */
+	public static List<ObjectId> getPeopleIdList() {
+return convertToPeopleIdList(getPeopleList());
+	}
+	
+	public static People getPeopleById(ObjectId id) {
+		PeopleManager pm = getPeopleManager();
+		if (pm != null) {
+			return pm.getPeopleById(id);
+		}
+		return null;
 	}
 	
 	/**

@@ -47,6 +47,7 @@ import com.original.service.channel.core.MessageManager;
 import com.original.service.channel.core.QueryItem;
 import com.original.service.channel.event.MessageEvent;
 import com.original.service.channel.event.MessageListner;
+import com.original.service.people.People;
 import com.seaglasslookandfeel.widget.SGPanel;
 import com.seaglasslookandfeel.widget.SGScrollPane;
 
@@ -99,6 +100,8 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 	
 	//联系人Id列表
 	private List<ObjectId> peopleIdList = null;//初始化消息的时候赋值。以后使用时，直接调用，而不需要再次查询数据库！
+	//联系人列表，和联系人Id列表一样，供其他地方调用，而不需要再次查询数据库！
+	private List<People> peopleList = null;
 	
 	public ChannelDesktopPane() {
 		setLayout(layoutMgr);
@@ -253,7 +256,12 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 
 		boolean isAdd = !peopleIdList.contains(peopleId);
 		if (isAdd) {
-			peopleIdList.add(0, peopleId);//也可以peopleIdList.add(peopleId)
+			peopleIdList.add(0, peopleId);// 也可以peopleIdList.add(peopleId)
+
+			People people = ChannelAccesser.getPeopleById(peopleId);
+			if (people != null) {
+				peopleList.add(0, people);// 也可以peopleList.add(people)
+			}
 		}
 		return isAdd;
 	}
@@ -700,6 +708,13 @@ public class ChannelDesktopPane extends SGPanel implements MessageListner, Adjus
 	}
 	public void setPeopleIdList(List<ObjectId> peopleIdList) {
 		this.peopleIdList = peopleIdList;
+	}
+
+	public List<People> getPeopleList() {
+		return peopleList;
+	}
+	public void setPeopleList(List<People> peopleList) {
+		this.peopleList = peopleList;
 	}
 
 	@Override

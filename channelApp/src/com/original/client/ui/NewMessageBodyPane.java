@@ -40,7 +40,6 @@ import com.original.client.ui.widget.ToolTip;
 import com.original.client.util.ChannelConfig;
 import com.original.client.util.ChannelConstants;
 import com.original.client.util.ChannelUtil;
-import com.original.client.util.ChannelUtil;
 import com.original.client.util.IconFactory;
 import com.original.service.channel.Attachment;
 import com.original.service.channel.ChannelMessage;
@@ -215,6 +214,14 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 			center.setText(msg.getBody());
 			center.setAttachments(msg.getAttachments());
 		}
+	}
+	
+	/**
+	 * 获取当前显示的CHANNEL
+	 * @return
+	 */
+	public CHANNEL getChannel() {
+		return channel;
 	}
 	
 	@Override
@@ -485,7 +492,7 @@ public class NewMessageBodyPane extends ChannelMessageBodyPane
 								returnToHistory();//同时返回上一面板
 							} catch (Exception ex) {
 								ex.printStackTrace();
-								ChannelUtil.showMessageDialog(NewMessageBodyPane.this, "错误", ex);
+								ChannelUtil.showMessageDialog(NewMessageBodyPane.this, "错误", ex.getMessage());
 							}
 						}
 					}

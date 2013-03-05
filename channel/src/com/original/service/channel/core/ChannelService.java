@@ -622,8 +622,9 @@ public final class ChannelService extends AbstractService implements SeriveManag
 				if (pp == null)
 				{
 					//Pending Exception definition for channel
-					throw new IllegalArgumentException(msg.getToAddr());
+					throw new IllegalArgumentException("无法指定该联系人：" + msg.getToAddr());
 				}
+				
 				msg.setPeopleId(pp.getId());
 			}
 			
