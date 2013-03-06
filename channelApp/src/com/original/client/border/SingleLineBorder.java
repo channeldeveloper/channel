@@ -1,4 +1,4 @@
-﻿package com.original.client.border;
+package com.original.client.border;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -23,6 +23,9 @@ public class SingleLineBorder extends AbstractBorder
 {
 	private static final long serialVersionUID = -3126026196602525188L;
 
+	/**
+	 * 边框线位置：TOP(顶部)、LEFT(左边)、RIGHT(右边)、BOTTOM(底部)
+	 */
 	public static final int TOP = 0,
 			LEFT = 1,
 			RIGHT = 2,
@@ -35,21 +38,43 @@ public class SingleLineBorder extends AbstractBorder
 	
 	private int thickness = 1;
 	
+	/**
+	 * 默认颜色的单线边框
+	 * @param direction 边框线位置
+	 */
 	public SingleLineBorder(int direction)
 	{
 		this(direction, Color.gray);
 	}
 	
+	/**
+	 * 自定义颜色的单线边框
+	 * @param direction 边框线位置
+	 * @param color 颜色
+	 */
 	public SingleLineBorder(int direction, Color color)
 	{
 		this(direction, Color.gray, false);
 	}
 	
+	/**
+	 * 自定义颜色，是否带有渐变色(首末端透明)的单线边框
+	 * @param direction 边框线位置
+	 * @param color 颜色
+	 * @param drawGradient 是否带有渐变色(首位透明)
+	 */
 	public SingleLineBorder(int direction, Color color, boolean drawGradient)
 	{
 		this(direction, color, drawGradient, 1);
 	}
 	
+	/**
+	 * 自定义颜色，是否带有渐变色(首末端透明)，厚度的单线边框
+	 * @param direction 边框线位置
+	 * @param color 颜色
+	 * @param drawGradient 是否带有渐变色(首位透明)
+	 * @param thickness 厚度
+	 */
 	public SingleLineBorder(int direction, Color color, boolean drawGradient, int thickness)
 	{
 		this.borderDirection = direction;
@@ -58,6 +83,9 @@ public class SingleLineBorder extends AbstractBorder
 		this.thickness = thickness;
 	}
 	
+	/**
+	 * 绘制边框
+	 */
 	@Override
 	public void paintBorder(Component c, Graphics g, int x, int y, int width,
 			int height)

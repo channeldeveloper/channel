@@ -1,4 +1,4 @@
-﻿package com.original.client;
+package com.original.client;
 
 /**
  * SWING事件常量接口

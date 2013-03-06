@@ -6,6 +6,11 @@ import java.awt.event.MouseEvent;
 import javax.swing.JDialog;
 import javax.swing.event.MouseInputListener;
 
+/**
+ * 对话框鼠标拖动事件。目前设定鼠标拖动不能超出界面显示区域。
+ * @author WMS
+ *
+ */
 public class ChannelDialogDragListener implements MouseInputListener, ChannelConstants
 {
 	JDialog dialog = null;

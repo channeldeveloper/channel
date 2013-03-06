@@ -21,35 +21,53 @@ public class ChannelNativeCache {
 
 	private static Map<String, JComponent> cache = new HashMap<String, JComponent>();
 
-	// 获取一些本地缓存对象：
-	// 1、获取工具栏上的用户头像
+	/**
+	 * 获取一些本地缓存对象：
+	 * 1、获取工具栏上的用户头像
+	 * @return
+	 */
 	public static ChannelToolBar.ChannelUserHeadLabel getUserHeadLabel() {
 		return (ChannelToolBar.ChannelUserHeadLabel) cache
 				.get("ChannelUserHeadLabel");
 	}
 
-	// 2、获取工具栏
+	/**
+	 * 2、获取工具栏
+	 * @return
+	 */
 	public static ChannelToolBar getToolBar() {
 		return (ChannelToolBar) cache.get("ChannelToolBar");
 	}
 
-	// 3、获取桌面
+	/**
+	 * 获取桌面
+	 * @return
+	 */
 	public static ChannelDesktopPane getDesktop() {
 		return (ChannelDesktopPane) cache.get("ChannelDesktopPane");
 	}
 
-	// 获取一些本地缓存对象：
-	// 1、获取工具栏上的用户头像
+	/**
+	 * 设置一些本地缓存对象：
+	 * 1、设置工具栏上的用户头像
+	 * @param comp 用户头像控件
+	 */
 	public static void setUserHeadLabel(JComponent comp) {
 		cache.put("ChannelUserHeadLabel", comp);
 	}
 
-	// 2、获取工具栏
+	/**
+	 * 设置工具栏
+	 * @param comp 工具栏控件
+	 */
 	public static void setToolBar(JComponent comp) {
 		cache.put("ChannelToolBar", comp);
 	}
 
-	// 3、获取桌面
+	/**
+	 * 设置桌面
+	 * @param comp 桌面控件
+	 */
 	public static void setDesktop(JComponent comp) {
 		cache.put("ChannelDesktopPane", comp);
 	}

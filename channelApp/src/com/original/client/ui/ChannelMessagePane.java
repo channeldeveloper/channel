@@ -1,4 +1,4 @@
-﻿package com.original.client.ui;
+package com.original.client.ui;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;

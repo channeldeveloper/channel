@@ -1,7 +1,7 @@
 package com.original.client.ui.data;
 
 /**
- * 菜单项名称数据类
+ * 菜单属性数据类
  * @author WMS
  *
  */

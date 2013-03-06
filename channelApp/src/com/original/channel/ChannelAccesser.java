@@ -20,7 +20,7 @@ import com.original.service.people.People;
 import com.original.service.people.PeopleManager;
 
 /**
- * Channel访问服务，用于UI界面访问远程服务，操作数据库等。
+ * Channel访问服务，用于UI界面访问远程服务，操作数据库等。目前是CS结构，以后如需改成BS结构的话，只需要改动此类即可。
  * @author WMS
  *
  */
@@ -64,22 +64,36 @@ public class ChannelAccesser
 		return WeiboService.readToken(account);
 	}
 	
+	/**
+	 * 按账户名存储授权Token，目前保存在本地文件中，以后可能会保存至数据库中。待优化
+	 * @param account 指定账户名
+	 * @param accessToken 授权Token
+	 */
 	public static void storeAccessTokenKey(String account, String accessToken) {
 		WeiboService.storeToken(account, accessToken);
 	}
 	
 	/**
-	 * 获取消息管理服务对象，即MongoDB数据管理服务对象，用于获取数据
+	 * 获取消息管理服务对象，即MongoDB数据管理服务对象，用于获取消息
 	 * @return
 	 */
 	public static MessageManager getMsgManager() {
 		return cs.getMsgManager();
 	}
 	
+	/**
+	 * 获取联系人服务对象，即MongoDB联系人管理服务对象，用于获取联系人
+	 * @return
+	 */
 	public static PeopleManager getPeopleManager() {
 		return cs.getPeopleManager();
 	}
 	
+	/**
+	 * 获取Channel服务类对象，单例对象，即只能有一个Channel服务，其余一些子服务，如<code>MessageManager</code>
+	 * 和<code>PeopleManager</code>等都是该服务创建并获取得到。
+	 * @return
+	 */
 	public static ChannelService getChannelService() {
 		if(cs == null) {
 			cs = ChannelService.getInstance();
@@ -87,10 +101,20 @@ public class ChannelAccesser
 		return cs;
 	}
 	
+	/**
+	 * 获取自己的账户，如微博、QQ、邮件等等。
+	 * @return
+	 */
 	public static List<Account> getAccounts() {
 		return cs.getAccounts();
 	}
 	
+	/**
+	 * 获取消息对应的联系人账户头像。目前邮件不支持头像
+	 * @param acc   联系人账户
+	 * @param msg 消息对象，由消息来判断类型，如QQ、Weibo还是邮件。
+	 * @return
+	 */
 	public static String getAvadarPath(Account acc, ChannelMessage msg) {
 		String avadarPath = null;
 		if(acc != null && msg != null) {
@@ -118,6 +142,11 @@ public class ChannelAccesser
 		}
 		return null;
 	}
+	/**
+	 * 将联系人列表转换成联系人Id(ObjectId)列表。特殊需要，以减少存储空间和方便查询联系人
+	 * @param pL 联系人列表
+	 * @return
+	 */
 	public static List<ObjectId> convertToPeopleIdList(List<People> pL) {
 		List<ObjectId> pidL = null;
 		if (pL != null) {
@@ -137,6 +166,11 @@ public class ChannelAccesser
 return convertToPeopleIdList(getPeopleList());
 	}
 	
+	/**
+	 * 由联系人Id获取联系人，需要查询一次数据库。
+	 * @param id
+	 * @return
+	 */
 	public static People getPeopleById(ObjectId id) {
 		PeopleManager pm = getPeopleManager();
 		if (pm != null) {
@@ -146,16 +180,13 @@ return convertToPeopleIdList(getPeopleList());
 	}
 	
 	/**
-	 * 获取联系人消息。默认获取每个联系人20条最新消息，即按联系人分组
-	 * @return
+	 * 获取联系人消息列表。默认获取每个联系人20条最新消息，即按联系人分组
+	 * @param peopleGrp 联系人组
+	 * @param item 自定义查询条件（用于过滤消息）
+	 * @param offset 查询起始位置(>=0)，即在查询结果中从该处开始，默认为0，即从第一个结果开始。
+	 * @param count 查询需求数，即从offset开始选择count个消息保存至消息列表中
+	 * @return 消息列表
 	 */
-//	public static List<ChannelMessage> getMessageByPeopleGroup(int count) {
-//		return getMessageByPeopleGroup(null, count);
-//	}
-//	
-//	public static  List<ChannelMessage> getMessageByPeopleGroup(QueryItem item, int count) {
-//		return getMessageByPeopleGroup(item, 0, count);
-//	}
 	public static  List<ChannelMessage> getMessageByPeopleGroup(List<ObjectId> peopleGrp, QueryItem item, int offset, int count) {
 		if(peopleGrp == null || peopleGrp.isEmpty())
 			return null;
@@ -175,10 +206,25 @@ return convertToPeopleIdList(getPeopleList());
 		return messageList;
 	}
 	
+	/**
+	 * 获取一个联系人的消息列表，默认从0开始遍历。
+	 * @param peopleId 联系人Id
+	 * @param item 自定义查询条件（用于过滤消息）
+	 * @param count 查询需求数，即从0开始选择count个消息保存至消息列表中
+	 * @return 消息列表
+	 */
 	public static List<ChannelMessage> getMessageByPeople(ObjectId peopleId, QueryItem item, int count) {
 		return getMessageByPeople(peopleId, item, 0, count);
 	}
 	
+	/**
+	 * 获取一个联系人的消息列表。
+	 * @param peopleId 联系人Id
+	 * @param item 自定义查询条件（用于过滤消息）
+	 * @param offset 查询起始位置(>=0)，即在查询结果中从该处开始，默认为0，即从第一个结果开始。
+	 * @param count 查询需求数，即从offset开始选择count个消息保存至消息列表中
+	 * @return 消息列表
+	 */
 	public static List<ChannelMessage> getMessageByPeople(ObjectId peopleId, QueryItem item, int offset, int count) {
 		List<ChannelMessage> messageList = null;
 		MessageManager mm = null;

@@ -1,4 +1,4 @@
-﻿package com.original.client.layout;
+package com.original.client.layout;
 
 import java.awt.Component;
 import java.awt.Container;
@@ -7,7 +7,9 @@ import java.awt.Insets;
 import java.awt.LayoutManager;
 
 /**
- * Channel专用的网格布局，与传统的网格布局不同的是，ChannelGridLayout带有边距设置且单行显示。
+ * Channel专用的网格布局，与传统的网格布局(GridLayout)不同的是，ChannelGridLayout带有边距设置且单行显示。
+ * 即只能从左往右，或者从右往左显示（自动由面板的getComponentOrientation().isLeftToRight()属性来判断）。
+ * 默认是从左往右显示。
  * @author WMS
  * @version 1.1
  * @since 1.0 修正了子控件不可见时，仍有边界(bounds)的Bug，同时增加了面板添加方向(isLeftToRight)的控制
@@ -18,106 +20,84 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
 	private static final long serialVersionUID = -4382635535050340598L;
 	
 	/**
-     * This is the horizontal gap (in pixels) which specifies the space
-     * between columns.  They can be changed at any time.
-     * This should be a non-negative integer.
-     *
-     * @serial
-     * @see #getHgap()
-     * @see #setHgap(int)
-     */
+	 * 水平间距
+	 */
     int hgap;
+
     /**
-     * This is the vertical gap (in pixels) which specifies the space
-     * between rows.  They can be changed at any time.
-     * This should be a non negative integer.
-     *
-     * @serial
-     * @see #getVgap()
-     * @see #setVgap(int)
+     * 垂直间距，目前无意义，可以是任意值
      */
     int vgap;
     
     static final Insets DEFAULT_INSETS = new Insets(0, 0, 0, 5); 
+    /**
+     * 面板的页边距，即使用ChannelGridLayout布局后，可以同时设置面板的上下左右的边距。
+     */
     Insets insets;
     
     /**
-     * When child compoent is invisible, you can set 'autoAdjust' to show or hide its bounds.
-     * if true, then hide; else show its bounds.
+     * 是否自动调节子控件的显示区域。有时，子控件设置隐藏后，父面板中仍保留子控件的区域（空白区域）。
+     * 使用此属性来控制是否自动保留或隐藏该空白区域。根据需要，这里不强制去除(隐藏)。
+     * When child component is invisible, you can set 'autoAdjust' to show or hide its bounds.
+     * if true, then hide; else show its bounds. 
      */
     boolean autoAdjust = true;
     
 
     /**
-     * Creates a grid layout with a default of one column per component,
-     * in a single row.
-     * @since JDK1.1
+     * 使用默认页边距的网格布局
      */
     public ChannelGridLayout() {
 	this(0, 0, DEFAULT_INSETS);
     }
     
+    /**
+     * 自定义页边距的网格布局
+     * @param insets 页边距，即上左下右的边距
+     */
     public ChannelGridLayout(Insets insets) {
     	this(0, 0, insets);
     }
 
     /**
-     * Creates a grid layout with the specified number of rows and 
-     * columns. All components in the layout are given equal size. 
-     * <p>
-     * In addition, the horizontal and vertical gaps are set to the 
-     * specified values. Horizontal gaps are placed between each
-     * of the columns. Vertical gaps are placed between each of
-     * the rows. 
-     * <p>
-     * One, but not both, of <code>rows</code> and <code>cols</code> can 
-     * be zero, which means that any number of objects can be placed in a 
-     * row or in a column. 
-     * <p>
-     * All <code>GridLayout</code> constructors defer to this one.
-     * @param     hgap   the horizontal gap
-     * @param     vgap   the vertical gap
-     * @exception   IllegalArgumentException  if the value of both
-     *			<code>rows</code> and <code>cols</code> is 
-     *			set to zero
+     * 自定义页边距、水平和垂直间距的网格布局
+     * @param hgap 水平间距，可以<0
+     * @param vgap 垂直间距，此参数为意义，保留
+     * @param insets 页边距，即上左下右的边距
      */
     public ChannelGridLayout(int hgap, int vgap, Insets insets) {
-	this.hgap = hgap;
-	this.vgap = vgap;
-	this.insets = insets;
+    	this.hgap = hgap;
+    	this.vgap = vgap;
+    	this.insets = insets;
     }
 
     /**
-     * Gets the horizontal gap between components.
+     * 获取控件间的水平间距
      * @return       the horizontal gap between components
-     * @since        JDK1.1
      */
     public int getHgap() {
 	return hgap;
     }
     
     /**
-     * Sets the horizontal gap between components to the specified value.
+     * 设置控件间的水平间距
      * @param        hgap   the horizontal gap between components
-     * @since        JDK1.1
      */
     public void setHgap(int hgap) {
 	this.hgap = hgap;
     }
     
     /**
-     * Gets the vertical gap between components.
+     * 获取控件间的垂直间距
      * @return       the vertical gap between components
-     * @since        JDK1.1
      */
     public int getVgap() {
 	return vgap;
     }
     
     /**
-     * Sets the vertical gap between components to the specified value.
+     * 设置控件间的垂直间距
      * @param         vgap  the vertical gap between components
-     * @since        JDK1.1
      */
     public void setVgap(int vgap) {
 	this.vgap = vgap;
@@ -127,7 +107,6 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
 	{
 		return insets;
 	}
-
 	public void setInsets(Insets insets)
 	{
 		this.insets = insets;
@@ -137,7 +116,6 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
 	{
 		return autoAdjust;
 	}
-
 	public void setAutoAdjust(boolean autoAdjust) 
 	{
 		this.autoAdjust = autoAdjust;
@@ -161,16 +139,6 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
     /** 
      * Determines the preferred size of the container argument using 
      * this grid layout. 
-     * <p>
-     * The preferred width of a grid layout is the largest preferred 
-     * width of all of the components in the container times the number of 
-     * columns, plus the horizontal padding times the number of columns 
-     * minus one, plus the left and right insets of the target container. 
-     * <p>
-     * The preferred height of a grid layout is the largest preferred 
-     * height of all of the components in the container times the number of 
-     * rows, plus the vertical padding times the number of rows minus one, 
-     * plus the top and bottom insets of the target container. 
      * 
      * @param     parent   the container in which to do the layout
      * @return    the preferred dimensions to lay out the 
@@ -203,16 +171,6 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
     /**
      * Determines the minimum size of the container argument using this 
      * grid layout. 
-     * <p>
-     * The minimum width of a grid layout is the largest minimum width 
-     * of all of the components in the container times the number of columns, 
-     * plus the horizontal padding times the number of columns minus one, 
-     * plus the left and right insets of the target container. 
-     * <p>
-     * The minimum height of a grid layout is the largest minimum height 
-     * of all of the components in the container times the number of rows, 
-     * plus the vertical padding times the number of rows minus one, plus 
-     * the top and bottom insets of the target container. 
      *  
      * @param       parent   the container in which to do the layout
      * @return      the minimum dimensions needed to lay out the 
@@ -246,17 +204,6 @@ public class ChannelGridLayout implements LayoutManager, java.io.Serializable {
 
     /** 
      * Lays out the specified container using this layout. 
-     * <p>
-     * This method reshapes the components in the specified target 
-     * container in order to satisfy the constraints of the 
-     * <code>GridLayout</code> object. 
-     * <p>
-     * The grid layout manager determines the size of individual 
-     * components by dividing the free space in the container into 
-     * equal-sized portions according to the number of rows and columns 
-     * in the layout. The container's free space equals the container's 
-     * size minus any insets and any specified horizontal or vertical 
-     * gap. All components in a grid layout are given the same size. 
      *  
      * @param      parent   the container in which to do the layout
      * @see        java.awt.Container

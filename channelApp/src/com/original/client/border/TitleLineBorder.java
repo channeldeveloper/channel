@@ -26,29 +26,70 @@ public class TitleLineBorder extends SingleLineBorder {
 	private LocationIcon cornerIcon;// 边角按钮，一般为关闭按钮
 	private int marginLeft = 0, marginRight = 0; //边框的左右边距（上下边距自动调整）
 
+	/**
+	 * 默认标题边框
+	 * @param title 标题
+	 */
 	public TitleLineBorder(String title) {
 		this(title, null);
 	}
 
+	/**
+	 * 带标题和图标的边框。图标位于最左边
+	 * @param title 标题
+	 * @param titleIcon 标题图标
+	 */
 	public TitleLineBorder(String title, ImageIcon titleIcon) {
 		this(title, titleIcon, null);
 	}
 
+	/**
+	 * 带标题和图标(最左边)、边角图标(最右边)的边框。
+	 * @param title 标题
+	 * @param titleIcon 标题图标
+	 * @param cornerIcon 边角图标
+	 */
 	public TitleLineBorder(String title, ImageIcon titleIcon,
 			LocationIcon cornerIcon) {
 		this(title, titleIcon, cornerIcon, Color.black, Color.black);
 	}
 	
+	/**
+	 * 带标题和图标(最左边)、边角图标(最右边)的边框。可以设定边框线方向和厚度。目前边框线方向仅支持顶部和底部两种。
+	 * @param title 标题
+	 * @param titleIcon 标题图标
+	 * @param cornerIcon 边角图标
+	 * @param borderDirection 边框线方向，仅支持顶部和底部两种
+	 * @param borderThickness 边框线厚度
+	 */
 	public TitleLineBorder(String title, ImageIcon titleIcon,
 			LocationIcon cornerIcon, int borderDirection, int borderThickness) {
 		this(title, titleIcon, cornerIcon, Color.black, Color.black, borderDirection, borderThickness);
 	}
 
+	/**
+	 * 带标题和图标(最左边)、边角图标(最右边)的边框。可以设定边框线颜色，标题文字的颜色
+	 * @param title 标题
+	 * @param titleIcon 标题图标
+	 * @param cornerIcon 边角图标
+	 * @param lineColor 边框线颜色
+	 * @param titleColor 标题文字的颜色
+	 */
 	public TitleLineBorder(String title, ImageIcon titleIcon,
 			LocationIcon cornerIcon, Color lineColor, Color titleColor) {
 		this(title, titleIcon, cornerIcon, lineColor, titleColor, BOTTOM, 1);
 	}
 	
+	/**
+	 * 带标题和图标(最左边)、边角图标(最右边)的边框。可以设定边框线颜色、厚度以及位置，标题字体的颜色。如果有其他属性，可以再扩充参数！
+	 * @param title 标题
+	 * @param titleIcon 标题图标
+	 * @param cornerIcon  边角图标
+	 * @param lineColor 边框线颜色
+	 * @param titleColor 标题文字的颜色
+	 * @param borderDirection 边框线方向，仅支持顶部和底部两种
+	 * @param borderThickness 边框线厚度
+	 */
 	public TitleLineBorder(String title, ImageIcon titleIcon,
 			LocationIcon cornerIcon, Color lineColor, Color titleColor, int borderDirection, int borderThickness) {
 		super(borderDirection, lineColor, false, borderThickness);
@@ -74,6 +115,9 @@ public class TitleLineBorder extends SingleLineBorder {
 		return topHeight;
 	}
 
+	/**
+	 * 绘制边框
+	 */
 	@Override
 	public void paintBorder(Component c, Graphics g, int x, int y, int width,
 			int height) {

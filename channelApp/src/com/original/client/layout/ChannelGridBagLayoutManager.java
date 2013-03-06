@@ -1,4 +1,4 @@
-﻿package com.original.client.layout;
+package com.original.client.layout;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -15,9 +15,10 @@ import com.original.client.border.SingleLineBorder;
 import com.original.client.util.ChannelUtil;
 
 /**
- * Channel网格包布局管理器
+ * Channel网格包布局管理器。使用此布局管理器，如果控件已有其他布局(LayoutManager)，会强制替换成GridBagLayout。
  * @author WMS
- *
+ * @version 1.1
+ * @since 1.0 增加了insets，即子控件的间距设置；anchor，即子控件的摆放位置(东南西北，以及对角线处4个位置)
  */
 public class ChannelGridBagLayoutManager
 {
@@ -28,12 +29,15 @@ public class ChannelGridBagLayoutManager
 				GridBagConstraints.NONE, insets, 0, 0);
 	
 	//对齐方式
-	public static final String ALIGN_LEFT = "left",
-			ALIGN_RIGHT = "right";
-	
+	public static final String ALIGN_LEFT = "left", ALIGN_RIGHT = "right";
 	private String alignment = ALIGN_LEFT;
 	
 	private JComponent parent = null;
+	
+	/**
+	 * 为控件添加网格包布局管理器。以后添加子控件时，直接使用addComToModel即可。
+	 * @param parent
+	 */
 	public ChannelGridBagLayoutManager(JComponent parent)
 	{
 		this.parent=parent;
@@ -44,32 +48,13 @@ public class ChannelGridBagLayoutManager
 	}
 	
 	/**
-	 * 添加组件至父面板
-	 * @param com
+	 * 添加组件至父面板。组件的宽高固定，不随父面板的宽高改变而改变。
+	 * @param com 组件
 	 */
 	public void addComToModel(Component com)
     {
         addComToModel(com, 1, 1, GridBagConstraints.NONE);
     }
-	
-	public void addFillerToModel(int horizonWidth, int verticalHeight)
-	{
-		addComToModel(ChannelUtil.createBlankFillArea(horizonWidth, verticalHeight),
-				1, 1, GridBagConstraints.NONE);
-	}
-	
-	public void addHorizonLineToModel(int lineThickness, Color lineColor) {
-		addHorizonLineToModel(lineThickness, lineColor, 1);
-	}
-	public void addHorizonLineToModel(int lineThickness, Color lineColor, int gridWidth) {
-		addHorizonLineToModel(lineThickness, lineColor, gridWidth, 0);
-	}
-	public void addHorizonLineToModel(int lineThickness, Color lineColor, int gridWidth, int nextLineGridX) {
-		Filler filler = ChannelUtil.createBlankFillArea(1, lineThickness < 1 ? 1 : lineThickness);
-		filler.setBorder(new SingleLineBorder(SingleLineBorder.BOTTOM, lineColor, false, lineThickness));
-		addComToModel(filler, gridWidth, 1, GridBagConstraints.HORIZONTAL);
-		newLine(nextLineGridX);
-	}
 	
     public void addComToModel(Component com, int gridWidth, int gridHeight, int fill)
     {
@@ -110,13 +95,54 @@ public class ChannelGridBagLayoutManager
     }
     
     /**
-     * 重设GridBagConstraints参数
+     * 添加透明填充区域
+     * @param horizonWidth 水平宽度
+     * @param verticalHeight 垂直高度
+     */
+    public void addFillerToModel(int horizonWidth, int verticalHeight)
+	{
+		addComToModel(ChannelUtil.createBlankFillArea(horizonWidth, verticalHeight),
+				1, 1, GridBagConstraints.NONE);
+	}
+	
+    /**
+     * 添加水平线，同时自动换行
+     * @param lineThickness 水平线厚度(>=1)
+     * @param lineColor 水平线颜色
+     */
+	public void addHorizonLineToModel(int lineThickness, Color lineColor) {
+		addHorizonLineToModel(lineThickness, lineColor, 1);
+	}
+	/**
+	 * 添加水平线，同时自动换行。可以设置水平线所占N(N=gridWidth)个控件的区域
+	 * @param lineThickness 水平线厚度(>=1)
+	 * @param lineColor  水平线颜色
+	 * @param gridWidth 水平线所占N个控件的区域(N=gridWidth)
+	 */
+	public void addHorizonLineToModel(int lineThickness, Color lineColor, int gridWidth) {
+		addHorizonLineToModel(lineThickness, lineColor, gridWidth, 0);
+	}
+	/**
+	 * 添加水平线，同时自动换行(可以设置下一行是与哪一个控件对齐，默认为0，即与第一个控件对齐)。同时，可以设置水平线所占N(N=gridWidth)个控件的区域
+	 * @param lineThickness 水平线厚度(>=1)
+	 * @param lineColor  水平线颜色
+	 * @param gridWidth 水平线所占N个控件的区域(N=gridWidth)
+	 * @param nextLineGridX 设置下一行是与哪一个控件对齐，默认为0，即与第一个控件对齐
+	 */
+	public void addHorizonLineToModel(int lineThickness, Color lineColor, int gridWidth, int nextLineGridX) {
+		Filler filler = ChannelUtil.createBlankFillArea(1, lineThickness < 1 ? 1 : lineThickness);
+		filler.setBorder(new SingleLineBorder(SingleLineBorder.BOTTOM, lineColor, false, lineThickness));
+		addComToModel(filler, gridWidth, 1, GridBagConstraints.HORIZONTAL);
+		newLine(nextLineGridX);
+	}
+    
+    /**
+     * 重设GridBagConstraints参数，默认不清空父面板的所有子件
      */
     public void reset() 
     {
     	reset(false);
     }
-    
     /**
      * 重设GridBagConstraints参数
      * @param removeAll 是否也清空parent添加的子件
@@ -148,8 +174,8 @@ public class ChannelGridBagLayoutManager
     }
     
     /**
-     * 切换至下一行第gridX的位置
-     * @param gridX
+     * 切换至下一行第gridX的位置，即与下一行哪一个控件对齐
+     * @param gridX 对齐控件的索引号
      * @return
      */
     public GridBagConstraints newLine(int gridX)
@@ -187,7 +213,6 @@ public class ChannelGridBagLayoutManager
     /**
      * 判断某一行是否可见。只有这一行所有控件都不可见时，才为false。
      * @param gridY 行索引，从0开始编号
-     * @param 如果为true，则是显示；否则隐藏
      */
     public boolean isLineVisible(int gridY)
     {
@@ -219,7 +244,6 @@ public class ChannelGridBagLayoutManager
     	}
     	return null;
     }
-    
     /**
      * 添加控件一样大小的填充区域
      * @param comp

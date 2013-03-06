@@ -1,4 +1,4 @@
-﻿package com.original.client.border;
+package com.original.client.border;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -26,18 +26,25 @@ public class ShadowBorder extends AbstractBorder
 	
 	private Color fillColor = Color.white;//面板的背景色
 	
+	/**
+	 * 默认外阴影边框
+	 */
 	public ShadowBorder()
 	{
 		this(2);
 	}
 	
+	/**
+	 * 自定义阴影厚度的边框
+	 * @param thickness
+	 */
 	public ShadowBorder(int thickness)
 	{
 		this(thickness, 10, 0.4f);
 	}
 	
 	/**
-	 * 阴影边框(统一圆角)
+	 * 自定义阴影厚度、圆角半径、透明度的边框(统一圆角)
 	 * @param thickness 阴影厚度
 	 * @param shadowRadius 阴影圆角半径
 	 * @param alpha 阴影的透明度
@@ -48,7 +55,7 @@ public class ShadowBorder extends AbstractBorder
 	}
 	
 	/**
-	 * 阴影边框(统一圆角)
+	 * 自定义阴影厚度、圆角半径、透明度的边框(统一圆角)，并同时设置面板的背景色。
 	 * @param thickness 阴影厚度
 	 * @param shadowRadius 阴影圆角半径
 	 * @param alpha 阴影的透明度
@@ -90,6 +97,9 @@ public class ShadowBorder extends AbstractBorder
 		this.fillColor = fillColor;
 	}
 
+	/**
+	 * 绘制边框
+	 */
 	@Override
 	public void paintBorder(Component c, Graphics gd, int x, int y, int width,
 			int height)

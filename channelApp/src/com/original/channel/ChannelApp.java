@@ -11,9 +11,6 @@ public class ChannelApp extends SingleIFrameApplication {
 
     public static ChannelApp channelApp;
 
-    /**
-     * my internal frame.
-     */
     @Override
     protected void initialize(String[] args) {
         channelApp = this;

@@ -1,4 +1,4 @@
-﻿package com.original.client.util;
+package com.original.client.util;
 
 import java.awt.Color;
 import java.awt.Graphics;

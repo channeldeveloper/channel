@@ -32,7 +32,7 @@ import com.seaglasslookandfeel.SeaGlassLookAndFeel;
 
 /**
  * 消息渠道Channel用户主界面，也是主线程执行的入口。
- * @author wms
+ * @author WMS
  *
  */
 public class ChannelGUI extends JFrame implements ChannelConstants
@@ -109,7 +109,7 @@ public class ChannelGUI extends JFrame implements ChannelConstants
 				}
 				else {
 					cs.skipAllService();
-//					break;
+					break;
 				}
 			}
 		}

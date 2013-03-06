@@ -16,6 +16,7 @@ import org.bson.types.ObjectId;
 
 import weibo4j.model.WeiboException;
 
+import com.original.client.ChannelGUI;
 import com.original.client.ui.ChannelDesktopPane;
 import com.original.client.ui.ChannelToolBar;
 import com.original.client.util.ChannelConfig;
@@ -30,8 +31,8 @@ import com.original.service.people.People;
 import com.seaglasslookandfeel.SeaGlassLookAndFeel;
 
 /**
- * 消息渠道Channel用户主界面，也是主线程执行的入口。
- * @author wms
+ * 消息渠道Channel用户主界面，也是主线程执行的入口。区别于{@link ChannelGUI}，ChannelIFrame便于整合至其他系统中。
+ * @author WMS
  *
  */
 public class ChannelIFrame extends JInternalFrame implements ChannelConstants
@@ -110,7 +111,7 @@ public class ChannelIFrame extends JInternalFrame implements ChannelConstants
 					}
 					else {
 						cs.skipAllService();
-//						break;
+						break;
 					}
 				}
 			}

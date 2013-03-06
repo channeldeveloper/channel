@@ -1,4 +1,4 @@
-﻿package com.original.client.util;
+package com.original.client.util;
 
 import iqq.ui.QQFaceDialog;
 
@@ -8,7 +8,6 @@ import java.awt.Container;
 import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.Insets;
@@ -126,8 +125,8 @@ public class ChannelUtil implements ChannelConstants
 	
 	/**
 	 * 比较两个对象是否相等
-	 * @param old
-	 * @param nw
+	 * @param old 原对象
+	 * @param nw 新对象
 	 * @return
 	 */
 	public static boolean isEqual(Object old, Object nw)
@@ -139,30 +138,16 @@ public class ChannelUtil implements ChannelConstants
 	}
 	
 	/**
-	 * 为文本添加指定长度的空格
-	 * @param text 文本
-	 * @param fm 字体测量工具
-	 * @param blankLength 空格长度
-	 * @return
-	 */
-	public static String appendBlank(String text, FontMetrics fm, int blankLength)
-	{
-		if(text != null) {
-			int blankNum = (int)((double)blankLength/fm.stringWidth(" "));
-			for(int i=0;i<blankNum;i++)
-				text += " ";
-		}
-		return text;
-	}
-	
-	/**
-	 * 创建水平、或垂直方向的指定填充区域(<=0表示任意的宽度、或高度)
+	 * 创建水平、或垂直方向的指定填充区域(<=0表示任意的宽度、或高度。但是不能同时为负)
 	 * @param h 水平填充宽度
 	 * @param v 垂直填充高度
 	 * @return
 	 */
 	public static Filler createBlankFillArea(int h, int v)
 	{
+		if(h < 0 && v < 0)
+			throw new IllegalArgumentException("h<0, v<0");
+		
 		if (h <= 0)
 			return (Filler) Box.createVerticalStrut(v);
 		if (v <= 0)
@@ -172,10 +157,10 @@ public class ChannelUtil implements ChannelConstants
 	}
 	
 	/**
-	 * 截取指定长度subLength(单位px)的字符串
-	 * @param text 字符串
-	 * @param fm 字体测量工具
-	 * @param limitLength 截取长度
+	 * 截取指定长度limitLength(单位px)的字符串。已优化算法！！！（取代了原先使用FontMetrics测量每一个字符的方式，效率慢）。
+	 * @param text 原字符串
+	 * @param font  字体，这里用于获取字体的大小
+	 * @param limitLength 截取长度，一般为控件的宽度
 	 * @return
 	 */
 	public static String cutString(String text, Font font, int limitLength)
@@ -209,6 +194,12 @@ public class ChannelUtil implements ChannelConstants
 		}
 		return text;
 	}
+	/**
+	 * 按控件的当前显示大小(宽度)来截取字符串
+	 * @param text 原字符串
+	 * @param comp 控件，一般为JTextComponent的子对象，如JTextPane、JTextField等
+	 * @return
+	 */
 	public static String cutString(String text, JComponent comp)
 	{
 		if(comp != null && !isEmpty(text)) {
@@ -234,6 +225,14 @@ public class ChannelUtil implements ChannelConstants
 		}
 		return dim;
 	}
+	/**
+	 * 按照设定的宽度、高度来设置图像的宽度、宽度，保持原图像的宽高比
+	 * @param oldWidth 原图像宽度
+	 * @param oldHeight 原图像高度
+	 * @param width  设定宽度
+	 * @param height 设定高度
+	 * @return
+	 */
 	public static Dimension adjustImage(int oldWidth, int oldHeight, int width, int height)
 	{
 		Dimension dim = new Dimension();
@@ -267,14 +266,19 @@ public class ChannelUtil implements ChannelConstants
 	}
 	
 	/**
-	 * 由按钮项目构建按钮
-	 * @param item 按钮项目
+	 * 由按钮属性对象构建按钮
+	 * @param item 按钮属性对象
 	 * @return
 	 */
 	public static SGButton createAbstractButton(AbstractButtonItem item)
 	{
 		return createAbstractButton(item, SGButton.class);
 	}
+	/**
+	 * 创建应用程序按钮，其实就是按钮样式(使用OButtonUI)不同而已
+	 * @param item 按钮属性对象
+	 * @return
+	 */
 	public static OButton createApplicationButton(AbstractButtonItem item)
 	{
 		OButton button = createAbstractButton(item, OButton.class);
@@ -283,6 +287,12 @@ public class ChannelUtil implements ChannelConstants
 		button.getModel().getButtonEffect().setHasShadow(false);
 		return button;
 	}
+	/**
+	 * 由按钮属性对象构建按钮。传参中的按钮类不同，返回的按钮对象也不同
+	 * @param item 按钮属性对象
+	 * @param clazz 按钮类，继承自AbstractButton，如JButton、JToggleButton等
+	 * @return
+	 */
 	public static <T extends AbstractButton> T  createAbstractButton(AbstractButtonItem item, Class<T> clazz)
 	{
 		if(item != null) {
@@ -322,8 +332,8 @@ public class ChannelUtil implements ChannelConstants
 	}
 	
 	/**
-	 * 由菜单项目构建菜单
-	 * @param item 菜单项目
+	 * 由菜单属性对象构建菜单
+	 * @param item 菜单属性对象
 	 * @return
 	 */
 	public static SGMenuItem createMenuItem(MenuItem item) {
@@ -340,9 +350,9 @@ public class ChannelUtil implements ChannelConstants
 	}
 	
 	/**
-	 * 显示微博授权浏览器窗口，注意该窗口一旦打开，将使主程序处于wait()状态，待授权结束后才notify
+	 * 显示微博授权浏览器窗口。待用户输入微博账号和密码后，会自动返回给用户激活码，然后程序自动由激活码生成授权Token
 	 * @throws WeiboException
-	 * @return 授权是否成功
+	 * @return 
 	 */
 	public static void showAuthorizeWindow(final Window owner, final String account, final WindowListener listener) throws WeiboException
 	{
@@ -445,31 +455,6 @@ NativeInterface.open();
 	}
 	
 	/**
-	 * 弹出对话框，默认使用UIManager#getDefaultLookandFeel主题
-	 */
-	public static void showWithDialog(Component parent,
-			String title, boolean modal, Container cp) {
-		showWithDialog(null, parent, title, modal, cp);
-	}
-	public static void showWithDialog(Dimension size, Component parent,
-			String title, boolean modal, Container child) {
-		if (parent == null) {
-			parent = SGOptionPane.getRootFrame();
-		}
-		JDialog d = createDialog(parent, title, modal);
-		d.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-		d.setContentPane(child);
-
-		if (size == null) {
-			d.pack();
-		} else {
-			d.setSize(size);
-		}
-		d.setLocationRelativeTo(parent);
-		d.setVisible(true);
-	}
-	
-	/**
 	 * 弹出自定义风格的消息框
 	 */
 	public static void showMessageDialog(Component parent, String title,
@@ -528,6 +513,10 @@ MessageBox box = new MessageBox(content);
 		return getOptionValue(pane);
 		
 	}
+	
+	/**
+	 * 是否确认
+	 */
 	public static boolean confirm(Component parent, String title,
 			Object content) {
 		return SGOptionPane.YES_OPTION == showConfirmDialog(parent, title, content);
@@ -642,17 +631,21 @@ MessageBox box = new MessageBox(content);
 		return d;
 	}
 	
+	/**
+	 * 检查窗体，如对话框的位置是否超出规定边界
+	 */
 	public static void checkWindowLocation(Window window)
 	{
 		Point point = window.getLocation();
 		checkWindowLocation(point.x, point.y, window);
 	}
-	
 	public  static void checkWindowLocation(int x, int y, Window window)
 	{
 		checkComponentLocation(x, y, window);
 	}
-	
+	/**
+	 * 检查控件的位置是否超出规定边界
+	 */
 	public static Point checkComponentLocation(int x, int y, Component comp)
 	{
 		if (x < MARGIN_LEFT)
@@ -767,6 +760,9 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		return fcl.getChooseFile();
 	}	
 	
+	/**
+	 * 显示自定义文件保存对话框
+	 */
 	public static void showFileSaveDialog(Component c, String title, boolean modal,
 		     SGFileChooser savePane, File saveFile) {
 		if(savePane == null) {
@@ -1114,6 +1110,10 @@ new FileNameExtensionFilter("图片文件(*.bmp, *.gif, *.jpg, *.jpeg, *.png)",
 		executor.execute(command);
 	}
 	
+	/**
+	 * 执行线程，这里用于客户端界面
+	 * @param call 可执行对象
+	 */
 	public  static <T> Future<T> exec(Callable<T> call) {
 		return executor.submit(call);
 	}

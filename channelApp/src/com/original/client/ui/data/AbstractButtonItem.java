@@ -6,6 +6,11 @@ import java.io.Serializable;
 import javax.swing.AbstractButton;
 import javax.swing.Icon;
 
+/**
+ * 按钮属性对象数据类
+ * @author WMS
+ *
+ */
 public class AbstractButtonItem implements Serializable
 {
 	private static final long serialVersionUID = -3786407435229848051L;

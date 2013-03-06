@@ -25,16 +25,26 @@ public class InnerShadowBorder extends AbstractBorder
 	
 	private Color backColor = new Color(237,237,237);
 	
+	/**
+	 * 默认灰色内部阴影的边框
+	 */
 	public InnerShadowBorder () 
 	{
 		this(new Color(237, 237, 237));
 	}
 	
+	/**
+	 * 自定义阴影颜色的边框
+	 * @param backColor 阴影颜色
+	 */
 	public InnerShadowBorder(Color backColor)
 	{
 		this.backColor = backColor;
 	}
 	
+	/**
+	 * 绘制边框
+	 */
 	@Override
 	public void paintBorder(Component c, Graphics g, int x, int y, int width,
 			int height)
